@@ -212,6 +212,40 @@ enlace. Si algún día pasa, las salidas son: pedir un dato que solo el
 proveedor real conozca (una orden de compra, por ejemplo) o mover el
 formulario detrás del portal de proveedores.
 
+## Copia en una hoja de Holcim
+
+Cada registro se guarda dos veces: en la hoja de este script y en una hoja
+propiedad de Holcim. Sirve para que la información esté desde el principio
+donde debe estar, aunque el script viva en otra cuenta.
+
+1. En la cuenta de **Holcim**, cree la hoja destino (idealmente en la unidad
+   compartida del área).
+2. Compártala **con permiso de Editor** con la cuenta que ejecuta el script.
+3. Copie el identificador de su dirección:
+   `docs.google.com/spreadsheets/d/`**`ESTO`**`/edit`
+4. Péguelo en `Config.gs`:
+
+```js
+ID_HOJA_HOLCIM: '1AbC...XyZ',
+```
+
+5. Ejecute **`probarCopiaEnHolcim`** desde `Hoja.gs`. Si responde con el nombre
+   de la hoja, la conexión está bien y ya quedaron creadas sus pestañas.
+
+No hay que preparar nada más: las hojas `EMPRESAS` y `PERSONAS` se crean solas
+en el destino, con los mismos encabezados.
+
+**Si la copia falla** —permisos revocados, hoja borrada, sin conexión— el
+registro principal **igual queda guardado** y el fallo se anota en `ERRORES`.
+Nunca se pierde un trámite por culpa de la copia.
+
+**Si Holcim no deja compartir con cuentas externas**, este camino tampoco
+funciona: es la misma familia de políticas que bloqueó la publicación abierta.
+En ese caso la copia tendrá que esperar a la respuesta de TI, y mientras tanto
+el correo de aviso cumple como respaldo de cada registro.
+
+Para dejar de copiar, borre el identificador: `ID_HOJA_HOLCIM: ''`.
+
 ## Qué se guarda
 
 **EMPRESAS** — ID · Fecha · NIT · DV · Nombre empresa · Correo · Teléfono

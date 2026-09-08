@@ -11,9 +11,13 @@ function libro_() {
   return libro;
 }
 
-/** Devuelve la hoja pedida; la crea con sus encabezados si no existe. */
+/** Devuelve la hoja pedida del libro principal. */
 function hoja_(nombre) {
-  var libro = libro_();
+  return hojaEn_(libro_(), nombre);
+}
+
+/** Igual, pero en el libro que se le indique. La crea si no existe. */
+function hojaEn_(libro, nombre) {
   var hoja = libro.getSheetByName(nombre);
   if (hoja) return asegurarEncabezados_(hoja, nombre);
 
@@ -52,20 +56,70 @@ function asegurarEncabezados_(hoja, nombre) {
   return hoja;
 }
 
-/** Crea las tres hojas. Se ejecuta una vez al instalar. */
+/** Crea las hojas. Se ejecuta una vez al instalar. */
 function prepararHojas() {
   Object.keys(CONFIG.HOJAS).forEach(function (llave) { hoja_(CONFIG.HOJAS[llave]); });
+  if (String(CONFIG.ID_HOJA_HOLCIM || '').trim()) probarCopiaEnHolcim();
   return 'Hojas creadas o verificadas.';
 }
 
 /** Agrega una fila respetando el orden de los encabezados. */
 function agregarFila_(nombreHoja, fila) {
   var hoja = hoja_(nombreHoja);
-  var valores = CONFIG.ENCABEZADOS[nombreHoja].map(function (columna) {
+  hoja.appendRow(enOrden_(nombreHoja, fila));
+
+  /* La misma fila va a la hoja de Holcim, si está configurada.
+     El registro de errores se excluye: copiarlo llamaría de nuevo a esta
+     función y se mordería la cola. */
+  if (nombreHoja !== CONFIG.HOJAS.ERRORES) copiarEnHolcim_(nombreHoja, fila);
+
+  return hoja.getLastRow();
+}
+
+function enOrden_(nombreHoja, fila) {
+  return CONFIG.ENCABEZADOS[nombreHoja].map(function (columna) {
     return fila[columna] !== undefined && fila[columna] !== null ? fila[columna] : '';
   });
-  hoja.appendRow(valores);
-  return hoja.getLastRow();
+}
+
+/* ------------------------------------------------------------------ *
+ * Copia en la hoja de Holcim
+ *
+ * Cada registro se escribe dos veces: en el libro de este script y en el
+ * de Holcim. Si la copia falla, el registro principal ya quedó guardado y
+ * el fallo se anota en ERRORES: nadie pierde su trámite por esto.
+ * ------------------------------------------------------------------ */
+
+function libroDeHolcim_() {
+  var id = String(CONFIG.ID_HOJA_HOLCIM || '').trim();
+  if (!id) return null;
+  return SpreadsheetApp.openById(id);
+}
+
+function copiarEnHolcim_(nombreHoja, fila) {
+  if (!String(CONFIG.ID_HOJA_HOLCIM || '').trim()) return;
+  try {
+    var hoja = hojaEn_(libroDeHolcim_(), nombreHoja);
+    hoja.appendRow(enOrden_(nombreHoja, fila));
+  } catch (error) {
+    anotarError_('No se pudo copiar a la hoja de Holcim (' + nombreHoja + '): ' + error.message);
+  }
+}
+
+/**
+ * Comprueba la copia sin registrar nada: abre la hoja de Holcim, crea sus
+ * pestañas si faltan y devuelve su nombre. Ejecútela desde el editor.
+ */
+function probarCopiaEnHolcim() {
+  if (!String(CONFIG.ID_HOJA_HOLCIM || '').trim()) {
+    return 'CONFIG.ID_HOJA_HOLCIM está vacío: no se está copiando nada.';
+  }
+  var libro = libroDeHolcim_();
+  hojaEn_(libro, CONFIG.HOJAS.EMPRESAS);
+  hojaEn_(libro, CONFIG.HOJAS.PERSONAS);
+  var mensaje = 'Conexión correcta con: ' + libro.getName() + '\n' + libro.getUrl();
+  console.log(mensaje);
+  return mensaje;
 }
 
 /** Lee una columna completa como texto. Sirve para buscar duplicados. */
