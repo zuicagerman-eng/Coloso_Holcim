@@ -178,10 +178,10 @@ function actualizarListaEmpresas() {
 function correoDePrueba() {
   enviarAviso_('EMPRESA', {
     'Dirección de correo electrónico': Session.getEffectiveUser().getEmail(),
-    'NIT (sin dígito de verificación)': '830053105',
-    'Nombre de la empresa': 'Transportes del Magdalena S.A.S.',
-    'Correo de la empresa': 'contratos@transmagdalena.com',
-    'Contacto (nombre y teléfono)': 'Luisa Peña — 315 442 1180'
+    'NIT (sin dígito de verificación)': '900123456',
+    'Nombre de la empresa': 'Empresa de Prueba S.A.S.',
+    'Correo de la empresa': 'contacto@empresadeprueba.com',
+    'Contacto (nombre y teléfono)': 'Persona de prueba — 300 000 0000'
   }, Session.getEffectiveUser().getEmail());
   SpreadsheetApp.getUi().alert('Correo de prueba enviado a: ' + CONFIG.NOTIFICAR_A.join(', '));
 }

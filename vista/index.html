@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--INICIO-CONTENIDO-->
+<title>Registro Coloso Holcim</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* ================================================================
+     Identidad. Todo el color sale de estas variables: para ajustar la
+     marca no hay que tocar nada más abajo.
+     ================================================================ */
+  :root {
+    --ground: #EBEFEC;
+    --surface: #FFFFFF;
+    --surface-2: #F5F8F5;
+    --line: #D6DED8;
+    --line-fuerte: #B4C0B8;
+    --ink: #16211B;
+    --muted: #5E6B62;
+    --accent: #007440;
+    --accent-fill: #00A758;
+    --accent-suave: #E4F3EA;
+    --danger: #A82C22;
+    --danger-suave: #FBEAE8;
+    --sombra: 0 1px 2px rgba(22, 33, 27, .05), 0 12px 32px -22px rgba(22, 33, 27, .5);
+    --r: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1411;
+      --surface: #161E19;
+      --surface-2: #1C2621;
+      --line: #2A3630;
+      --line-fuerte: #3E4D45;
+      --ink: #E4EBE6;
+      --muted: #90A098;
+      --accent: #56CE92;
+      --accent-fill: #00A758;
+      --accent-suave: #14291F;
+      --danger: #EE9B93;
+      --danger-suave: #2E1A18;
+      --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -22px rgba(0, 0, 0, .9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E1411;
+    --surface: #161E19;
+    --surface-2: #1C2621;
+    --line: #2A3630;
+    --line-fuerte: #3E4D45;
+    --ink: #E4EBE6;
+    --muted: #90A098;
+    --accent: #56CE92;
+    --accent-fill: #00A758;
+    --accent-suave: #14291F;
+    --danger: #EE9B93;
+    --danger-suave: #2E1A18;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -22px rgba(0, 0, 0, .9);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  input, select, .mono { font-variant-numeric: tabular-nums; }
+
+  /* ---------- Cinta superior ---------- */
+  .cinta {
+    background: var(--accent-fill);
+    color: #fff;
+    padding: 15px 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .cinta .marca {
+    font-family: "Archivo", sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+  }
+  .cinta .contexto { font-size: 13px; opacity: .88; }
+
+  /* ---------- Envoltura ---------- */
+  .hoja {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 34px 20px 60px;
+  }
+
+  .titular { margin-bottom: 26px; }
+  h1 {
+    font-family: "Archivo", sans-serif;
+    font-weight: 800;
+    font-size: clamp(27px, 4vw, 36px);
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .titular p {
+    margin: 0;
+    color: var(--muted);
+    max-width: 56ch;
+  }
+
+  /* ---------- Selector Empresa / Personas ---------- */
+  .selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .opcion {
+    appearance: none;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line-fuerte);
+    border-radius: var(--r);
+    padding: 13px 16px;
+    font: inherit;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+  .opcion .orden {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    display: block;
+  }
+  .opcion .nombre {
+    font-family: "Archivo", sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: inherit;
+    display: block;
+    margin-top: 1px;
+  }
+  .opcion:hover { border-color: var(--line-fuerte); }
+  .opcion[aria-selected="true"] {
+    color: var(--ink);
+    border-color: var(--line);
+    border-left-color: var(--accent-fill);
+    box-shadow: var(--sombra);
+  }
+  .opcion:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Tarjeta del formulario ---------- */
+  .tarjeta {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    box-shadow: var(--sombra);
+    padding: 26px;
+  }
+
+  .grupo { display: grid; gap: 0 18px; }
+  .grupo.dos { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) { .grupo.dos { grid-template-columns: 1fr; } }
+
+  .campo { margin-bottom: 18px; }
+  .campo > label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .campo .ayuda {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 11px 12px;
+    background: var(--surface);
+    border: 1px solid var(--line-fuerte);
+    border-radius: 4px;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+  }
+  input.mono { font-family: "IBM Plex Mono", monospace; letter-spacing: .05em; }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent-fill);
+    box-shadow: 0 0 0 3px var(--accent-suave);
+  }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--danger-suave); }
+
+  .error {
+    display: block;
+    color: var(--danger);
+    font-size: 12.5px;
+    margin-top: 5px;
+    min-height: 0;
+  }
+  .error:empty { display: none; }
+
+  .pista-dv {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .pista-dv b { color: var(--accent); font-weight: 500; }
+  .pista-dv:empty { display: none; }
+
+  .barra-envio {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    margin-top: 4px;
+  }
+  .obligatorio { color: var(--muted); font-size: 12.5px; }
+
+  .boton {
+    appearance: none;
+    background: var(--accent-fill);
+    color: #fff;
+    border: 1px solid var(--accent-fill);
+    border-radius: 4px;
+    padding: 12px 26px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .boton:hover { background: #008E4A; border-color: #008E4A; }
+  .boton:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .boton.hueco {
+    background: none;
+    color: var(--accent);
+    border-color: var(--line-fuerte);
+  }
+  .boton.hueco:hover { background: var(--accent-suave); border-color: var(--accent); }
+
+  /* ---------- Confirmación ---------- */
+  .confirmacion { text-align: left; }
+  .sello {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--accent-suave);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 5px 14px 5px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .sello svg { display: block; }
+  .confirmacion h2 {
+    font-family: "Archivo", sans-serif;
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  .confirmacion .radicado {
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--accent);
+    font-size: 15px;
+  }
+  .repaso {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0 24px;
+    font-size: 14px;
+  }
+  .repaso td {
+    border-bottom: 1px solid var(--line);
+    padding: 10px 2px;
+    vertical-align: top;
+  }
+  .repaso tr:last-child td { border-bottom: none; }
+  .repaso td:first-child { color: var(--muted); width: 44%; }
+  .repaso td:last-child { font-weight: 600; }
+
+  .nota-pie {
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: 12.5px;
+    text-align: center;
+  }
+  .oculto { display: none !important; }
+</style>
+</head>
+<body>
+<!-- ================== VISTA ================== -->
+<header class="cinta">
+  <span class="marca">Holcim</span>
+  <span class="contexto">Registro de proveedores y personal en planta</span>
+</header>
+
+<main class="hoja">
+  <div class="titular">
+    <h1>Registro de Empresas y Personas</h1>
+    <p>Primero se registra la empresa; después las personas que pertenecen a ella.</p>
+  </div>
+
+  <div class="selector" role="tablist">
+    <button class="opcion" id="opEmpresa" role="tab" aria-selected="true" aria-controls="formEmpresa" onclick="cambiar('empresa')">
+      <span class="orden">Paso 1</span>
+      <span class="nombre">Empresa</span>
+    </button>
+    <button class="opcion" id="opPersona" role="tab" aria-selected="false" aria-controls="formPersona" onclick="cambiar('persona')">
+      <span class="orden">Paso 2</span>
+      <span class="nombre">Personas</span>
+    </button>
+  </div>
+
+  <div class="tarjeta">
+
+    <!-- ---------- Empresa ---------- -->
+    <form id="formEmpresa" role="tabpanel" aria-labelledby="opEmpresa" novalidate onsubmit="enviar(event, 'empresa')">
+      <div class="campo">
+        <label for="nit">NIT
+          <span class="ayuda">Sin el dígito de verificación y sin guion.</span>
+        </label>
+        <input id="nit" name="nit" class="mono" inputmode="numeric" maxlength="12" autocomplete="off"
+               oninput="pintarDV()" onblur="revisar('nit')">
+        <span class="pista-dv" id="pistaDV"></span>
+        <span class="error" id="errorNit"></span>
+      </div>
+
+      <div class="campo">
+        <label for="nombreEmpresa">Nombre de la empresa</label>
+        <input id="nombreEmpresa" name="nombre" autocomplete="off" onblur="revisar('nombreEmpresa')">
+        <span class="error" id="errorNombreEmpresa"></span>
+      </div>
+
+      <div class="grupo dos">
+        <div class="campo">
+          <label for="correoEmpresa">Correo</label>
+          <input id="correoEmpresa" name="correo" type="email" autocomplete="off" onblur="revisar('correoEmpresa')">
+          <span class="error" id="errorCorreoEmpresa"></span>
+        </div>
+        <div class="campo">
+          <label for="contacto">Contacto
+            <span class="ayuda">Nombre y teléfono.</span>
+          </label>
+          <input id="contacto" name="contacto" autocomplete="off" onblur="revisar('contacto')">
+          <span class="error" id="errorContacto"></span>
+        </div>
+      </div>
+
+      <div class="barra-envio">
+        <button class="boton" type="submit">Registrar empresa</button>
+        <span class="obligatorio">Todos los campos son obligatorios.</span>
+      </div>
+    </form>
+
+    <!-- ---------- Personas ---------- -->
+    <form id="formPersona" class="oculto" role="tabpanel" aria-labelledby="opPersona" novalidate onsubmit="enviar(event, 'persona')">
+      <div class="grupo dos">
+        <div class="campo">
+          <label for="nombres">Nombres</label>
+          <input id="nombres" name="nombres" autocomplete="off" onblur="revisar('nombres')">
+          <span class="error" id="errorNombres"></span>
+        </div>
+        <div class="campo">
+          <label for="apellidos">Apellidos</label>
+          <input id="apellidos" name="apellidos" autocomplete="off" onblur="revisar('apellidos')">
+          <span class="error" id="errorApellidos"></span>
+        </div>
+        <div class="campo">
+          <label for="cedula">Cédula
+            <span class="ayuda">Solo dígitos, sin puntos.</span>
+          </label>
+          <input id="cedula" name="cedula" class="mono" inputmode="numeric" maxlength="13" autocomplete="off" onblur="revisar('cedula')">
+          <span class="error" id="errorCedula"></span>
+        </div>
+        <div class="campo">
+          <label for="correoPersona">Correo</label>
+          <input id="correoPersona" name="correo" type="email" autocomplete="off" onblur="revisar('correoPersona')">
+          <span class="error" id="errorCorreoPersona"></span>
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="empresa">Empresa a la que pertenece
+          <span class="ayuda">Debe estar registrada en el paso 1.</span>
+        </label>
+        <select id="empresa" name="empresa" onblur="revisar('empresa')"></select>
+        <span class="error" id="errorEmpresa"></span>
+      </div>
+
+      <div class="barra-envio">
+        <button class="boton" type="submit">Registrar persona</button>
+        <span class="obligatorio">Todos los campos son obligatorios.</span>
+      </div>
+    </form>
+
+    <!-- ---------- Confirmación ---------- -->
+    <div id="confirmacion" class="confirmacion oculto"></div>
+  </div>
+
+  <p class="nota-pie">Los datos quedan bajo custodia de Holcim y se usan solo para el trámite de ingreso.</p>
+</main>
+
+<script>
+/* ==================================================================
+   Vista del registro — Coloso Holcim
+   Solo interfaz y validación. El envío está aislado en enviarAlServidor():
+   ahí se conecta el flujo cuando esté definido.
+   ================================================================== */
+
+/* ---------- Reglas de validación ---------- */
+function soloDigitos(v) { return String(v || '').replace(/[^0-9]/g, ''); }
+function limpiar(v) { return String(v || '').trim().replace(/\s+/g, ' '); }
+
+/** Dígito de verificación del NIT colombiano (DIAN). */
+function calcularDV(nitSinDV) {
+  var pesos = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+  var digitos = soloDigitos(nitSinDV).split('').reverse();
+  var suma = 0;
+  for (var i = 0; i < digitos.length; i++) suma += parseInt(digitos[i], 10) * pesos[i];
+  var residuo = suma % 11;
+  return residuo > 1 ? 11 - residuo : residuo;
+}
+
+var REGLAS = {
+  nit: function (v) {
+    if (!limpiar(v)) return 'Escriba el NIT de la empresa.';
+    if (/-/.test(v)) return 'Escriba el NIT sin el guion ni el dígito de verificación.';
+    var n = soloDigitos(v);
+    if (n.length < 8 || n.length > 10) return 'El NIT tiene entre 8 y 10 dígitos, sin el de verificación.';
+    return '';
+  },
+  nombreEmpresa: function (v) {
+    return limpiar(v).length < 3 ? 'Escriba la razón social de la empresa.' : '';
+  },
+  correoEmpresa: function (v) { return revisarCorreo(v); },
+  contacto: function (v) {
+    return limpiar(v).length < 3 ? 'Escriba el nombre y el teléfono de contacto.' : '';
+  },
+  nombres: function (v) { return limpiar(v).length < 2 ? 'Escriba los nombres.' : ''; },
+  apellidos: function (v) { return limpiar(v).length < 2 ? 'Escriba los apellidos.' : ''; },
+  cedula: function (v) {
+    if (!limpiar(v)) return 'Escriba el número de cédula.';
+    var c = soloDigitos(v);
+    if (c.length < 6 || c.length > 10) return 'La cédula tiene entre 6 y 10 dígitos.';
+    return '';
+  },
+  correoPersona: function (v) { return revisarCorreo(v); },
+  empresa: function (v) { return v ? '' : 'Seleccione la empresa a la que pertenece.'; }
+};
+
+function revisarCorreo(v) {
+  var c = limpiar(v).toLowerCase();
+  if (!c) return 'Escriba el correo electrónico.';
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(c)) return 'Ese correo no tiene un formato válido.';
+  return '';
+}
+
+var CAMPOS = {
+  empresa: ['nit', 'nombreEmpresa', 'correoEmpresa', 'contacto'],
+  persona: ['nombres', 'apellidos', 'cedula', 'correoPersona', 'empresa']
+};
+
+/* ---------- Validación en pantalla ---------- */
+function elemento(id) { return document.getElementById(id); }
+
+function revisar(id) {
+  var campo = elemento(id);
+  var mensaje = REGLAS[id](campo.value);
+  elemento('error' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = mensaje;
+  campo.setAttribute('aria-invalid', mensaje ? 'true' : 'false');
+  return !mensaje;
+}
+
+function pintarDV() {
+  var valor = elemento('nit').value;
+  var pista = elemento('pistaDV');
+  if (!limpiar(valor) || REGLAS.nit(valor)) { pista.innerHTML = ''; return; }
+  var nit = soloDigitos(valor);
+  pista.innerHTML = 'Se registra <b>' + nit + '</b> · dígito de verificación <b>' + calcularDV(nit) + '</b>';
+}
+
+function cambiar(cual) {
+  var esEmpresa = cual === 'empresa';
+  elemento('formEmpresa').classList.toggle('oculto', !esEmpresa);
+  elemento('formPersona').classList.toggle('oculto', esEmpresa);
+  elemento('confirmacion').classList.add('oculto');
+  elemento('opEmpresa').setAttribute('aria-selected', String(esEmpresa));
+  elemento('opPersona').setAttribute('aria-selected', String(!esEmpresa));
+}
+
+/* ---------- Envío ---------- */
+function enviar(evento, tipo) {
+  evento.preventDefault();
+
+  var valido = true;
+  CAMPOS[tipo].forEach(function (id) { if (!revisar(id)) valido = false; });
+  if (!valido) {
+    var primero = CAMPOS[tipo].filter(function (id) {
+      return elemento(id).getAttribute('aria-invalid') === 'true';
+    })[0];
+    if (primero) elemento(primero).focus();
+    return;
+  }
+
+  var datos = {};
+  CAMPOS[tipo].forEach(function (id) { datos[id] = limpiar(elemento(id).value); });
+  if (tipo === 'empresa') {
+    datos.nit = soloDigitos(datos.nit);
+    datos.dv = calcularDV(datos.nit);
+  }
+  if (tipo === 'persona') datos.cedula = soloDigitos(datos.cedula);
+
+  enviarAlServidor(tipo, datos);
+}
+
+/**
+ * ▼▼▼  AQUÍ SE CONECTA EL FLUJO  ▼▼▼
+ * Por ahora solo confirma en pantalla. Cuando se defina a dónde van los
+ * datos (hoja de cálculo, base propia, correo), se reemplaza el cuerpo
+ * de esta función; nada más de la vista cambia.
+ */
+function enviarAlServidor(tipo, datos) {
+  console.log('Registro listo para enviar:', tipo, datos);
+  recordarEmpresa(tipo, datos);
+  mostrarConfirmacion(tipo, datos);
+}
+
+/* ---------- Confirmación ---------- */
+function mostrarConfirmacion(tipo, datos) {
+  var esEmpresa = tipo === 'empresa';
+  var radicado = (esEmpresa ? 'EMP' : 'PER') + '-' + new Date().getFullYear() + '-' +
+                 ('0000' + (++contador[tipo])).slice(-4);
+
+  var repaso = esEmpresa
+    ? [['NIT', datos.nit + '  ·  DV ' + datos.dv],
+       ['Empresa', datos.nombreEmpresa],
+       ['Correo', datos.correoEmpresa],
+       ['Contacto', datos.contacto]]
+    : [['Nombre', datos.nombres + ' ' + datos.apellidos],
+       ['Cédula', datos.cedula],
+       ['Correo', datos.correoPersona],
+       ['Empresa', datos.empresa]];
+
+  elemento('formEmpresa').classList.add('oculto');
+  elemento('formPersona').classList.add('oculto');
+
+  var caja = elemento('confirmacion');
+  caja.classList.remove('oculto');
+  caja.innerHTML =
+    '<div class="sello">' +
+      '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">' +
+        '<path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg> Registro recibido</div>' +
+    '<h2>' + escapar(esEmpresa ? datos.nombreEmpresa : datos.nombres + ' ' + datos.apellidos) + '</h2>' +
+    '<div class="radicado">' + radicado + '</div>' +
+    '<table class="repaso">' +
+      repaso.map(function (f) {
+        return '<tr><td>' + escapar(f[0]) + '</td><td>' + escapar(f[1]) + '</td></tr>';
+      }).join('') +
+    '</table>' +
+    '<button class="boton hueco" onclick="cambiar(\'' + tipo + '\'); limpiarFormulario(\'' + tipo + '\')">' +
+      (esEmpresa ? 'Registrar otra empresa' : 'Registrar otra persona') + '</button> ' +
+    (esEmpresa
+      ? '<button class="boton" onclick="cambiar(\'persona\')">Continuar con las personas</button>'
+      : '');
+
+  caja.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+var contador = { empresa: 0, persona: 0 };
+
+function limpiarFormulario(tipo) {
+  var form = elemento(tipo === 'empresa' ? 'formEmpresa' : 'formPersona');
+  form.reset();
+  CAMPOS[tipo].forEach(function (id) {
+    elemento(id).setAttribute('aria-invalid', 'false');
+    elemento('error' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = '';
+  });
+  elemento('pistaDV').innerHTML = '';
+  elemento(CAMPOS[tipo][0]).focus();
+}
+
+/* ---------- Lista de empresas del paso 2 ---------- *
+ * Provisional: se llena con lo registrado en esta pantalla. Cuando exista
+ * el flujo, esta lista la entrega el servidor.                          */
+var empresasRegistradas = [];
+
+function recordarEmpresa(tipo, datos) {
+  if (tipo !== 'empresa') return;
+  empresasRegistradas.push(datos.nombreEmpresa + ' — NIT ' + datos.nit);
+  pintarListaEmpresas();
+}
+
+function pintarListaEmpresas() {
+  var select = elemento('empresa');
+  if (!empresasRegistradas.length) {
+    select.innerHTML = '<option value="">Registre primero una empresa en el paso 1</option>';
+    return;
+  }
+  var actual = select.value;
+  select.innerHTML = '<option value="">Seleccione la empresa…</option>' +
+    empresasRegistradas.map(function (e) {
+      return '<option value="' + escapar(e) + '">' + escapar(e) + '</option>';
+    }).join('');
+  select.value = actual;
+}
+
+function escapar(t) {
+  return String(t).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+pintarListaEmpresas();
+</script>
+<!--FIN-CONTENIDO-->
+</body>
+</html>
