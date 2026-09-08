@@ -1,84 +1,68 @@
 # Coloso Holcim — Registro de Empresas y Personas
 
-Aplicación web para registrar **empresas** y **personas**, almacenar todo en un
-**Google Sheet** y **notificar por correo a dos áreas de Holcim** con un enlace
-para que ellas diligencien la información que les corresponde.
-
-## Decisión de plataforma
-
-**Google Apps Script para ejecutar, GitHub para versionar.** No compiten:
-Apps Script es donde corre la solución (Sheet y correo nativos, costo cero,
-sin infraestructura que aprobar); GitHub es donde vive el código con historial,
-ramas y revisión. El análisis completo, con el árbol de decisión y el límite de
-cuándo migrar a otra plataforma, está en
-[`docs/DECISION-GITHUB-VS-APPS-SCRIPT.md`](docs/DECISION-GITHUB-VS-APPS-SCRIPT.md).
-
-## Modelo de datos (el de la nota)
-
-**Empresa**
-| Campo | Regla |
-|---|---|
-| NIT | 8–10 dígitos, **sin dígito de verificación** (el DV se calcula y se guarda aparte) |
-| Nombre | obligatorio |
-| Correo | formato válido |
-| Contacto | nombre y teléfono |
-
-**Persona**
-| Campo | Regla |
-|---|---|
-| Nombres / Apellidos | obligatorios |
-| Cédula | 6–10 dígitos, única |
-| Correo | formato válido |
-| Empresa | debe existir previamente (se selecciona por NIT) |
-
-## Flujo
+Dos **Google Forms** que alimentan una **hoja de cálculo** (la base de datos de
+quién diligenció qué) y un script que **avisa por correo** a las personas
+responsables cada vez que alguien registra una empresa o una persona.
 
 ```
-Formulario web (Holcim)
-   │
-   ├─► Validación (NIT sin DV, cédula, correo, duplicados)
-   ├─► Google Sheet: EMPRESAS / PERSONAS
-   └─► Correo a los DOS destinatarios de CONFIG.NOTIFICAR_A
-           │
-           └─► botón "Diligenciar información" (enlace con token único)
-                   │
-                   └─► formulario por área → hoja COMPLEMENTOS
-                           └─► estado: Pendiente → En diligenciamiento → Completo
+Google Form Empresa  ──┐
+                       ├──►  Google Sheet (hojas EMPRESAS y PERSONAS)
+Google Form Personas ──┘            │
+                                    └──►  correo automático a CONFIG.NOTIFICAR_A
+                                          "Fulano diligenció el registro de …"
 ```
 
-## Estructura
+Sin formularios a la medida, sin servidor y sin hosting: el formulario lo pone
+Google, la base de datos es el Sheet, y el único código que corre son unas
+líneas que arman y envían el aviso.
 
-```
-apps-script/
-  Config.gs             correos notificados, áreas, hojas y encabezados
-  Code.gs               doGet + casos de uso (registrarEmpresa, registrarPersona, guardarComplemento)
-  Sheets.gs             única capa que toca SpreadsheetApp
-  Validators.gs         NIT/DV DIAN, cédula, correo, IDs y tokens
-  Mailer.gs             notificación a los dos correos + acuse al registrado
-  ui/index.html         formulario Empresa / Personas
-  ui/complemento.html   formulario para las otras áreas
-  ui/estilos.html       identidad visual (variables CSS)
-  mail/notificacion.html plantilla del correo
-docs/
-  DECISION-GITHUB-VS-APPS-SCRIPT.md
-  DESPLIEGUE.md
-```
+## Qué se captura
+
+**Empresa** — NIT *sin dígito de verificación* (el script calcula el DV y lo
+guarda en su propia columna), nombre, correo y contacto.
+
+**Personas** — nombres, apellidos, cédula, correo y la empresa a la que
+pertenecen, elegida de una lista que **se actualiza sola** con las empresas ya
+registradas.
+
+Los dos formularios guardan además el correo de **quien responde**, que es lo
+que convierte al Sheet en la base de datos de quién diligenció.
+
+Las validaciones las hace el propio Google Form al escribir: NIT de 8 a 10
+dígitos sin guion, cédula de 6 a 10 dígitos, correos con formato válido.
 
 ## Puesta en marcha
 
-Resumen: cree la hoja → Extensiones → Apps Script → suba estos archivos
-(o `clasp push`) → ponga los dos correos en `Config.gs` → ejecute
-`inicializarLibro` → publique como Web App para el dominio Holcim.
-Paso a paso y pruebas de verificación en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
+1. Cree una hoja de cálculo nueva en el Drive de Holcim.
+2. **Extensiones → Apps Script**, y suba los archivos de `apps-script/`
+   (o `clasp push`, ver [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)).
+3. En `Config.gs`, escriba los correos que deben recibir el aviso.
+4. Ejecute la función **`instalar()`** una sola vez y acepte los permisos.
 
-## Personalización
+`instalar()` crea los dos formularios con sus validaciones, los conecta a la
+hoja y deja activo el aviso por correo. Al terminar muestra los **dos enlaces
+para compartir**: esos son los que se le pasan a quien deba diligenciar.
 
-| Qué | Dónde |
+## Archivos
+
+| Archivo | Para qué |
 |---|---|
-| Los dos correos notificados | `Config.gs → NOTIFICAR_A` |
-| Áreas que diligencian | `Config.gs → AREAS` |
-| Colores / marca | `ui/estilos.html` (variables `--hlc-*`) y el verde `#00A758` de `mail/notificacion.html` |
-| Campos nuevos | `Config.gs → ENCABEZADOS` + validación en `Validators.gs` + campo en `ui/index.html` |
+| `apps-script/Config.gs` | **Lo único que se edita**: correos notificados y textos de las preguntas |
+| `apps-script/Instalar.gs` | Crea los formularios, los conecta al Sheet y activa el aviso |
+| `apps-script/Notificaciones.gs` | Envía el correo en cada respuesta, calcula el DV y refresca la lista de empresas |
+| `apps-script/mail/notificacion.html` | Plantilla del correo |
 
-Los colores parten del verde corporativo `#00A758`; si Comunicaciones entrega el
-manual de marca vigente, se reemplazan solo las variables CSS.
+## Cambiar los correos que reciben el aviso
+
+Solo `Config.gs`; no hay que reinstalar nada:
+
+```js
+NOTIFICAR_A: ['compras@holcim.com', 'contratacion@holcim.com'],
+```
+
+## Por qué Apps Script y no un desarrollo propio
+
+El Sheet y el correo son nativos de Google: cero infraestructura, cero costo y
+nada que aprobar con TI. GitHub queda como el respaldo y el historial del
+código. El análisis completo, con el límite de cuándo convendría migrar, está en
+[`docs/DECISION-GITHUB-VS-APPS-SCRIPT.md`](docs/DECISION-GITHUB-VS-APPS-SCRIPT.md).

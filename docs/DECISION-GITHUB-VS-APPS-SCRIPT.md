@@ -8,18 +8,21 @@
 - **GitHub** = *dónde vive y se versiona* el código de esa solución.
 
 Para el requerimiento de la nota (registrar **Empresa** y **Personas**, guardar en un
-**Sheet** y **notificar por correo a dos destinatarios** para que otras áreas de Holcim
-diligencien) la ejecución debe ser **Google Apps Script**, y el código debe estar en
-**GitHub** y subirse con `clasp`.
+**Sheet** y **notificar por correo** a los responsables cuando alguien diligencie) la
+ejecución debe ser **Google Forms + Apps Script**, y el código debe estar en **GitHub**
+y subirse con `clasp`.
 
 ```
 GitHub (repositorio, ramas, PR, historial)
-        │  clasp push  /  GitHub Actions
+        │  clasp push
         ▼
-Google Apps Script (Web App)  ──►  Google Sheets (EMPRESAS, PERSONAS, COMPLEMENTOS)
-        │
-        └──►  MailApp  ──►  correo1@holcim.com + correo2@holcim.com  (con link para diligenciar)
+Google Forms (Empresa · Personas)  ──►  Google Sheets (EMPRESAS, PERSONAS)
+                                              │
+                                              └──►  Apps Script + MailApp
+                                                    └──►  los correos de CONFIG.NOTIFICAR_A
 ```
+
+El formulario no se programa: lo pone Google. El código se limita al aviso por correo.
 
 ## Árbol de decisión aplicado al caso
 
@@ -31,7 +34,7 @@ Google Apps Script (Web App)  ──►  Google Sheets (EMPRESAS, PERSONAS, COMP
 | ¿Se requiere aprobación de TI para infraestructura? | Sí, y es lenta | Apps Script vive dentro de Workspace ya aprobado |
 | ¿Volumen esperado? | Cientos/mes, no miles/día | Muy por debajo de las cuotas de Apps Script |
 | ¿Necesitamos control de versiones, revisión y respaldo del código? | Sí | **GitHub**: ramas, PR, historial, recuperación ante borrado accidental |
-| ¿Se necesita login corporativo? | Sí | Web App con acceso "Usuarios de holcim.com" (Google resuelve la identidad) |
+| ¿Se necesita login corporativo? | Sí | El Form exige sesión del dominio y guarda quién respondió |
 
 ## Comparación directa
 
@@ -42,6 +45,7 @@ Google Apps Script (Web App)  ──►  Google Sheets (EMPRESAS, PERSONAS, COMP
 | Acceso al Sheet | Nativo | Requiere Service Account + Google Sheets API + secretos |
 | Envío de correo | Nativo (cuota 1.500–2.000/día en Workspace) | Requiere proveedor SMTP y whitelisting |
 | Autenticación Holcim | Automática (sesión Google) | Hay que integrar SSO/Azure AD |
+| Construir el formulario | Ya existe (Google Forms) | Hay que desarrollarlo y mantenerlo |
 | Versionamiento del código | Débil (editor en línea) → **por eso GitHub** | Nativo |
 | Pruebas automatizadas / CI | Limitadas | Completas |
 | Escalabilidad futura (miles de usuarios, reportería pesada) | Se queda corta | Adecuada |
@@ -49,11 +53,11 @@ Google Apps Script (Web App)  ──►  Google Sheets (EMPRESAS, PERSONAS, COMP
 
 ## Recomendación
 
-1. **Fase 1 (ahora, este repositorio):** Web App en Apps Script + Sheet + notificación a 2 correos.
+1. **Fase 1 (ahora, este repositorio):** Google Forms + Sheet + notificación por correo.
    Código versionado aquí en GitHub, publicado con `clasp push`.
 2. **Fase 2 (si el volumen crece o se integra con SAP/Ariba):** migrar la capa de datos a una
-   base real. La lógica de validación (NIT sin dígito de verificación, cédula, correo) ya queda
-   aislada en `Validators.gs` y se puede portar sin reescribir todo.
+   base real. Las reglas de captura viven en `Config.gs` y en las validaciones del propio
+   formulario, así que el cambio no arrastra código de interfaz.
 
 ## Límite claro de cuándo NO usar Apps Script
 

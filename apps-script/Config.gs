@@ -1,12 +1,10 @@
 /**
- * Configuración central del registro de Empresas y Personas — Holcim.
- * Todo lo que cambia entre ambientes (correos, IDs, textos) vive aquí.
+ * Configuración del registro de Empresas y Personas — Holcim.
+ * Es el único archivo que se edita en el día a día.
  */
 var CONFIG = {
-  /** ID del Google Sheet. Vacío = usa la hoja contenedora del script. */
-  SPREADSHEET_ID: '',
 
-  /** Los dos correos que se notifican en cada registro nuevo. */
+  /** Los correos que reciben el aviso cada vez que alguien diligencia. */
   NOTIFICAR_A: [
     'area1.holcim@example.com',
     'area2.holcim@example.com'
@@ -15,50 +13,37 @@ var CONFIG = {
   /** Copia oculta opcional (auditoría). */
   CON_COPIA_OCULTA: [],
 
-  /** Se avisa también a la empresa/persona registrada. */
-  ACUSE_AL_REGISTRADO: true,
+  /** Acuse de recibo a quien diligenció el formulario. */
+  ACUSE_A_QUIEN_DILIGENCIA: false,
 
-  NOMBRE_APP: 'Registro de Empresas y Personas',
   NOMBRE_REMITENTE: 'Registros Holcim',
 
-  /** Áreas que pueden diligenciar la información complementaria. */
-  AREAS: ['Compras', 'HSE / SSTA', 'Legal', 'Contabilidad', 'Seguridad Física'],
+  /** Restringe los formularios a cuentas del dominio y guarda quién responde. */
+  SOLO_DOMINIO_HOLCIM: true,
 
-  HOJAS: {
-    EMPRESAS: 'EMPRESAS',
-    PERSONAS: 'PERSONAS',
-    COMPLEMENTOS: 'COMPLEMENTOS',
-    LOG: 'LOG'
+  FORMULARIOS: {
+    EMPRESA: {
+      titulo: 'Registro de Empresa — Holcim',
+      descripcion: 'Diligencie los datos de la empresa. El NIT se registra SIN dígito de verificación.',
+      hoja: 'EMPRESAS'
+    },
+    PERSONA: {
+      titulo: 'Registro de Personas — Holcim',
+      descripcion: 'Diligencie los datos de la persona y seleccione la empresa a la que pertenece.',
+      hoja: 'PERSONAS'
+    }
   },
 
-  ENCABEZADOS: {
-    EMPRESAS: [
-      'ID', 'Fecha registro', 'NIT (sin DV)', 'DV calculado', 'Nombre empresa',
-      'Correo', 'Contacto', 'Estado', 'Registrado por', 'Token'
-    ],
-    PERSONAS: [
-      'ID', 'Fecha registro', 'Nombres', 'Apellidos', 'Cédula', 'Correo',
-      'NIT empresa', 'Nombre empresa', 'Estado', 'Registrado por', 'Token'
-    ],
-    COMPLEMENTOS: [
-      'Fecha', 'Tipo registro', 'ID registro', 'Área', 'Diligenciado por',
-      'Responsable asignado', 'Observaciones', 'Resultado'
-    ],
-    LOG: ['Fecha', 'Nivel', 'Origen', 'Detalle']
-  },
-
-  ESTADOS: {
-    NUEVO: 'Pendiente por áreas',
-    EN_PROCESO: 'En diligenciamiento',
-    COMPLETO: 'Completo'
+  /** Textos de las preguntas. Cambiarlos aquí exige volver a ejecutar instalar(). */
+  PREGUNTAS: {
+    NIT: 'NIT (sin dígito de verificación)',
+    NOMBRE_EMPRESA: 'Nombre de la empresa',
+    CORREO_EMPRESA: 'Correo de la empresa',
+    CONTACTO: 'Contacto (nombre y teléfono)',
+    NOMBRES: 'Nombres',
+    APELLIDOS: 'Apellidos',
+    CEDULA: 'Cédula',
+    CORREO_PERSONA: 'Correo de la persona',
+    EMPRESA: 'Empresa a la que pertenece'
   }
 };
-
-/** URL pública de la Web App (se resuelve en tiempo de ejecución). */
-function urlWebApp_() {
-  try {
-    return ScriptApp.getService().getUrl() || '';
-  } catch (e) {
-    return '';
-  }
-}
