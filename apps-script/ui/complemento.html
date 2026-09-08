@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <?!= incluir('ui/estilos') ?>
+</head>
+<body>
+  <header class="barra">
+    <div class="marca">Holcim</div>
+    <h1>Diligenciamiento por áreas</h1>
+  </header>
+
+  <main class="contenedor">
+    <? if (!contexto.ok) { ?>
+      <div class="tarjeta">
+        <div class="aviso aviso-error"><?= contexto.mensaje ?></div>
+        <p>Solicite un enlace nuevo al equipo que administra el registro.</p>
+      </div>
+    <? } else { ?>
+      <div class="tarjeta">
+        <h2 style="margin-top:0;font-size:17px;">
+          Radicado <?= contexto.id ?>
+          <span style="color:#6B7280;font-weight:400;font-size:14px;">— <?= contexto.estado ?></span>
+        </h2>
+
+        <table class="resumen">
+          <? for (var i = 0; i < contexto.resumen.length; i++) { ?>
+          <tr>
+            <td><?= contexto.resumen[i].etiqueta ?></td>
+            <td><b><?= contexto.resumen[i].valor ?></b></td>
+          </tr>
+          <? } ?>
+        </table>
+
+        <div id="mensaje"></div>
+
+        <form id="formComplemento" onsubmit="enviar(event)">
+          <input type="hidden" name="tipo" value="<?= contexto.tipo ?>">
+          <input type="hidden" name="token" value="<?= contexto.token ?>">
+
+          <div class="rejilla">
+            <div class="campo">
+              <label for="area">Área que diligencia</label>
+              <select id="area" name="area" required>
+                <option value="">Seleccione…</option>
+                <? for (var a = 0; a < areas.length; a++) { ?>
+                  <option value="<?= areas[a] ?>"><?= areas[a] ?></option>
+                <? } ?>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="resultado">Resultado</label>
+              <select id="resultado" name="resultado" required>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Rechazado">Rechazado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="responsable">Responsable asignado
+              <span class="ayuda">Persona de su área que queda a cargo</span>
+            </label>
+            <input id="responsable" name="responsable">
+          </div>
+
+          <div class="campo">
+            <label for="observaciones">Observaciones
+              <span class="ayuda">Obligatorias si el resultado es "Rechazado"</span>
+            </label>
+            <textarea id="observaciones" name="observaciones"></textarea>
+          </div>
+
+          <button class="boton" type="submit" id="btnGuardar">Guardar diligenciamiento</button>
+        </form>
+      </div>
+    <? } ?>
+  </main>
+
+  <script>
+    function enviar(evento) {
+      evento.preventDefault();
+      var datos = {};
+      new FormData(document.getElementById('formComplemento')).forEach(function (v, k) { datos[k] = v; });
+
+      var btn = document.getElementById('btnGuardar');
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+
+      google.script.run
+        .withSuccessHandler(function (r) {
+          btn.disabled = false;
+          btn.textContent = 'Guardar diligenciamiento';
+          if (r.ok) {
+            document.getElementById('mensaje').innerHTML =
+              '<div class="aviso aviso-ok">' + r.mensaje + '</div>';
+            document.getElementById('formComplemento').reset();
+          } else {
+            document.getElementById('mensaje').innerHTML =
+              '<div class="aviso aviso-error"><ul><li>' + r.errores.join('</li><li>') + '</li></ul></div>';
+          }
+          window.scrollTo(0, 0);
+        })
+        .withFailureHandler(function (e) {
+          btn.disabled = false;
+          btn.textContent = 'Guardar diligenciamiento';
+          document.getElementById('mensaje').innerHTML =
+            '<div class="aviso aviso-error">' + e.message + '</div>';
+        })
+        .guardarComplemento(datos);
+    }
+  </script>
+</body>
+</html>
