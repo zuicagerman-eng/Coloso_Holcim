@@ -9,12 +9,11 @@ function avisar_(titulo, sujeto, id, filas) {
   if (!destinatarios.length) return;
 
   try {
-    var quien = usuarioActual_() || 'no identificado';
     var fecha = Utilities.formatDate(new Date(), Session.getScriptTimeZone(),
                                      "d 'de' MMMM 'de' yyyy, h:mm a");
 
     var opciones = {
-      htmlBody: cuerpoDelAviso_(titulo, sujeto, id, filas, quien, fecha),
+      htmlBody: cuerpoDelAviso_(titulo, sujeto, id, filas, fecha),
       name: CONFIG.NOMBRE_REMITENTE
     };
     if ((CONFIG.CON_COPIA_OCULTA || []).length) {
@@ -24,7 +23,7 @@ function avisar_(titulo, sujeto, id, filas) {
     MailApp.sendEmail(
       destinatarios.join(','),
       titulo + ': ' + sujeto,
-      textoPlano_(titulo, sujeto, id, filas, quien),
+      textoPlano_(titulo, sujeto, id, filas),
       opciones
     );
   } catch (error) {
@@ -33,7 +32,7 @@ function avisar_(titulo, sujeto, id, filas) {
   }
 }
 
-function cuerpoDelAviso_(titulo, sujeto, id, filas, quien, fecha) {
+function cuerpoDelAviso_(titulo, sujeto, id, filas, fecha) {
   var enlace = libro_().getUrl();
 
   var celdas = filas.map(function (f) {
@@ -58,8 +57,7 @@ function cuerpoDelAviso_(titulo, sujeto, id, filas, quien, fecha) {
       '<tr><td style="padding:24px;">' +
         '<p style="margin:0 0 4px;color:#0F2438;font-size:16px;"><b>' + escaparHtml_(sujeto) + '</b></p>' +
         '<p style="margin:0 0 20px;color:#59697A;font-size:13px;">' +
-          'Radicado <b style="color:#00457C;">' + escaparHtml_(id) + '</b><br>' +
-          'Diligenciado por <b style="color:#00457C;">' + escaparHtml_(quien) + '</b> · ' +
+          'Radicado <b style="color:#00457C;">' + escaparHtml_(id) + '</b> · ' +
           escaparHtml_(fecha) +
         '</p>' +
         '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" ' +
@@ -80,8 +78,8 @@ function cuerpoDelAviso_(titulo, sujeto, id, filas, quien, fecha) {
   '</div>';
 }
 
-function textoPlano_(titulo, sujeto, id, filas, quien) {
-  var lineas = [titulo + ': ' + sujeto, 'Radicado: ' + id, 'Diligenciado por: ' + quien, ''];
+function textoPlano_(titulo, sujeto, id, filas) {
+  var lineas = [titulo + ': ' + sujeto, 'Radicado: ' + id, ''];
   filas.forEach(function (f) { lineas.push(f[0] + ': ' + f[1]); });
   return lineas.join('\n');
 }

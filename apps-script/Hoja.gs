@@ -111,15 +111,6 @@ function nombreDeEmpresa_(nit) {
   return encontrada ? encontrada.nombre : '';
 }
 
-/** Correo de quien está usando el formulario, si Google lo conoce. */
-function usuarioActual_() {
-  try {
-    return Session.getActiveUser().getEmail() || '';
-  } catch (e) {
-    return '';
-  }
-}
-
 function anotarError_(detalle) {
   try {
     agregarFila_(CONFIG.HOJAS.ERRORES, { 'Fecha': new Date(), 'Detalle': String(detalle) });

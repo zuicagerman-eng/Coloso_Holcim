@@ -66,15 +66,28 @@ Se crean las hojas `EMPRESAS`, `PERSONAS` y `ERRORES`.
 **Implementar → Nueva implementación → Aplicación web**:
 
 - Ejecutar como: **Yo**
-- Quién tiene acceso: **Usuarios de holcim.com**
+- Quién tiene acceso: **Cualquier usuario**
+
+Esas dos opciones juntas son la clave:
+
+- *Cualquier usuario* deja entrar a proveedores y contratistas, que **no
+  tienen cuenta de Holcim**. Si aquí pone "Usuarios de holcim.com", Google
+  les pide iniciar sesión y no pueden diligenciar.
+- *Ejecutar como: Yo* hace que la escritura en la hoja y el envío del correo
+  ocurran con **sus** permisos. Nadie de afuera necesita acceso a la hoja, ni
+  la ve, ni puede abrirla: solo ve el formulario.
 
 Copie la URL que termina en `/exec`. **Ábrala en el navegador: ahí está el
-formulario.** Esa es la dirección que se le comparte a la gente.
+formulario.** Esa es la dirección que se comparte.
+
+> Al cambiar el acceso, la URL cambia de forma: la restringida al dominio se
+> ve como `script.google.com/a/macros/holcim.com/s/…`, y la pública como
+> `script.google.com/macros/s/…`. Vuelva a copiarla del cuadro de diálogo.
 
 Para comprobar que el servicio responde, agréguele `?ping=1` al final:
 
 ```json
-{"ok":true,"servicio":"Registro de Empresas y Personas — Holcim","usuario":"quien.sea@holcim.com"}
+{"ok":true,"servicio":"Registro de Empresas y Personas — Holcim","listo":true}
 ```
 
 ## 4. ¿Y el archivo suelto?
@@ -115,24 +128,28 @@ puede entregarle a Google la sesión del usuario.
 | Registrar la misma empresa otra vez | "Ya hay una empresa registrada con el NIT…" |
 | Ir al paso 2 | La empresa aparece en la lista desplegable |
 | Registrar persona con cédula repetida | La rechaza |
-| Registrar una empresa | La columna *Registrado por* trae el correo de quien la registró |
+| Abrir el enlace en una ventana de incógnito | Debe salir el formulario **sin pedir cuenta de Google** |
+| Registrar una empresa | Llega el correo de aviso a `NOTIFICAR_A` |
 
-## Sobre el acceso "Cualquier usuario"
+## Qué implica que el formulario sea público
 
-> Con la cuenta de Holcim existe la opción de publicar solo para
-> **"Usuarios de holcim.com"**, que resuelve de raíz lo que viene abajo.
-> Con una cuenta personal esa opción no aparece.
+Quien diligencia es externo a Holcim, así que el formulario **no puede pedir
+inicio de sesión**. La contrapartida es la misma de cualquier formulario
+público, incluido un Google Form: quien tenga el enlace puede enviar datos.
 
-Un formulario en un archivo HTML suelto no puede autenticarse contra Google, así
-que el servicio se publica abierto y el `TOKEN` es lo que evita escrituras de
-terceros. **El token viaja dentro del HTML**: quien tenga el archivo puede leerlo.
-Sirve contra curiosos, no contra alguien decidido.
+Lo que sí está protegido:
 
-Si eso no es aceptable para Holcim, la alternativa es servir el formulario
-**desde el propio Apps Script** (`doGet` devolviendo la página) y publicar con
-acceso *"Usuarios de holcim.com"*. Ahí Google exige sesión del dominio, el token
-sobra y queda registrado quién entra. El costo es que la página deja de ser un
-archivo que se abre con doble clic.
+- **La hoja no se expone.** Nadie de afuera la ve ni la abre. El formulario
+  escribe con los permisos del dueño, no con los del visitante.
+- **Solo se puede escribir lo que el formulario permite.** El servidor valida
+  todo otra vez y rechaza lo que no cumpla; no hay forma de leer lo ya
+  registrado desde afuera, salvo la lista de empresas que el paso 2 necesita.
+- **Duplicados controlados** por NIT y por cédula.
+
+Lo que queda expuesto es que alguien mande registros basura si consigue el
+enlace. Si algún día pasa, las salidas son: pedir un dato que solo el
+proveedor real conozca (una orden de compra, por ejemplo) o mover el
+formulario detrás del portal de proveedores.
 
 ## Qué se guarda
 

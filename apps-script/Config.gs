@@ -26,9 +26,8 @@ var CONFIG = {
 
   /**
    * Solo aplica si algún día se sirve el formulario POR FUERA de Google,
-   * como archivo suelto. En el montaje actual la página la entrega Apps
-   * Script y Google exige sesión del dominio, así que esto no se usa.
-   * Déjelo como está.
+   * como archivo suelto. En el montaje actual la página la entrega la
+   * propia aplicación web, así que esto no se usa. Déjelo como está.
    */
   TOKEN: 'CAMBIE-ESTA-CLAVE',
 
@@ -40,13 +39,11 @@ var CONFIG = {
 
   ENCABEZADOS: {
     EMPRESAS: [
-      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono',
-      'Registrado por'
+      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono'
     ],
     PERSONAS: [
       'ID', 'Fecha', 'Nombres', 'Primer apellido', 'Segundo apellido',
-      'Nombre completo', 'Cédula', 'Correo', 'NIT empresa', 'Nombre empresa',
-      'Registrado por'
+      'Nombre completo', 'Cédula', 'Correo', 'NIT empresa', 'Nombre empresa'
     ],
     ERRORES: ['Fecha', 'Detalle']
   }

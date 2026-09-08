@@ -16,7 +16,7 @@ function doGet(e) {
     return responder_({
       ok: true,
       servicio: 'Registro de Empresas y Personas — Holcim',
-      usuario: usuarioActual_()
+      listo: true
     });
   }
   return HtmlService.createHtmlOutputFromFile('pagina')
@@ -98,8 +98,7 @@ function guardarEmpresa_(entrada) {
       'DV': d.dv,
       'Nombre empresa': d.nombreEmpresa,
       'Correo': d.correoEmpresa,
-      'Teléfono': d.telefono,
-      'Registrado por': usuarioActual_()
+      'Teléfono': d.telefono
     });
 
     avisar_('Nueva empresa registrada', d.nombreEmpresa, id, [
@@ -145,8 +144,7 @@ function guardarPersona_(entrada) {
       'Cédula': d.cedula,
       'Correo': d.correoPersona,
       'NIT empresa': d.nitEmpresa,
-      'Nombre empresa': nombreEmpresa,
-      'Registrado por': usuarioActual_()
+      'Nombre empresa': nombreEmpresa
     });
 
     avisar_('Nueva persona registrada', d.nombreCompleto, id, [
