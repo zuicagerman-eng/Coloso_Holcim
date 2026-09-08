@@ -2,6 +2,39 @@
 
 Son cuatro pasos, unos 15 minutos.
 
+## Antes de empezar: ¿en qué cuenta se crea?
+
+**En la cuenta de Holcim, no en una personal.** La hoja, el script y los datos
+pertenecen a quien los crea, y aquí se van a guardar cédulas, correos y teléfonos
+de terceros.
+
+| | Cuenta Holcim | Cuenta personal |
+|---|---|---|
+| Dueño de los datos | Holcim | Una persona |
+| Si esa persona sale de la empresa | No pasa nada | Holcim pierde la base |
+| Responsable ante la ley de datos (1581 de 2012) | La empresa, como debe ser | Un particular |
+| Correos por día | 1.500 | 100 |
+| Restringir el acceso a `@holcim.com` | Sí | No existe |
+
+Además, **cree la hoja en una unidad compartida** del área, no en "Mi unidad" de
+alguien. Una unidad compartida pertenece al equipo: si el dueño se va o le
+desactivan la cuenta, el archivo sigue ahí.
+
+Cuidado con un detalle tonto que pasa seguido: si tiene la sesión abierta con una
+cuenta personal, Google crea el archivo **en esa**. Verifique arriba a la derecha
+antes de crear la hoja.
+
+### ¿Y si quiere probar hoy, sin esperar permisos?
+
+Puede montarlo en una cuenta personal **solo para ensayar, y solo con datos
+inventados**. Nunca con proveedores reales.
+
+Eso sí, después no se "mueve": Google normalmente no deja transferir la propiedad
+de un archivo entre una cuenta personal y un dominio corporativo. Lo que se hace
+es **volver a montarlo** en la cuenta de Holcim, y eso cuesta 15 minutos porque
+el código está en este repositorio. Esa es justamente la razón de tenerlo aquí:
+la hoja se vuelve a crear, el código no se vuelve a escribir.
+
 ## 1. Crear la hoja y el script
 
 1. Cree una hoja de cálculo nueva en Drive: `Registro Empresas y Personas`.
@@ -70,6 +103,10 @@ Listo. Abra el archivo y registre una empresa: la fila aparece en la hoja.
 | Cambiar el token del formulario y enviar | "No autorizado." |
 
 ## Sobre el acceso "Cualquier usuario"
+
+> Con la cuenta de Holcim existe la opción de publicar solo para
+> **"Usuarios de holcim.com"**, que resuelve de raíz lo que viene abajo.
+> Con una cuenta personal esa opción no aparece.
 
 Un formulario en un archivo HTML suelto no puede autenticarse contra Google, así
 que el servicio se publica abierto y el `TOKEN` es lo que evita escrituras de
