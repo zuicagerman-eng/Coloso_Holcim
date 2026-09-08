@@ -15,7 +15,7 @@ function libro_() {
 function hoja_(nombre) {
   var libro = libro_();
   var hoja = libro.getSheetByName(nombre);
-  if (hoja) return hoja;
+  if (hoja) return asegurarEncabezados_(hoja, nombre);
 
   hoja = libro.insertSheet(nombre);
   var encabezados = CONFIG.ENCABEZADOS[nombre] || [];
@@ -28,6 +28,27 @@ function hoja_(nombre) {
     hoja.setFrozenRows(1);
     hoja.autoResizeColumns(1, encabezados.length);
   }
+  return hoja;
+}
+
+/**
+ * Si la hoja ya existía de una versión anterior, le agrega las columnas
+ * que le falten. Así no hay que borrar nada al ampliar el modelo.
+ */
+function asegurarEncabezados_(hoja, nombre) {
+  var esperados = CONFIG.ENCABEZADOS[nombre] || [];
+  if (!esperados.length) return hoja;
+
+  var ancho = Math.max(hoja.getLastColumn(), 1);
+  var actuales = hoja.getRange(1, 1, 1, ancho).getValues()[0].map(String);
+  var faltantes = esperados.filter(function (c) { return actuales.indexOf(c) < 0; });
+  if (!faltantes.length) return hoja;
+
+  hoja.getRange(1, ancho + 1, 1, faltantes.length)
+    .setValues([faltantes])
+    .setFontWeight('bold')
+    .setBackground('#00457C')
+    .setFontColor('#FFFFFF');
   return hoja;
 }
 
@@ -88,6 +109,15 @@ function empresasRegistradas_() {
 function nombreDeEmpresa_(nit) {
   var encontrada = empresasRegistradas_().filter(function (e) { return e.nit === String(nit); })[0];
   return encontrada ? encontrada.nombre : '';
+}
+
+/** Correo de quien está usando el formulario, si Google lo conoce. */
+function usuarioActual_() {
+  try {
+    return Session.getActiveUser().getEmail() || '';
+  } catch (e) {
+    return '';
+  }
 }
 
 function anotarError_(detalle) {

@@ -42,8 +42,10 @@ la hoja se vuelve a crear, el código no se vuelve a escribir.
 3. Borre el `Código.gs` de ejemplo y cree estos archivos con el mismo nombre y
    contenido que en `apps-script/`:
    `Config.gs`, `Api.gs`, `Hoja.gs`, `Validaciones.gs`, `Correo.gs`.
-4. Cree un archivo **HTML** llamado literalmente `mail/notificacion` con el
-   contenido de `apps-script/mail/notificacion.html`.
+4. Con el **+ → HTML**, cree un archivo llamado **`pagina`** y pegue el
+   contenido de `apps-script/pagina.html`. Ese es el formulario.
+5. Solo si va a encender los avisos por correo: otro archivo HTML llamado
+   `mail/notificacion`, con el contenido de `apps-script/mail/notificacion.html`.
 5. En **Configuración del proyecto**, marque *Mostrar el archivo de manifiesto
    `appsscript.json`* y pegue el contenido de `apps-script/appsscript.json`.
 
@@ -65,26 +67,39 @@ Se crean las hojas `EMPRESAS`, `PERSONAS` y `ERRORES`.
 **Implementar → Nueva implementación → Aplicación web**:
 
 - Ejecutar como: **Yo**
-- Quién tiene acceso: **Cualquier usuario**
+- Quién tiene acceso: **Usuarios de holcim.com**
 
-Copie la URL que termina en `/exec`. Ábrala en el navegador: debe responder
+Copie la URL que termina en `/exec`. **Ábrala en el navegador: ahí está el
+formulario.** Esa es la dirección que se le comparte a la gente.
+
+Para comprobar que el servicio responde, agréguele `?ping=1` al final:
 
 ```json
-{"ok":true,"servicio":"Registro de Empresas y Personas — Holcim","listo":true}
+{"ok":true,"servicio":"Registro de Empresas y Personas — Holcim","usuario":"quien.sea@holcim.com"}
 ```
 
-## 4. Conectar el formulario
+## 4. ¿Y el archivo suelto?
 
-En `vista/index.html`, arriba del todo en el bloque `<script>`:
+No hace falta: la página servida por Apps Script **es** el formulario, y así
+Google exige sesión del dominio y registra quién diligencia. La página se
+acomoda sola al entorno; no hay que configurarle nada.
 
-```js
-var API = {
-  url: 'https://script.google.com/macros/s/AKfy.../exec',
-  token: 'hlc-7f3a91c4d8e2b6'      // la misma de Config.gs
-};
+El archivo `vista/index.html` sigue sirviendo para dos cosas: mostrar el
+formulario sin montar nada, y como **única fuente** del diseño. Cuando lo
+cambie, regenere la página del servidor con
+
+```bash
+python3 herramientas/generar-pagina.py
 ```
 
-Listo. Abra el archivo y registre una empresa: la fila aparece en la hoja.
+y vuelva a pegar `apps-script/pagina.html` en el editor.
+
+### Solo si necesita abrirlo como archivo local
+
+Requiere publicar con acceso **"Cualquier usuario"** y llenar, en el bloque
+`var API` de `vista/index.html`, la `url` y el `token` de `Config.gs`. Con la
+publicación restringida al dominio esta vía **no funciona**: el navegador no
+puede entregarle a Google la sesión del usuario.
 
 > Cada vez que cambie el código en Apps Script hay que hacer
 > **Implementar → Administrar implementaciones → Editar → Versión nueva**.
@@ -94,13 +109,14 @@ Listo. Abra el archivo y registre una empresa: la fila aparece en la hoja.
 
 | Prueba | Resultado esperado |
 |---|---|
-| Abrir la URL `/exec` en el navegador | El JSON de arriba |
+| Abrir la URL `/exec` en el navegador | Aparece el formulario |
+| Abrir la URL `/exec?ping=1` | El JSON con su correo en `usuario` |
 | `pruebaDeEscritura` desde el editor | Fila nueva en `EMPRESAS`, sin pasar por el formulario |
 | Registrar una empresa desde el formulario | Fila en `EMPRESAS` y radicado `EMP-2026-0001` en pantalla |
 | Registrar la misma empresa otra vez | "Ya hay una empresa registrada con el NIT…" |
 | Ir al paso 2 | La empresa aparece en la lista desplegable |
 | Registrar persona con cédula repetida | La rechaza |
-| Cambiar el token del formulario y enviar | "No autorizado." |
+| Registrar una empresa | La columna *Registrado por* trae el correo de quien la registró |
 
 ## Sobre el acceso "Cualquier usuario"
 

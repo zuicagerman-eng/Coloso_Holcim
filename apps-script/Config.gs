@@ -28,11 +28,13 @@ var CONFIG = {
 
   ENCABEZADOS: {
     EMPRESAS: [
-      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono'
+      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono',
+      'Registrado por'
     ],
     PERSONAS: [
       'ID', 'Fecha', 'Nombres', 'Primer apellido', 'Segundo apellido',
-      'Nombre completo', 'Cédula', 'Correo', 'NIT empresa', 'Nombre empresa'
+      'Nombre completo', 'Cédula', 'Correo', 'NIT empresa', 'Nombre empresa',
+      'Registrado por'
     ],
     ERRORES: ['Fecha', 'Detalle']
   }

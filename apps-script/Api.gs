@@ -7,16 +7,36 @@
  * vista/index.html, en API.url.
  */
 
-/** Verificación rápida: abrir la URL en el navegador debe mostrar este JSON. */
-function doGet() {
-  return responder_({
-    ok: true,
-    servicio: 'Registro de Empresas y Personas — Holcim',
-    listo: true
-  });
+/**
+ * Abrir la URL en el navegador entrega el formulario.
+ * Con `?ping=1` responde un JSON, para comprobar que la publicación quedó viva.
+ */
+function doGet(e) {
+  if (e && e.parameter && e.parameter.ping) {
+    return responder_({
+      ok: true,
+      servicio: 'Registro de Empresas y Personas — Holcim',
+      usuario: usuarioActual_()
+    });
+  }
+  return HtmlService.createHtmlOutputFromFile('pagina')
+    .setTitle('Registro de Empresas y Personas — Holcim')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-/** Todas las operaciones entran por aquí. */
+/**
+ * Entrada desde la propia página (google.script.run).
+ * Aquí no se pide token: Google ya verificó que quien llama tiene sesión
+ * del dominio, que es una garantía mucho más fuerte.
+ */
+function atender(cuerpo) {
+  return manejar_(cuerpo || {});
+}
+
+/**
+ * Entrada desde un formulario que vive fuera de Google.
+ * Como cualquiera puede llamar esta URL, aquí sí se exige el token.
+ */
 function doPost(e) {
   var cuerpo;
   try {
@@ -24,25 +44,28 @@ function doPost(e) {
   } catch (error) {
     return responder_({ ok: false, errores: ['La petición no es JSON válido.'] });
   }
-
   if (CONFIG.TOKEN && cuerpo.token !== CONFIG.TOKEN) {
     return responder_({ ok: false, errores: ['No autorizado.'] });
   }
+  return responder_(manejar_(cuerpo));
+}
 
+/** El encaminador, común a las dos entradas. */
+function manejar_(cuerpo) {
   try {
     switch (cuerpo.accion) {
       case 'empresas':
-        return responder_({ ok: true, empresas: empresasRegistradas_() });
+        return { ok: true, empresas: empresasRegistradas_() };
       case 'registrarEmpresa':
-        return responder_(guardarEmpresa_(cuerpo.datos || {}));
+        return guardarEmpresa_(cuerpo.datos || {});
       case 'registrarPersona':
-        return responder_(guardarPersona_(cuerpo.datos || {}));
+        return guardarPersona_(cuerpo.datos || {});
       default:
-        return responder_({ ok: false, errores: ['Acción no reconocida: ' + cuerpo.accion] });
+        return { ok: false, errores: ['Acción no reconocida: ' + cuerpo.accion] };
     }
   } catch (error) {
     anotarError_(error.stack || error.message);
-    return responder_({ ok: false, errores: ['Error del servidor. Intente de nuevo.'] });
+    return { ok: false, errores: ['Error del servidor. Intente de nuevo.'] };
   }
 }
 
@@ -75,7 +98,8 @@ function guardarEmpresa_(entrada) {
       'DV': d.dv,
       'Nombre empresa': d.nombreEmpresa,
       'Correo': d.correoEmpresa,
-      'Teléfono': d.telefono
+      'Teléfono': d.telefono,
+      'Registrado por': usuarioActual_()
     });
 
     avisar_('Nueva empresa registrada', d.nombreEmpresa, id, [
@@ -121,7 +145,8 @@ function guardarPersona_(entrada) {
       'Cédula': d.cedula,
       'Correo': d.correoPersona,
       'NIT empresa': d.nitEmpresa,
-      'Nombre empresa': nombreEmpresa
+      'Nombre empresa': nombreEmpresa,
+      'Registrado por': usuarioActual_()
     });
 
     avisar_('Nueva persona registrada', d.nombreCompleto, id, [
