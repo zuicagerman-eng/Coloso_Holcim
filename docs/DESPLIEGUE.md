@@ -131,6 +131,36 @@ puede entregarle a Google la sesión del usuario.
 | Abrir el enlace en una ventana de incógnito | Debe salir el formulario **sin pedir cuenta de Google** |
 | Registrar una empresa | Llega el correo de aviso a `NOTIFICAR_A` |
 
+## Bloqueo conocido: el dominio no permite publicar en abierto
+
+En el Workspace de Holcim, el desplegable **"Usuarios con acceso"** solo ofrece
+*Solo yo* y *Cualquier usuario de Holcim*, incluso con "Ejecutar como: Yo"
+correctamente seleccionado. **Falta la opción "Cualquier usuario".**
+
+No es un error de configuración del proyecto: el administrador de Google
+Workspace tiene deshabilitada la publicación de aplicaciones de Apps Script con
+acceso anónimo. En muchas organizaciones esa política va atada a la de compartir
+archivos fuera del dominio.
+
+Mientras eso siga así, un proveedor externo no puede abrir el formulario.
+
+### Salidas, en orden de preferencia
+
+1. **Pedir a TI que habilite la publicación anónima** para esta cuenta o para
+   este proyecto. Es lo más limpio: el día que lo habiliten, se cambia un
+   desplegable y todo lo demás ya está hecho. Texto sugerido para el pedido en
+   `docs/SOLICITUD-TI.md`.
+
+2. **Google Forms**, si el dominio sí permite formularios públicos. Se pierde la
+   interfaz a la medida y la lista de empresas encadenada, pero el Sheet y el
+   aviso por correo funcionan igual. Comprobación rápida: cree un formulario y
+   mire si puede desmarcar *"Restringir a usuarios de Holcim"*.
+
+3. **Alojar el formulario fuera de Google** y escribir en la hoja con una cuenta
+   de servicio y la API de Sheets. Es la opción de la "Fase 2" del análisis de
+   plataforma: funciona sin depender de esta política, pero exige servidor,
+   credenciales y aprobación de TI de todos modos.
+
 ## Qué implica que el formulario sea público
 
 Quien diligencia es externo a Holcim, así que el formulario **no puede pedir
