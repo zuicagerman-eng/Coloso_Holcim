@@ -239,6 +239,13 @@
   /* El dato se captura y se guarda en mayúscula sostenida; el correo,
      al contrario, siempre en minúscula. */
   input.mayus { text-transform: uppercase; }
+  /* Campo calculado: se muestra pero no se escribe. */
+  input.resultado {
+    background: var(--surface-2);
+    border-style: dashed;
+    cursor: default;
+  }
+  input.resultado:focus { box-shadow: none; border-color: var(--line-fuerte); }
   input.minus { text-transform: lowercase; }
 
   /* Teléfono con el indicativo fijo del país. */
@@ -486,13 +493,23 @@
       <div class="grupo dos">
         <div class="campo">
           <label for="nombres">Nombres</label>
-          <input id="nombres" name="nombres" class="mayus" autocomplete="off" onblur="revisar('nombres')">
+          <input id="nombres" name="nombres" class="mayus" autocomplete="off"
+                 oninput="componerNombre()" onblur="revisar('nombres')">
           <span class="error" id="errorNombres"></span>
         </div>
         <div class="campo">
-          <label for="apellidos">Apellidos</label>
-          <input id="apellidos" name="apellidos" class="mayus" autocomplete="off" onblur="revisar('apellidos')">
-          <span class="error" id="errorApellidos"></span>
+          <label for="apellido1">Primer apellido</label>
+          <input id="apellido1" name="apellido1" class="mayus" autocomplete="off"
+                 oninput="componerNombre()" onblur="revisar('apellido1')">
+          <span class="error" id="errorApellido1"></span>
+        </div>
+        <div class="campo">
+          <label for="apellido2">Segundo apellido
+            <span class="ayuda">Opcional.</span>
+          </label>
+          <input id="apellido2" name="apellido2" class="mayus" autocomplete="off"
+                 oninput="componerNombre()" onblur="revisar('apellido2')">
+          <span class="error" id="errorApellido2"></span>
         </div>
         <div class="campo">
           <label for="cedula">Cédula
@@ -502,11 +519,20 @@
                  oninput="soloNumeros(this)" onblur="revisar('cedula')">
           <span class="error" id="errorCedula"></span>
         </div>
-        <div class="campo">
-          <label for="correoPersona">Correo</label>
-          <input id="correoPersona" name="correo" type="email" class="minus" autocomplete="off" onblur="revisar('correoPersona')">
-          <span class="error" id="errorCorreoPersona"></span>
-        </div>
+      </div>
+
+      <div class="campo">
+        <label for="nombreCompleto">Nombre completo
+          <span class="ayuda">Se arma solo con los campos de arriba; así queda registrado.</span>
+        </label>
+        <input id="nombreCompleto" name="nombreCompleto" class="mayus resultado" readonly
+               tabindex="-1" aria-live="polite" placeholder="—">
+      </div>
+
+      <div class="campo">
+        <label for="correoPersona">Correo</label>
+        <input id="correoPersona" name="correo" type="email" class="minus" autocomplete="off" onblur="revisar('correoPersona')">
+        <span class="error" id="errorCorreoPersona"></span>
       </div>
 
       <div class="campo">
@@ -519,7 +545,7 @@
 
       <div class="barra-envio">
         <button class="boton" type="submit">Registrar persona</button>
-        <span class="obligatorio">Todos los campos son obligatorios.</span>
+        <span class="obligatorio">Todos los campos son obligatorios, salvo el segundo apellido.</span>
       </div>
     </form>
 
@@ -570,7 +596,13 @@ var REGLAS = {
     return '';
   },
   nombres: function (v) { return limpiar(v).length < 2 ? 'Escriba los nombres.' : ''; },
-  apellidos: function (v) { return limpiar(v).length < 2 ? 'Escriba los apellidos.' : ''; },
+  apellido1: function (v) { return limpiar(v).length < 2 ? 'Escriba el primer apellido.' : ''; },
+  /* El segundo apellido es opcional: solo se revisa si escribieron algo. */
+  apellido2: function (v) {
+    var t = limpiar(v);
+    if (!t) return '';
+    return t.length < 2 ? 'El segundo apellido es muy corto; déjelo vacío si no aplica.' : '';
+  },
   cedula: function (v) {
     if (!limpiar(v)) return 'Escriba el número de cédula.';
     var c = soloDigitos(v);
@@ -605,13 +637,13 @@ function revisarCorreo(v) {
 }
 
 /* El dato se guarda normalizado, no solo se ve normalizado. */
-var MAYUSCULAS = ['nombreEmpresa', 'nombres', 'apellidos'];
+var MAYUSCULAS = ['nombreEmpresa', 'nombres', 'apellido1', 'apellido2'];
 var MINUSCULAS = ['correoEmpresa', 'correoPersona'];
 var INDICATIVO = '+57';
 
 var CAMPOS = {
   empresa: ['nit', 'nombreEmpresa', 'correoEmpresa', 'contacto'],
-  persona: ['nombres', 'apellidos', 'cedula', 'correoPersona', 'empresa']
+  persona: ['nombres', 'apellido1', 'apellido2', 'cedula', 'correoPersona', 'empresa']
 };
 
 /* ---------- Validación en pantalla ---------- */
@@ -623,6 +655,23 @@ function revisar(id) {
   elemento('error' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = mensaje;
   campo.setAttribute('aria-invalid', mensaje ? 'true' : 'false');
   return !mensaje;
+}
+
+/**
+ * Nombre completo = nombres + primer apellido + segundo apellido.
+ * Se arma en vivo y es el valor que se registra.
+ */
+function nombreCompletoDe(nombres, apellido1, apellido2) {
+  return [nombres, apellido1, apellido2]
+    .map(limpiar)
+    .filter(Boolean)
+    .join(' ')
+    .toUpperCase();
+}
+
+function componerNombre() {
+  elemento('nombreCompleto').value = nombreCompletoDe(
+    elemento('nombres').value, elemento('apellido1').value, elemento('apellido2').value);
 }
 
 function pintarDV() {
@@ -668,7 +717,10 @@ function enviar(evento, tipo) {
     datos.dv = calcularDV(datos.nit);
     datos.contacto = INDICATIVO + soloDigitos(datos.contacto);
   }
-  if (tipo === 'persona') datos.cedula = soloDigitos(datos.cedula);
+  if (tipo === 'persona') {
+    datos.cedula = soloDigitos(datos.cedula);
+    datos.nombreCompleto = nombreCompletoDe(datos.nombres, datos.apellido1, datos.apellido2);
+  }
 
   enviarAlServidor(tipo, datos);
 }
@@ -696,7 +748,7 @@ function mostrarConfirmacion(tipo, datos) {
        ['Empresa', datos.nombreEmpresa],
        ['Correo', datos.correoEmpresa],
        ['Teléfono', telefonoLegible(datos.contacto)]]
-    : [['Nombre', datos.nombres + ' ' + datos.apellidos],
+    : [['Nombre completo', datos.nombreCompleto],
        ['Cédula', datos.cedula],
        ['Correo', datos.correoPersona],
        ['Empresa', datos.empresa]];
@@ -711,7 +763,7 @@ function mostrarConfirmacion(tipo, datos) {
       '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">' +
         '<path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
       '</svg> Registro recibido</div>' +
-    '<h2>' + escapar(esEmpresa ? datos.nombreEmpresa : datos.nombres + ' ' + datos.apellidos) + '</h2>' +
+    '<h2>' + escapar(esEmpresa ? datos.nombreEmpresa : datos.nombreCompleto) + '</h2>' +
     '<div class="radicado">' + radicado + '</div>' +
     '<table class="repaso">' +
       repaso.map(function (f) {
@@ -737,6 +789,7 @@ function limpiarFormulario(tipo) {
     elemento('error' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = '';
   });
   elemento('pistaDV').innerHTML = '';
+  elemento('nombreCompleto').value = '';
   elemento(CAMPOS[tipo][0]).focus();
 }
 
