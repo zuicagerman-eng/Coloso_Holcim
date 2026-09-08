@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 222 222" role="img" aria-label="Símbolo Holcim">
+  <defs>
+    <linearGradient id="degradadoHolcim" x1="10" y1="212" x2="212" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7AC143"/>
+      <stop offset=".26" stop-color="#00A94F"/>
+      <stop offset=".58" stop-color="#009BB4"/>
+      <stop offset="1" stop-color="#00AEEF"/>
+    </linearGradient>
+    <mask id="recorteHolcim">
+      <rect width="222" height="222" fill="#fff"/>
+      <rect x="97" y="0" width="46" height="99" fill="#000"/>
+      <rect x="79" y="123" width="46" height="99" fill="#000"/>
+    </mask>
+  </defs>
+  <g mask="url(#recorteHolcim)" fill="url(#degradadoHolcim)">
+    <circle cx="147" cy="75" r="75"/>
+    <circle cx="75" cy="147" r="75"/>
+    <rect x="72" y="0" width="78" height="222"/>
+  </g>
+</svg>
