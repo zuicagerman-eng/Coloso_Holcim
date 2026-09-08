@@ -48,9 +48,12 @@ function depurarEmpresa_(datos) {
   d.correoEmpresa = limpiar_(datos.correoEmpresa).toLowerCase();
   if (!esCorreo_(d.correoEmpresa)) errores.push('El correo de la empresa no es válido.');
 
-  d.telefono = soloDigitos_(datos.contacto);
-  if (d.telefono.length !== 10) errores.push('El teléfono debe tener exactamente 10 dígitos.');
-  d.telefono = '+57' + d.telefono;
+  /* El formulario manda el teléfono ya con el indicativo (+573001234567).
+     Hay que quitárselo antes de contar, o los 10 dígitos parecerían 12. */
+  var telefono = soloDigitos_(datos.contacto);
+  if (telefono.length === 12 && telefono.indexOf('57') === 0) telefono = telefono.substring(2);
+  if (telefono.length !== 10) errores.push('El teléfono debe tener exactamente 10 dígitos.');
+  d.telefono = '+57' + telefono;
 
   return { ok: errores.length === 0, errores: errores, datos: d };
 }
