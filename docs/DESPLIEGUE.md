@@ -144,6 +144,37 @@ archivos fuera del dominio.
 
 Mientras eso siga así, un proveedor externo no puede abrir el formulario.
 
+### Camino elegido: cuenta personal
+
+Se decidió montarlo en una **cuenta personal de Google**, donde la opción
+"Cualquier usuario" sí está disponible, y pasarlo a Holcim más adelante.
+
+Funciona igual: mismo código, misma hoja, mismo formulario. Dos diferencias
+que conviene tener presentes:
+
+- **Cuota de correo:** 100 envíos al día en cuenta personal (1.500 en
+  Workspace). De sobra para este volumen.
+- **El aviso llega igual al correo de Holcim.** En `NOTIFICAR_A` va la
+  dirección `@holcim.com`; quien envía es la cuenta personal.
+
+#### Cómo pasarlo a Holcim después
+
+No es un traslado: Google no permite transferir la propiedad de un archivo
+entre una cuenta personal y un dominio corporativo. Es una copia.
+
+1. Desde la cuenta personal, comparta la hoja con la cuenta de Holcim.
+2. Desde la cuenta de Holcim: **Archivo → Hacer una copia**. La copia ya es
+   propiedad de Holcim; déjela en la unidad compartida del área.
+3. En esa copia, **Extensiones → Apps Script**, y pegue de nuevo los archivos
+   desde este repositorio. Son 15 minutos: el código no se reescribe.
+4. Publique la aplicación web desde la cuenta de Holcim. **Aquí reaparece el
+   bloqueo del dominio**, así que este paso solo tiene sentido cuando TI haya
+   habilitado la publicación anónima.
+5. La URL cambia. Avise a quien tenga la anterior.
+
+Mientras tanto, los datos viven en una cuenta personal. Es una situación
+temporal y conviene tratarla como tal.
+
 ### Salidas, en orden de preferencia
 
 1. **Pedir a TI que habilite la publicación anónima** para esta cuenta o para
