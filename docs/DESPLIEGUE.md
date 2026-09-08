@@ -44,19 +44,18 @@ la hoja se vuelve a crear, el código no se vuelve a escribir.
    `Config.gs`, `Api.gs`, `Hoja.gs`, `Validaciones.gs`, `Correo.gs`.
 4. Con el **+ → HTML**, cree un archivo llamado **`pagina`** y pegue el
    contenido de `apps-script/pagina.html`. Ese es el formulario.
-5. Solo si va a encender los avisos por correo: otro archivo HTML llamado
-   `mail/notificacion`, con el contenido de `apps-script/mail/notificacion.html`.
+   No hay más archivos HTML: el correo de aviso se arma dentro de `Correo.gs`.
 5. En **Configuración del proyecto**, marque *Mostrar el archivo de manifiesto
    `appsscript.json`* y pegue el contenido de `apps-script/appsscript.json`.
 
 > Con `clasp` es más corto: `clasp create --type sheets --rootDir apps-script` y `clasp push`.
 
-## 2. Poner la clave
+## 2. Poner los correos que reciben el aviso
 
-En `Config.gs`, cambie `TOKEN` por una cadena propia, larga y sin sentido:
+En `Config.gs`, arriba del todo:
 
 ```js
-TOKEN: 'hlc-7f3a91c4d8e2b6',
+NOTIFICAR_A: ['su.correo@holcim.com'],
 ```
 
 Ejecute la función **`prepararHojas`** una vez y acepte los permisos.
@@ -150,12 +149,13 @@ de verificación calculado aparte.
 
 ## Avisos por correo
 
-Están listos pero apagados. Para encenderlos, en `Config.gs`:
+Cada registro manda un correo a `CONFIG.NOTIFICAR_A` diciendo **qué** se
+registró y **quién** lo hizo. Para probarlo sin tocar la hoja, ejecute la
+función `pruebaDeCorreo` desde `Correo.gs`.
 
-```js
-NOTIFICAR_A: ['compras@holcim.com', 'contratacion@holcim.com'],
-```
+Para apagarlos, deje la lista vacía: `NOTIFICAR_A: []`.
 
-Publique una versión nueva y desde ahí cada registro manda el correo.
-Si el envío falla, el registro igual queda guardado y el fallo se anota
-en la hoja `ERRORES`.
+Si el envío falla, el registro **igual queda guardado** y el fallo se anota
+en la hoja `ERRORES`. Nunca se pierde un dato por culpa del correo.
+
+Cuota de Google Workspace: 1.500 correos al día.

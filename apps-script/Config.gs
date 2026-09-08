@@ -5,20 +5,32 @@
 var CONFIG = {
 
   /**
-   * Clave compartida entre el formulario y este servicio. Cambie este valor
-   * por uno propio y ponga el mismo en vista/index.html (API.token).
-   * No es una contraseña de usuario: solo evita que un tercero que descubra
-   * la URL escriba en la hoja por accidente o por curiosidad.
+   * ► CORREOS QUE RECIBEN EL AVISO ◄
+   * Cada vez que alguien registre una empresa o una persona, llega un
+   * correo a estas direcciones diciendo quién lo hizo y qué registró.
+   * Ponga uno o varios, separados por coma. Vacío = no se envía nada.
    */
-  TOKEN: 'CAMBIE-ESTA-CLAVE',
+  NOTIFICAR_A: [
+    'su.correo@holcim.com'
+  ],
+
+  /** Copia oculta, si alguien más debe quedar enterado sin figurar. */
+  CON_COPIA_OCULTA: [],
+
+  /** Nombre que aparece como remitente del aviso. */
+  NOMBRE_REMITENTE: 'Registros Holcim',
+
+  /* ------------------------------------------------------------------
+     De aquí para abajo no hay nada que ajustar en el uso normal.
+     ------------------------------------------------------------------ */
 
   /**
-   * Correos que reciben aviso de cada registro.
-   * Vacío = no se envía ningún correo (solo se guarda en la hoja).
+   * Solo aplica si algún día se sirve el formulario POR FUERA de Google,
+   * como archivo suelto. En el montaje actual la página la entrega Apps
+   * Script y Google exige sesión del dominio, así que esto no se usa.
+   * Déjelo como está.
    */
-  NOTIFICAR_A: [],
-
-  NOMBRE_REMITENTE: 'Registros Holcim',
+  TOKEN: 'CAMBIE-ESTA-CLAVE',
 
   HOJAS: {
     EMPRESAS: 'EMPRESAS',
