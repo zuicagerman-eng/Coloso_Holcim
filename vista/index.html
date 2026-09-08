@@ -290,6 +290,17 @@
   }
   .error:empty { display: none; }
 
+  .aviso {
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    border: 1px solid;
+  }
+  .aviso ul { margin: 6px 0 0; padding-left: 18px; }
+  .aviso-error { background: var(--danger-suave); border-color: var(--danger); color: var(--danger); }
+  .aviso:empty { display: none; }
+
   .pista-dv {
     display: block;
     font-family: "IBM Plex Mono", monospace;
@@ -442,6 +453,7 @@
   </div>
 
   <div class="tarjeta">
+    <div id="avisoGeneral" role="alert"></div>
 
     <!-- ---------- Empresa ---------- -->
     <form id="formEmpresa" role="tabpanel" aria-labelledby="opEmpresa" novalidate onsubmit="enviar(event, 'empresa')">
@@ -562,6 +574,17 @@
    Solo interfaz y validación. El envío está aislado en enviarAlServidor():
    ahí se conecta el flujo cuando esté definido.
    ================================================================== */
+
+/* ==================================================================
+   CONEXIÓN CON LA HOJA DE CÁLCULO
+   Pegue en url lo que entrega Google al publicar la aplicación web
+   (termina en /exec) y en token la misma clave que puso en Config.gs.
+   Si url queda vacía, el formulario funciona pero no guarda nada.
+   ================================================================== */
+var API = {
+  url: '',
+  token: 'CAMBIE-ESTA-CLAVE'
+};
 
 /* ---------- Reglas de validación ---------- */
 function soloDigitos(v) { return String(v || '').replace(/[^0-9]/g, ''); }
@@ -687,6 +710,7 @@ function cambiar(cual) {
   elemento('formEmpresa').classList.toggle('oculto', !esEmpresa);
   elemento('formPersona').classList.toggle('oculto', esEmpresa);
   elemento('confirmacion').classList.add('oculto');
+  limpiarAviso();
   elemento('opEmpresa').setAttribute('aria-selected', String(esEmpresa));
   elemento('opPersona').setAttribute('aria-selected', String(!esEmpresa));
 }
@@ -694,6 +718,7 @@ function cambiar(cual) {
 /* ---------- Envío ---------- */
 function enviar(evento, tipo) {
   evento.preventDefault();
+  limpiarAviso();
 
   var valido = true;
   CAMPOS[tipo].forEach(function (id) { if (!revisar(id)) valido = false; });
@@ -732,16 +757,68 @@ function enviar(evento, tipo) {
  * de esta función; nada más de la vista cambia.
  */
 function enviarAlServidor(tipo, datos) {
-  console.log('Registro listo para enviar:', tipo, datos);
-  recordarEmpresa(tipo, datos);
-  mostrarConfirmacion(tipo, datos);
+  if (!API.url) {
+    recordarEmpresaLocal(tipo, datos);
+    mostrarConfirmacion(tipo, datos, null);
+    return;
+  }
+
+  ocupado(tipo, true);
+  llamarApi({
+    accion: tipo === 'empresa' ? 'registrarEmpresa' : 'registrarPersona',
+    datos: datos
+  }).then(function (respuesta) {
+    ocupado(tipo, false);
+    if (!respuesta.ok) return avisar(respuesta.errores || ['No se pudo guardar.']);
+    mostrarConfirmacion(tipo, datos, respuesta.id);
+    if (tipo === 'empresa') cargarEmpresas();
+  }).catch(function (error) {
+    ocupado(tipo, false);
+    avisar(['No se pudo guardar: ' + error.message,
+            'Revise la conexión e intente de nuevo. Los datos siguen en el formulario.']);
+  });
 }
 
+function llamarApi(cuerpo) {
+  cuerpo.token = API.token;
+  return fetch(API.url, {
+    method: 'POST',
+    /* text/plain evita la petición previa de CORS, que Apps Script no atiende. */
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(cuerpo),
+    redirect: 'follow'
+  }).then(function (r) {
+    if (!r.ok) throw new Error('el servidor respondió ' + r.status);
+    return r.json();
+  });
+}
+
+function ocupado(tipo, activo) {
+  var form = elemento(tipo === 'empresa' ? 'formEmpresa' : 'formPersona');
+  var boton = form.querySelector('button[type="submit"]');
+  boton.disabled = activo;
+  if (activo) {
+    boton.dataset.texto = boton.textContent;
+    boton.textContent = 'Guardando…';
+  } else if (boton.dataset.texto) {
+    boton.textContent = boton.dataset.texto;
+  }
+}
+
+function avisar(mensajes) {
+  elemento('avisoGeneral').innerHTML = '<div class="aviso aviso-error"><ul><li>' +
+    mensajes.map(escapar).join('</li><li>') + '</li></ul></div>';
+  elemento('avisoGeneral').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function limpiarAviso() { elemento('avisoGeneral').innerHTML = ''; }
+
 /* ---------- Confirmación ---------- */
-function mostrarConfirmacion(tipo, datos) {
+function mostrarConfirmacion(tipo, datos, idServidor) {
   var esEmpresa = tipo === 'empresa';
-  var radicado = (esEmpresa ? 'EMP' : 'PER') + '-' + new Date().getFullYear() + '-' +
-                 ('0000' + (++contador[tipo])).slice(-4);
+  var radicado = idServidor ||
+    ((esEmpresa ? 'EMP' : 'PER') + '-' + new Date().getFullYear() + '-' +
+     ('0000' + (++contador[tipo])).slice(-4));
 
   var repaso = esEmpresa
     ? [['NIT', datos.nit + '  ·  DV ' + datos.dv],
@@ -751,8 +828,9 @@ function mostrarConfirmacion(tipo, datos) {
     : [['Nombre completo', datos.nombreCompleto],
        ['Cédula', datos.cedula],
        ['Correo', datos.correoPersona],
-       ['Empresa', datos.empresa]];
+       ['Empresa', etiquetaEmpresa(datos.empresa)]];
 
+  limpiarAviso();
   elemento('formEmpresa').classList.add('oculto');
   elemento('formPersona').classList.add('oculto');
 
@@ -762,9 +840,9 @@ function mostrarConfirmacion(tipo, datos) {
     '<div class="sello">' +
       '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">' +
         '<path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '</svg> Registro recibido</div>' +
+      '</svg> ' + (idServidor ? 'Guardado en la base de datos' : 'Registro recibido') + '</div>' +
     '<h2>' + escapar(esEmpresa ? datos.nombreEmpresa : datos.nombreCompleto) + '</h2>' +
-    '<div class="radicado">' + radicado + '</div>' +
+    '<div class="radicado">' + escapar(radicado) + '</div>' +
     '<table class="repaso">' +
       repaso.map(function (f) {
         return '<tr><td>' + escapar(f[0]) + '</td><td>' + escapar(f[1]) + '</td></tr>';
@@ -790,32 +868,51 @@ function limpiarFormulario(tipo) {
   });
   elemento('pistaDV').innerHTML = '';
   elemento('nombreCompleto').value = '';
+  limpiarAviso();
   elemento(CAMPOS[tipo][0]).focus();
 }
 
-/* ---------- Lista de empresas del paso 2 ---------- *
- * Provisional: se llena con lo registrado en esta pantalla. Cuando exista
- * el flujo, esta lista la entrega el servidor.                          */
-var empresasRegistradas = [];
+/* ---------- Lista de empresas del paso 2 ---------- */
+var empresas = [];
 
-function recordarEmpresa(tipo, datos) {
+/** Con servicio configurado, la lista sale de la hoja de cálculo. */
+function cargarEmpresas() {
+  if (!API.url) return;
+  llamarApi({ accion: 'empresas' })
+    .then(function (r) {
+      if (r.ok) { empresas = r.empresas || []; pintarListaEmpresas(); }
+    })
+    .catch(function () {
+      /* Sin conexión el paso 2 queda sin lista, pero el paso 1 sigue sirviendo. */
+    });
+}
+
+/** Sin servicio, la lista se arma con lo registrado en esta pantalla. */
+function recordarEmpresaLocal(tipo, datos) {
   if (tipo !== 'empresa') return;
-  empresasRegistradas.push(datos.nombreEmpresa + ' — NIT ' + datos.nit);
+  empresas.push({ nit: datos.nit, nombre: datos.nombreEmpresa });
   pintarListaEmpresas();
 }
 
 function pintarListaEmpresas() {
   var select = elemento('empresa');
-  if (!empresasRegistradas.length) {
+  if (!empresas.length) {
     select.innerHTML = '<option value="">Registre primero una empresa en el paso 1</option>';
     return;
   }
   var actual = select.value;
   select.innerHTML = '<option value="">Seleccione la empresa…</option>' +
-    empresasRegistradas.map(function (e) {
-      return '<option value="' + escapar(e) + '">' + escapar(e) + '</option>';
+    empresas.map(function (e) {
+      return '<option value="' + escapar(e.nit) + '">' +
+             escapar(e.nombre) + ' — NIT ' + escapar(e.nit) + '</option>';
     }).join('');
   select.value = actual;
+}
+
+/** El registro guarda el NIT; en pantalla se muestra el nombre. */
+function etiquetaEmpresa(nit) {
+  var hallada = empresas.filter(function (e) { return e.nit === nit; })[0];
+  return hallada ? hallada.nombre + ' — NIT ' + hallada.nit : nit;
 }
 
 /** +573001234567 → +57 300 123 4567 */
@@ -831,6 +928,7 @@ function escapar(t) {
 }
 
 pintarListaEmpresas();
+cargarEmpresas();
 </script>
 <!--FIN-CONTENIDO-->
 </body>

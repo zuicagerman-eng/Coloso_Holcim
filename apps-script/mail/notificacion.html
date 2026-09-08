@@ -1,45 +1,35 @@
-<!-- Correo que reciben los responsables cada vez que alguien diligencia. -->
-<div style="margin:0;padding:24px 12px;background:#F3F4F6;font-family:Arial,Helvetica,sans-serif;">
-  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:620px;margin:0 auto;background:#FFFFFF;border-radius:10px;overflow:hidden;border:1px solid #E5E7EB;">
+<div style="margin:0;padding:24px 12px;background:#F1F4F8;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;margin:0 auto;background:#FFFFFF;border-radius:8px;overflow:hidden;border:1px solid #DCE3EB;">
+    <tr><td style="height:3px;background:#00A94F;font-size:0;line-height:0;">&nbsp;</td></tr>
     <tr>
-      <td style="background:#00A758;padding:20px 24px;">
+      <td style="background:#00457C;padding:20px 24px;">
         <div style="color:#FFFFFF;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Holcim</div>
         <div style="color:#FFFFFF;font-size:20px;font-weight:bold;margin-top:4px;"><?= titulo ?></div>
       </td>
     </tr>
     <tr>
       <td style="padding:24px;">
-        <p style="margin:0 0 4px;color:#1D1D1B;font-size:16px;"><b><?= sujeto ?></b></p>
-        <p style="margin:0 0 20px;color:#6B7280;font-size:13px;">
-          Diligenciado por <b style="color:#046A38;"><?= quienDiligencio ?></b> · <?= fecha ?>
+        <p style="margin:0 0 4px;color:#0F2438;font-size:16px;"><b><?= sujeto ?></b></p>
+        <p style="margin:0 0 20px;color:#59697A;font-size:13px;">
+          Radicado <b style="color:#00457C;"><?= id ?></b> · <?= fecha ?>
         </p>
-
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;font-size:14px;">
           <? for (var i = 0; i < filas.length; i++) { ?>
           <tr>
-            <td style="padding:10px 12px;background:#F9FAFB;border:1px solid #E5E7EB;color:#6B7280;width:44%;">
-              <?= filas[i].etiqueta ?>
-            </td>
-            <td style="padding:10px 12px;border:1px solid #E5E7EB;color:#1D1D1B;">
-              <b><?= filas[i].valor ?></b>
-            </td>
+            <td style="padding:10px 12px;background:#F7F9FC;border:1px solid #DCE3EB;color:#59697A;width:42%;"><?= filas[i][0] ?></td>
+            <td style="padding:10px 12px;border:1px solid #DCE3EB;color:#0F2438;"><b><?= filas[i][1] ?></b></td>
           </tr>
           <? } ?>
         </table>
-
         <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px;">
-          <tr>
-            <td style="background:#00A758;border-radius:6px;">
-              <a href="<?= enlaceHoja ?>" style="display:inline-block;padding:13px 26px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
-                Abrir la base de datos
-              </a>
-            </td>
-          </tr>
+          <tr><td style="background:#00457C;border-radius:5px;">
+            <a href="<?= enlaceHoja ?>" style="display:inline-block;padding:13px 26px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">Abrir la base de datos</a>
+          </td></tr>
         </table>
       </td>
     </tr>
     <tr>
-      <td style="background:#F9FAFB;padding:16px 24px;border-top:1px solid #E5E7EB;color:#9CA3AF;font-size:12px;">
+      <td style="background:#F7F9FC;padding:16px 24px;border-top:1px solid #DCE3EB;color:#9AA8B6;font-size:12px;">
         Aviso automático del registro de empresas y personas. No responda a este correo.
       </td>
     </tr>

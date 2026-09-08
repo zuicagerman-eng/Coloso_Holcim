@@ -1,68 +1,69 @@
 # Coloso Holcim — Registro de Empresas y Personas
 
-Dos **Google Forms** que alimentan una **hoja de cálculo** (la base de datos de
-quién diligenció qué) y un script que **avisa por correo** a las personas
-responsables cada vez que alguien registra una empresa o una persona.
+Formulario web con la identidad de Holcim que registra **empresas** y las
+**personas** que pertenecen a ellas, y guarda todo en una **hoja de cálculo**
+de Google.
 
 ```
-Google Form Empresa  ──┐
-                       ├──►  Google Sheet (hojas EMPRESAS y PERSONAS)
-Google Form Personas ──┘            │
-                                    └──►  correo automático a CONFIG.NOTIFICAR_A
-                                          "Fulano diligenció el registro de …"
+vista/index.html            un solo archivo, se abre en cualquier navegador
+        │  fetch POST (JSON + token)
+        ▼
+Apps Script  Api.gs         valida otra vez y escribe
+        │
+        ▼
+Google Sheet  EMPRESAS · PERSONAS · ERRORES
+        │
+        └──►  correo de aviso (opcional, apagado por defecto)
 ```
-
-Sin formularios a la medida, sin servidor y sin hosting: el formulario lo pone
-Google, la base de datos es el Sheet, y el único código que corre son unas
-líneas que arman y envían el aviso.
 
 ## Qué se captura
 
-**Empresa** — NIT *sin dígito de verificación* (el script calcula el DV y lo
-guarda en su propia columna), nombre, correo y contacto.
+**Empresa** — NIT sin dígito de verificación (el DV se calcula y se guarda
+aparte), nombre, correo y teléfono `+57` de 10 dígitos.
 
-**Personas** — nombres, apellidos, cédula, correo y la empresa a la que
-pertenecen, elegida de una lista que **se actualiza sola** con las empresas ya
-registradas.
+**Personas** — nombres, primer apellido, segundo apellido opcional, nombre
+completo armado solo, cédula, correo y la empresa a la que pertenecen, elegida
+de una lista que sale de las empresas ya registradas.
 
-Los dos formularios guardan además el correo de **quien responde**, que es lo
-que convierte al Sheet en la base de datos de quién diligenció.
-
-Las validaciones las hace el propio Google Form al escribir: NIT de 8 a 10
-dígitos sin guion, cédula de 6 a 10 dígitos, correos con formato válido.
+Todo entra normalizado: nombres en **mayúscula sostenida**, correos en
+minúscula, NIT y cédula solo con dígitos.
 
 ## Puesta en marcha
 
-1. Cree una hoja de cálculo nueva en el Drive de Holcim.
-2. **Extensiones → Apps Script**, y suba los archivos de `apps-script/`
-   (o `clasp push`, ver [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)).
-3. En `Config.gs`, escriba los correos que deben recibir el aviso.
-4. Ejecute la función **`instalar()`** una sola vez y acepte los permisos.
+Cuatro pasos, unos 15 minutos: crear la hoja, pegar el script, publicarlo como
+aplicación web y pegar la URL en el formulario.
+Está detallado en **[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)**.
 
-`instalar()` crea los dos formularios con sus validaciones, los conecta a la
-hoja y deja activo el aviso por correo. Al terminar muestra los **dos enlaces
-para compartir**: esos son los que se le pasan a quien deba diligenciar.
+Mientras `API.url` esté vacía, el formulario funciona igual pero no guarda nada;
+sirve para mostrarlo sin montar nada.
 
-## Archivos
+## Estructura
 
 | Archivo | Para qué |
 |---|---|
-| `apps-script/Config.gs` | **Lo único que se edita**: correos notificados y textos de las preguntas |
-| `apps-script/Instalar.gs` | Crea los formularios, los conecta al Sheet y activa el aviso |
-| `apps-script/Notificaciones.gs` | Envía el correo en cada respuesta, calcula el DV y refresca la lista de empresas |
-| `apps-script/mail/notificacion.html` | Plantilla del correo |
+| `vista/index.html` | El formulario completo: un archivo, sin dependencias |
+| `vista/assets/logo-holcim.svg` | Símbolo de la marca (reconstrucción, ver abajo) |
+| `apps-script/Config.gs` | **Lo único que se edita**: token y correos de aviso |
+| `apps-script/Api.gs` | Recibe los registros y los guarda |
+| `apps-script/Validaciones.gs` | Las reglas, del lado del servidor |
+| `apps-script/Hoja.gs` | Único punto que toca la hoja de cálculo |
+| `apps-script/Correo.gs` | Aviso por correo, apagado mientras no haya destinatarios |
 
-## Cambiar los correos que reciben el aviso
+Las reglas están escritas dos veces a propósito: en el navegador para que quien
+diligencia vea el error mientras escribe, y en el servidor porque cualquiera
+puede mandar datos a la URL sin pasar por el formulario. Lo que decide qué entra
+a la hoja es siempre el servidor.
 
-Solo `Config.gs`; no hay que reinstalar nada:
+## Dos cosas por resolver
 
-```js
-NOTIFICAR_A: ['compras@holcim.com', 'contratacion@holcim.com'],
-```
+1. **El repositorio es público.** Antes de meter datos o correos reales:
+   Settings → General → Danger Zone → Make private.
+2. **El logotipo es una reconstrucción**, no el archivo oficial. Se parece, pero
+   pídalo a Comunicaciones y reemplace `vista/assets/logo-holcim.svg` y el bloque
+   `<svg>` del HTML, que está comentado.
 
-## Por qué Apps Script y no un desarrollo propio
+## Por qué Apps Script
 
 El Sheet y el correo son nativos de Google: cero infraestructura, cero costo y
-nada que aprobar con TI. GitHub queda como el respaldo y el historial del
-código. El análisis completo, con el límite de cuándo convendría migrar, está en
-[`docs/DECISION-GITHUB-VS-APPS-SCRIPT.md`](docs/DECISION-GITHUB-VS-APPS-SCRIPT.md).
+nada que aprobar con TI. El análisis completo, con el límite de cuándo convendría
+migrar, está en [`docs/DECISION-GITHUB-VS-APPS-SCRIPT.md`](docs/DECISION-GITHUB-VS-APPS-SCRIPT.md).
