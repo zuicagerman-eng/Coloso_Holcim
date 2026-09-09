@@ -1,4 +1,4 @@
-# Listado de programas — dónde vive cada uno y quién puede entrar
+# Los programas del área — dónde vive cada uno y quién puede entrar
 
 La regla, en una frase:
 
@@ -6,9 +6,12 @@ La regla, en una frase:
 > pantalla que un externo necesita para diligenciar, y esa pantalla pide clave
 > de usuario antes de mostrar nada.**
 
-Este archivo es el inventario. Un programa que no esté aquí no está listo para
-usarse con datos reales. Lo que hace falta para montar cualquiera de ellos está
-en [`REQUISITOS.md`](REQUISITOS.md).
+Este archivo es el inventario del **área**, no de un programa. El registro de
+proveedores es una fila más, y no la más importante: la reinducción la ve todo
+el mundo y el entorno de capacitaciones va a ser lo más grande que tengamos.
+
+Un programa que no esté aquí no está listo para usarse con datos reales. Lo que
+hace falta para montar cualquiera está en [`REQUISITOS.md`](REQUISITOS.md).
 
 ## La regla, por partes
 
@@ -44,16 +47,47 @@ recibe datos de personas.
 
 ## El listado
 
-| # | Programa | Qué hace | Dónde vive | Nivel | Estado |
+| # | Programa | Qué es | Dónde vive | Nivel | Estado |
 |---|---|---|---|---|---|
-| 1 | **Registro de Empresas y Personas** | Formulario web donde proveedores y contratistas se registran | Apps Script (aplicación web) | **N2** | En marcha, en cuenta personal — ver deuda abajo |
-| 2 | **Hoja de registros** | La base: `EMPRESAS`, `PERSONAS`, `ERRORES` | Google Sheets, ligada al script | **N1** | En marcha, en cuenta personal |
-| 3 | **Copia en hoja de Holcim** | Cada registro se escribe también en una hoja propiedad de Holcim | Google Sheets, unidad compartida | **N1** | Configurable (`ID_HOJA_HOLCIM`), apagado si está vacío |
-| 4 | **Aviso por correo** | Notifica cada registro a los responsables | Apps Script (`MailApp`) | **N1** | En marcha; destinatarios en `NOTIFICAR_A` |
-| 5 | **Código fuente** | Los archivos con los que se vuelve a montar todo | Ver *Dónde vive el código* | **Privado** | ⚠️ Hoy, GitHub personal y público |
-| 6 | **Vista de demostración** | `vista/index.html` sin `API.url`: valida y confirma en pantalla, no guarda nada | Archivo suelto | **N3** | Sirve para mostrar el formulario sin montar nada |
+| 1 | **Entorno de capacitaciones** | Subir capacitaciones, verlas, tomar asistencia y controlar vencidos | Sheets + Apps Script + Drive | **N0**, y **N2** lo que vean contratistas | Diseñado, sin construir — [`ENTORNO-CAPACITACIONES.md`](ENTORNO-CAPACITACIONES.md) |
+| 2 | **Presentación de reinducción** | La presentación en HTML que ve todo el personal | Por publicar con [`../plantilla/`](../plantilla/) | **N0**, o **N2** si la ven contratistas | ⚠️ Falta saber dónde está hoy y quién la mantiene |
+| 3 | **Registro de Empresas y Personas** | Formulario donde proveedores y contratistas se registran | Apps Script (aplicación web) | **N2** | En marcha, en cuenta personal — ver deuda abajo |
+| 4 | **Hoja de registros** | La base del registro: `EMPRESAS`, `PERSONAS`, `ERRORES` | Google Sheets | **N1** | En marcha, en cuenta personal |
+| 5 | **Copia en hoja de Holcim** | Cada registro se escribe también en una hoja propiedad de Holcim | Google Sheets, unidad compartida | **N1** | Configurable (`ID_HOJA_HOLCIM`) |
+| 6 | **Aviso por correo** | Notifica cada registro a los responsables | Apps Script (`MailApp`) | **N1** | En marcha |
+| 7 | **Código fuente** | Los archivos con los que se vuelve a montar todo | Ver *Dónde vive el código* | **Privado** | ⚠️ Hoy, GitHub personal y público |
+| — | **Lo que falte** | | | | Ver *Por inventariar* |
 
-### 1 · Registro de Empresas y Personas — por qué es N2
+### Por inventariar
+
+Las filas 1 y 2 están puestas porque salieron en la conversación; las demás son
+las que se ven desde este repositorio. **Falta el resto de los programas del
+área.** Por cada uno hacen falta cinco cosas, ni una más:
+
+```
+Nombre        —
+Qué hace      —
+Dónde vive    —  hoja / Apps Script / archivo HTML / otro
+Quién entra   —  empleados con cuenta Holcim / contratistas sin cuenta / ambos
+Estado        —  en marcha / a medias / por hacer
+```
+
+Con esa lista, cada uno entra a la tabla y se le asigna nivel. Sin ella, este
+inventario dice que hay siete programas cuando probablemente hay quince.
+
+## Publicar una pantalla nueva
+
+Cualquier programa del área que sea "una pantalla" —una presentación, un
+instructivo, un tablero, una calculadora— se publica igual, con
+[`../plantilla/`](../plantilla/): se pega el HTML, se elige si entra todo Holcim
+o solo quien tenga clave, y queda con dirección propia en 10 minutos. Sin
+servidor y sin instalar nada.
+
+Ahí está resuelto lo que no resuelve Drive: **un HTML guardado en Drive no se
+puede abrir como página web**, Google quitó esa función hace años. Por eso una
+presentación en HTML termina o convertida a otro formato, o publicada así.
+
+### Ficha · Registro de Empresas y Personas — por qué es N2
 
 Quien diligencia es un proveedor o un contratista: **no tiene cuenta de
 Holcim**. Si la aplicación se publica restringida al dominio, Google le pide

@@ -1,4 +1,23 @@
-# Coloso Holcim — Registro de Empresas y Personas
+# Coloso Holcim
+
+Los programas del área, sin servidor: hojas de cálculo con Apps Script, dentro
+del dominio de Holcim.
+
+- **[`docs/PROGRAMAS.md`](docs/PROGRAMAS.md)** — el listado de todos los
+  programas: dónde vive cada uno y quién puede entrar.
+- **[`plantilla/`](plantilla/)** — publica cualquier HTML como página propia de
+  Holcim, privada por omisión. La reinducción va por aquí.
+- **[`docs/ENTORNO-CAPACITACIONES.md`](docs/ENTORNO-CAPACITACIONES.md)** — el
+  diseño del entorno de capacitaciones: subir, ver, tomar asistencia, vencidos.
+- **[`docs/REQUISITOS.md`](docs/REQUISITOS.md)** — todo lo que hace falta para
+  ejecutar cualquiera de ellos.
+
+Lo que sigue de este archivo es el primero que quedó montado: el registro de
+empresas y personas.
+
+---
+
+## Registro de Empresas y Personas
 
 Formulario web con la identidad de Holcim que registra **empresas** y las
 **personas** que pertenecen a ellas, y guarda todo en una **hoja de cálculo**
@@ -55,6 +74,7 @@ sirve para mostrarlo sin montar nada.
 | `apps-script/Validaciones.gs` | Las reglas, del lado del servidor |
 | `apps-script/Hoja.gs` | Único punto que toca la hoja de cálculo |
 | `apps-script/Correo.gs` | Aviso por correo, apagado mientras no haya destinatarios |
+| `plantilla/` | Publica cualquier HTML como página de Holcim, con clave si hace falta |
 | `docs/REQUISITOS.md` | Todo lo que hace falta antes de empezar: cuentas, permisos y programas |
 | `docs/PROGRAMAS.md` | El listado de programas: dónde vive cada uno y quién puede entrar |
 | `herramientas/empaquetar.py` | Arma el `.zip` que se sube a la unidad compartida del área |
