@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><?!= incluir('estilos') ?>
+<style>
+  body { display: grid; place-items: center; padding: 24px; }
+  .puerta { width: 100%; max-width: 420px; }
+  .puerta h1 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+  .puerta p.explicacion { margin: 0 0 22px; color: var(--muted); font-size: 13.5px; }
+  label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: .05em; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line-fuerte);
+    border-radius: 4px;
+    font: inherit;
+    font-family: "Consolas", "Menlo", monospace;
+    letter-spacing: .04em;
+    color: var(--ink);
+  }
+  input:focus { outline: none; border-color: var(--marca); box-shadow: 0 0 0 3px #E3EDF6; }
+  .boton { width: 100%; text-align: center; }
+  .pie { margin: 18px 0 0; color: var(--muted); font-size: 12.5px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="tarjeta puerta">
+  <p class="marca" style="margin:0 0 20px">HOLCIM</p>
+  <h1><?= titulo ?></h1>
+  <p class="explicacion">Estas capacitaciones son privadas. Escriba la clave que
+     le entregaron para entrar.</p>
+
+  <form onsubmit="entrar(event)">
+    <label for="clave">Clave</label>
+    <input id="clave" autocomplete="off" spellcheck="false"
+           placeholder="HOLCIM-0000-0000-0000" autofocus>
+    <span class="aviso" id="aviso"><?= mensaje ?></span>
+    <button class="boton" type="submit">Entrar</button>
+  </form>
+
+  <p class="pie">¿No tiene clave? Pídala a quien lo convocó.</p>
+</div>
+
+<script>
+/* La página vive dentro de un marco: para recargarla con la clave hay que
+   mover la ventana de arriba, no el marco. */
+function entrar(evento) {
+  evento.preventDefault();
+  var escrita = document.getElementById('clave').value.trim().toUpperCase().replace(/\s+/g, '');
+  if (!escrita) {
+    document.getElementById('aviso').textContent = 'Escriba la clave.';
+    return;
+  }
+  window.top.location.href = '<?= url ?>?clave=' + encodeURIComponent(escrita);
+}
+</script>
+</body>
+</html>

@@ -49,8 +49,8 @@ recibe datos de personas.
 
 | # | Programa | Qué es | Dónde vive | Nivel | Estado |
 |---|---|---|---|---|---|
-| 1 | **Entorno de capacitaciones** | Subir capacitaciones, verlas, tomar asistencia y controlar vencidos | Sheets + Apps Script + Drive | **N0**, y **N2** lo que vean contratistas | Diseñado, sin construir — [`ENTORNO-CAPACITACIONES.md`](ENTORNO-CAPACITACIONES.md) |
-| 2 | **Presentación de reinducción** | La presentación en HTML que ve todo el personal | Por publicar con [`../plantilla/`](../plantilla/) | **N0**, o **N2** si la ven contratistas | ⚠️ Falta saber dónde está hoy y quién la mantiene |
+| 1 | **Entorno de capacitaciones** | Subir capacitaciones, verlas, tomar asistencia y controlar vencidos | Sheets + Apps Script + Drive | **N0**, y **N2** lo que vean contratistas | Fase 1 construida: catálogo y visor — [`../capacitaciones/`](../capacitaciones/) |
+| 2 | **Presentación de reinducción** | La presentación en HTML que ve todo el personal | Entra como un curso del entorno, o suelta con [`../plantilla/`](../plantilla/) | **N0**, o **N2** si la ven contratistas | ⚠️ Falta el archivo HTML |
 | 3 | **Registro de Empresas y Personas** | Formulario donde proveedores y contratistas se registran | Apps Script (aplicación web) | **N2** | En marcha, en cuenta personal — ver deuda abajo |
 | 4 | **Hoja de registros** | La base del registro: `EMPRESAS`, `PERSONAS`, `ERRORES` | Google Sheets | **N1** | En marcha, en cuenta personal |
 | 5 | **Copia en hoja de Holcim** | Cada registro se escribe también en una hoja propiedad de Holcim | Google Sheets, unidad compartida | **N1** | Configurable (`ID_HOJA_HOLCIM`) |

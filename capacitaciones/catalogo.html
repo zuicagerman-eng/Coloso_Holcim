@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><?!= incluir('estilos') ?></head>
+<body>
+<header class="cabecera">
+  <span class="marca">HOLCIM</span>
+  <span class="contexto"><?= titulo ?></span>
+</header>
+<div class="filo"></div>
+
+<main class="hoja">
+  <div class="titular">
+    <h1>Capacitaciones</h1>
+    <p>Elija la que va a hacer. Cada una está partida en varias partes.</p>
+    <? if (quien) { ?><p class="dato" style="margin-top:10px">Entró con la clave de <b><?= quien ?></b></p><? } ?>
+  </div>
+
+  <? if (!cursos.length) { ?>
+    <p class="vacio">Todavía no hay capacitaciones activas. Se agregan en la
+       pestaña <b>CURSOS</b> del libro, y sus partes en <b>MODULOS</b>.</p>
+  <? } ?>
+
+  <div class="rejilla dos">
+    <? for (var i = 0; i < cursos.length; i++) { var c = cursos[i]; ?>
+      <a class="tarjeta curso" href="<?= c.url ?>">
+        <h2><?= c.nombre ?></h2>
+        <? if (c.descripcion) { ?><p><?= c.descripcion ?></p><? } ?>
+        <div class="datos">
+          <span class="dato"><b><?= c.partes ?></b> parte<?= c.partes === 1 ? '' : 's' ?></span>
+          <? if (c.minutos) { ?><span class="dato"><b><?= c.minutos ?></b> min</span><? } ?>
+          <? if (c.dirigidoA) { ?><span class="dato"><?= c.dirigidoA ?></span><? } ?>
+          <? if (c.vigencia) { ?><span class="dato">vence a los <b><?= c.vigencia ?></b> meses</span><? } ?>
+        </div>
+      </a>
+    <? } ?>
+  </div>
+</main>
+</body>
+</html>

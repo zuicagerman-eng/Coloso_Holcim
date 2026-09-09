@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><?!= incluir('estilos') ?></head>
+<body>
+<header class="cabecera">
+  <span class="marca">HOLCIM</span>
+  <span class="contexto"><?= titulo ?></span>
+</header>
+<div class="filo"></div>
+
+<main class="hoja">
+  <a class="volver" href="<?= urlCatalogo ?>">← Todas las capacitaciones</a>
+
+  <div class="tarjeta">
+    <div class="titular">
+      <h1><?= curso.nombre ?></h1>
+      <? if (curso.descripcion) { ?><p><?= curso.descripcion ?></p><? } ?>
+    </div>
+
+    <? if (!partes.length) { ?>
+      <p class="vacio">Este curso todavía no tiene partes. Se agregan en la
+         pestaña <b>MODULOS</b> del libro, con <b>Curso</b> = <?= curso.id ?>.</p>
+    <? } ?>
+
+    <ul class="partes">
+      <? for (var i = 0; i < partes.length; i++) { var m = partes[i]; ?>
+        <li>
+          <span class="numero"><?= m.numero ?></span>
+          <span class="nombre"><?= m.nombre ?></span>
+          <span class="dato"><?= m.tipo ?></span>
+          <? if (m.minutos) { ?><span class="dato"><?= m.minutos ?> min</span><? } ?>
+          <a href="<?= m.url ?>">Abrir</a>
+        </li>
+      <? } ?>
+    </ul>
+
+    <? if (urlPrimera) { ?><a class="boton" href="<?= urlPrimera ?>">Empezar</a><? } ?>
+  </div>
+</main>
+</body>
+</html>

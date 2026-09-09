@@ -5,8 +5,10 @@ del dominio de Holcim.
 
 - **[`docs/PROGRAMAS.md`](docs/PROGRAMAS.md)** — el listado de todos los
   programas: dónde vive cada uno y quién puede entrar.
-- **[`plantilla/`](plantilla/)** — publica cualquier HTML como página propia de
-  Holcim, privada por omisión. La reinducción va por aquí.
+- **[`capacitaciones/`](capacitaciones/)** — el entorno de capacitaciones:
+  catálogo, cursos partidos en partes y visor de HTML, PDF, video y enlaces.
+- **[`plantilla/`](plantilla/)** — publica cualquier HTML suelto como página
+  propia de Holcim, privada por omisión.
 - **[`docs/ENTORNO-CAPACITACIONES.md`](docs/ENTORNO-CAPACITACIONES.md)** — el
   diseño del entorno de capacitaciones: subir, ver, tomar asistencia, vencidos.
 - **[`docs/REQUISITOS.md`](docs/REQUISITOS.md)** — todo lo que hace falta para

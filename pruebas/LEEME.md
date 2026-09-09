@@ -35,3 +35,16 @@ a esa empresa sin tocar a las demás.
 
 El formulario está publicado en abierto: esto es lo único que separa a un
 proveedor invitado de cualquiera que dé con el enlace.
+
+---
+
+    node pruebas/capacitaciones.js
+
+Comprueba el entorno de capacitaciones con dobles de Sheets, Drive y
+HtmlService: que el catálogo deje por fuera los cursos inactivos, que las partes
+salgan en orden, que cada tipo —HTML, PDF, video, enlace— se resuelva como debe,
+que la navegación no cuelgue en la última parte y que sin clave válida no se
+entregue nada, **tampoco el material**.
+
+El motor de plantillas de Apps Script no corre en Node, así que lo que se prueba
+aquí es la lógica. Que las pantallas se vean bien se comprueba abriéndolas.

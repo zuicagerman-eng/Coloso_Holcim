@@ -24,7 +24,10 @@ proveedores, con más pantallas.
 
 Una sola hoja de cálculo, en la unidad compartida del área. Es la base de datos.
 
-**`CAPACITACIONES`** — el catálogo. Una fila por curso.
+> Las pestañas construidas se llaman `CURSOS` y `MODULOS`: el curso es la
+> unidad que vence, el módulo es cada parte en que se segmenta.
+
+**`CURSOS`** — el catálogo. Una fila por curso.
 
 | ID | Nombre | Tipo | Enlace | Vigencia (meses) | Obligatoria para | Activa |
 |---|---|---|---|---|---|---|
@@ -117,13 +120,15 @@ listado no permite.
 
 | Fase | Qué queda funcionando | Se apoya en |
 |---|---|---|
-| **1** | El libro con sus pestañas, el catálogo y el visor: subir una capacitación y verla | La plantilla, ya hecha |
+| **1** | ✅ **Hecha** — el libro, el catálogo y el visor: subir una capacitación y verla, partida en partes | [`../capacitaciones/`](../capacitaciones/) |
 | **2** | Asistencia en línea. Es la pieza que más se va a usar | `Hoja.gs` del registro |
 | **3** | Vencidos y el correo automático | Fase 2 |
 | **4** | Asistencia presencial por lote y reportes por área | Fase 2 |
 
-La fase 1 ya está a medio camino: la plantilla publica cualquier HTML con clave
-y anota quién lo abrió. Lo que falta es el catálogo.
+La fase 1 está construida y probada: [`../capacitaciones/`](../capacitaciones/).
+El curso se parte en las partes que haga falta —presentación, video, cartilla,
+evaluación— y cada una puede ser HTML, PDF, video o un enlace a algo que viva
+por fuera. Lo que sigue es la asistencia.
 
 ## Lo que se reutiliza de lo que ya está hecho
 
