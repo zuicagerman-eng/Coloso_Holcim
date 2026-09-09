@@ -80,6 +80,9 @@ Esas dos opciones juntas son la clave:
 Copie la URL que termina en `/exec`. **Ábrala en el navegador: ahí está el
 formulario.** Esa es la dirección que se comparte.
 
+> Con "Cualquier usuario" el enlace queda abierto. **Encienda las claves antes
+> de repartirlo**: ver [Claves de acceso](#claves-de-acceso).
+
 > Al cambiar el acceso, la URL cambia de forma: la restringida al dominio se
 > ve como `script.google.com/a/macros/holcim.com/s/…`, y la pública como
 > `script.google.com/macros/s/…`. Vuelva a copiarla del cuadro de diálogo.
@@ -87,7 +90,7 @@ formulario.** Esa es la dirección que se comparte.
 Para comprobar que el servicio responde, agréguele `?ping=1` al final:
 
 ```json
-{"ok":true,"servicio":"Registro de Empresas y Personas — Holcim","listo":true}
+{"ok":true,"servicio":"Registro de Empresas y Personas — Holcim","listo":true,"pideClave":true}
 ```
 
 ## 4. ¿Y el archivo suelto?
@@ -117,18 +120,57 @@ puede entregarle a Google la sesión del usuario.
 > **Implementar → Administrar implementaciones → Editar → Versión nueva**.
 > Si no, la URL sigue sirviendo la versión anterior.
 
+## Claves de acceso
+
+El formulario se publica en abierto porque quien diligencia no tiene cuenta de
+Holcim. Enlace abierto no significa entrada libre: con claves encendidas, la
+pantalla no muestra nada hasta que se escriba una válida.
+
+En `Config.gs`, una línea por empresa o por convocatoria:
+
+```js
+CLAVES: {
+  'HOLCIM-2026-ANDINA': 'Constructora Andina S.A.S.',
+  'HOLCIM-2026-DELTA':  'Montajes Delta Ltda.',
+},
+```
+
+A la izquierda la clave; a la derecha **a quién se le entregó**, que es lo que
+queda escrito en la columna `Autorizado a` de cada registro. Para armar una
+clave nueva sin inventársela, ejecute **`nuevaClave`** desde el editor y copie
+lo que salga en el registro.
+
+- **Lista vacía = formulario abierto.** Sirve para probar; no para repartir el
+  enlace.
+- **Una clave por empresa, no una para todos.** Así se le puede quitar el acceso
+  a uno sin dejar por fuera a los demás.
+- **Para retirar el acceso**, borre la línea y vuelva a implementar. Ni la URL
+  cambia ni hay que avisarle a nadie más.
+- **No distingue mayúsculas ni espacios**: se teclea a mano, y quien la recibe
+  la copia de un correo.
+
+La clave la comprueba el servidor en cada llamada, no la pantalla: entrar por la
+URL sin pasar por el formulario no sirve de nada.
+
+Después de cambiar `CLAVES` hay que **Implementar → Administrar implementaciones
+→ Editar → Versión nueva**. Si no, el servicio sigue con las claves anteriores.
+
 ## Verificación
 
 | Prueba | Resultado esperado |
 |---|---|
 | Abrir la URL `/exec` en el navegador | Aparece el formulario |
-| Abrir la URL `/exec?ping=1` | El JSON con su correo en `usuario` |
+| Abrir la URL `/exec?ping=1` | El JSON del servicio, con `pideClave` |
 | `pruebaDeEscritura` desde el editor | Fila nueva en `EMPRESAS`, sin pasar por el formulario |
 | Registrar una empresa desde el formulario | Fila en `EMPRESAS` y radicado `EMP-2026-0001` en pantalla |
 | Registrar la misma empresa otra vez | "Ya hay una empresa registrada con el NIT…" |
 | Ir al paso 2 | La empresa aparece en la lista desplegable |
 | Registrar persona con cédula repetida | La rechaza |
 | Abrir el enlace en una ventana de incógnito | Debe salir el formulario **sin pedir cuenta de Google** |
+| Con `CLAVES` lleno, abrir el enlace | Pide la clave; no se ve el formulario |
+| Escribir una clave inventada | "La clave de acceso no es válida" |
+| Escribir la clave buena | Entra, y arriba dice a nombre de quién se registra |
+| Registrar una empresa con clave | La columna `Autorizado a` trae a quién se le entregó |
 | Registrar una empresa | Llega el correo de aviso a `NOTIFICAR_A` |
 
 ## Bloqueo conocido: el dominio no permite publicar en abierto
@@ -207,10 +249,14 @@ Lo que sí está protegido:
   registrado desde afuera, salvo la lista de empresas que el paso 2 necesita.
 - **Duplicados controlados** por NIT y por cédula.
 
-Lo que queda expuesto es que alguien mande registros basura si consigue el
-enlace. Si algún día pasa, las salidas son: pedir un dato que solo el
-proveedor real conozca (una orden de compra, por ejemplo) o mover el
-formulario detrás del portal de proveedores.
+- **Solo entra quien tiene clave.** Con `CONFIG.CLAVES` lleno, el enlace por sí
+  solo no abre nada: hay que escribir una de las claves que Holcim entregó, y
+  cada registro queda marcado con la que se usó. Ver
+  [Claves de acceso](#claves-de-acceso).
+
+Con la lista de claves vacía sí queda expuesto que alguien mande registros
+basura si consigue el enlace. Por eso las claves se encienden **antes** de
+repartirlo, no después del primer susto.
 
 ## Copia en una hoja de Holcim
 

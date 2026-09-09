@@ -16,7 +16,8 @@ function doGet(e) {
     return responder_({
       ok: true,
       servicio: 'Registro de Empresas y Personas — Holcim',
-      listo: true
+      listo: true,
+      pideClave: seExigeClave_()
     });
   }
   return HtmlService.createHtmlOutputFromFile('pagina')
@@ -50,16 +51,42 @@ function doPost(e) {
   return responder_(manejar_(cuerpo));
 }
 
-/** El encaminador, común a las dos entradas. */
+/**
+ * El encaminador, común a las dos entradas.
+ *
+ * Antes de cualquier cosa se resuelve la clave. La pantalla ya la pide, pero
+ * eso es comodidad para quien escribe: cualquiera puede llamar esta URL sin
+ * pasar por el formulario, así que lo que decide es este control.
+ */
 function manejar_(cuerpo) {
   try {
+    /* Qué exige el servicio. Se responde sin clave a propósito: es lo que la
+       pantalla consulta al abrirse, para saber si debe pedirla. */
+    if (cuerpo.accion === 'estado') {
+      return { ok: true, pideClave: seExigeClave_() };
+    }
+
+    var autorizado = '';
+    if (seExigeClave_()) {
+      autorizado = duenoDeClave_(cuerpo.clave);
+      if (!autorizado) {
+        return {
+          ok: false,
+          claveInvalida: true,
+          errores: ['La clave de acceso no es válida. Escriba la que Holcim le entregó con la invitación.']
+        };
+      }
+    }
+
     switch (cuerpo.accion) {
+      case 'entrar':
+        return { ok: true, para: autorizado };
       case 'empresas':
         return { ok: true, empresas: empresasRegistradas_() };
       case 'registrarEmpresa':
-        return guardarEmpresa_(cuerpo.datos || {});
+        return guardarEmpresa_(cuerpo.datos || {}, autorizado);
       case 'registrarPersona':
-        return guardarPersona_(cuerpo.datos || {});
+        return guardarPersona_(cuerpo.datos || {}, autorizado);
       default:
         return { ok: false, errores: ['Acción no reconocida: ' + cuerpo.accion] };
     }
@@ -75,10 +102,16 @@ function responder_(objeto) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/** El correo de aviso dice con qué clave entró, cuando se está pidiendo. */
+function conAutorizado_(filas, autorizado) {
+  if (!autorizado) return filas;
+  return filas.concat([['Autorizado a', autorizado]]);
+}
+
 /* ------------------------------------------------------------------ *
  * Registro de empresa
  * ------------------------------------------------------------------ */
-function guardarEmpresa_(entrada) {
+function guardarEmpresa_(entrada, autorizado) {
   var revision = depurarEmpresa_(entrada);
   if (!revision.ok) return { ok: false, errores: revision.errores };
   var d = revision.datos;
@@ -98,15 +131,16 @@ function guardarEmpresa_(entrada) {
       'DV': d.dv,
       'Nombre empresa': d.nombreEmpresa,
       'Correo': d.correoEmpresa,
-      'Teléfono': d.telefono
+      'Teléfono': d.telefono,
+      'Autorizado a': autorizado || ''
     });
 
-    avisar_('Nueva empresa registrada', d.nombreEmpresa, id, [
+    avisar_('Nueva empresa registrada', d.nombreEmpresa, id, conAutorizado_([
       ['NIT', d.nit + '  ·  DV ' + d.dv],
       ['Empresa', d.nombreEmpresa],
       ['Correo', d.correoEmpresa],
       ['Teléfono', d.telefono]
-    ]);
+    ], autorizado));
 
     return { ok: true, id: id, mensaje: 'Empresa registrada con el radicado ' + id + '.' };
   } finally {
@@ -117,7 +151,7 @@ function guardarEmpresa_(entrada) {
 /* ------------------------------------------------------------------ *
  * Registro de persona
  * ------------------------------------------------------------------ */
-function guardarPersona_(entrada) {
+function guardarPersona_(entrada, autorizado) {
   var revision = depurarPersona_(entrada);
   if (!revision.ok) return { ok: false, errores: revision.errores };
   var d = revision.datos;
@@ -144,15 +178,16 @@ function guardarPersona_(entrada) {
       'Cédula': d.cedula,
       'Correo': d.correoPersona,
       'NIT empresa': d.nitEmpresa,
-      'Nombre empresa': nombreEmpresa
+      'Nombre empresa': nombreEmpresa,
+      'Autorizado a': autorizado || ''
     });
 
-    avisar_('Nueva persona registrada', d.nombreCompleto, id, [
+    avisar_('Nueva persona registrada', d.nombreCompleto, id, conAutorizado_([
       ['Nombre completo', d.nombreCompleto],
       ['Cédula', d.cedula],
       ['Correo', d.correoPersona],
       ['Empresa', nombreEmpresa + '  ·  NIT ' + d.nitEmpresa]
-    ]);
+    ], autorizado));
 
     return { ok: true, id: id, mensaje: 'Persona registrada con el radicado ' + id + '.' };
   } finally {

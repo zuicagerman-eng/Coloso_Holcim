@@ -390,6 +390,26 @@
     font-size: 12.5px;
     text-align: center;
   }
+  /* ---------- Puerta: clave de acceso ---------- */
+  .puerta { max-width: 440px; margin: 0 auto; }
+  .puerta h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .puerta p {
+    margin: 0 0 22px;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .quien {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  .quien b { color: var(--ink); font-weight: 600; }
+
   .oculto { display: none !important; }
   /* Visible solo para lectores de pantalla. */
   .solo-lectores {
@@ -439,9 +459,32 @@
   <div class="titular">
     <h1>Registro de Empresas y Personas</h1>
     <p>Primero se registra la empresa; después las personas que pertenecen a ella.</p>
+    <p class="quien oculto" id="quien"></p>
   </div>
 
-  <div class="selector" role="tablist">
+  <!-- ---------- Puerta: clave de acceso ----------
+       Se muestra solo si el servidor está pidiendo clave. Quien no la
+       tenga no ve el formulario, y aunque lo viera, el servidor rechaza
+       cualquier registro sin una clave válida. -->
+  <div class="tarjeta puerta oculto" id="puerta">
+    <h2>Clave de acceso</h2>
+    <p>Este registro es privado. Escriba la clave que Holcim le entregó junto
+       con la invitación.</p>
+    <form novalidate onsubmit="entrarConClave(event)">
+      <div class="campo">
+        <label for="clave">Clave</label>
+        <input id="clave" class="mono" autocomplete="off" spellcheck="false"
+               placeholder="HOLCIM-0000-0000-0000">
+        <span class="error" id="errorClave"></span>
+      </div>
+      <div class="barra-envio">
+        <button class="boton" type="submit">Entrar</button>
+        <span class="obligatorio">¿No la tiene? Pídala a quien lo invitó.</span>
+      </div>
+    </form>
+  </div>
+
+  <div class="selector oculto" role="tablist" id="pasos">
     <button class="opcion" id="opEmpresa" role="tab" aria-selected="true" aria-controls="formEmpresa" onclick="cambiar('empresa')">
       <span class="orden">Paso 1</span>
       <span class="nombre">Empresa</span>
@@ -452,7 +495,7 @@
     </button>
   </div>
 
-  <div class="tarjeta">
+  <div class="tarjeta oculto" id="contenido">
     <div id="avisoGeneral" role="alert"></div>
 
     <!-- ---------- Empresa ---------- -->
@@ -597,6 +640,10 @@ var API = {
   url: '',
   token: 'CAMBIE-ESTA-CLAVE'
 };
+
+/* La clave con la que se entró. Viaja en cada llamada y el servidor la
+   vuelve a comprobar: aquí solo decide qué se muestra en pantalla. */
+var ACCESO = { clave: '', para: '' };
 
 /** ¿Nos está sirviendo Apps Script? */
 function dentroDeGoogle() {
@@ -790,7 +837,10 @@ function enviarAlServidor(tipo, datos) {
     datos: datos
   }).then(function (respuesta) {
     ocupado(tipo, false);
-    if (!respuesta.ok) return avisar(respuesta.errores || ['No se pudo guardar.']);
+    if (!respuesta.ok) {
+      if (respuesta.claveInvalida) return volverAPedirClave();
+      return avisar(respuesta.errores || ['No se pudo guardar.']);
+    }
     mostrarConfirmacion(tipo, datos, respuesta.id);
     if (tipo === 'empresa') cargarEmpresas();
   }).catch(function (error) {
@@ -801,6 +851,8 @@ function enviarAlServidor(tipo, datos) {
 }
 
 function llamarApi(cuerpo) {
+  if (ACCESO.clave) cuerpo.clave = ACCESO.clave;
+
   /* Dentro de Apps Script se llama la función del servidor directamente:
      no hay CORS, no hay token y la sesión la pone Google. */
   if (dentroDeGoogle()) {
@@ -959,8 +1011,99 @@ function escapar(t) {
   });
 }
 
-pintarListaEmpresas();
-cargarEmpresas();
+/* ---------- Puerta: clave de acceso ---------- */
+
+/**
+ * Al abrir se le pregunta al servidor si está pidiendo clave. Sin servicio
+ * —la vista suelta, que solo sirve para mostrar el formulario— se entra
+ * directo: no hay nada que proteger porque no se guarda nada.
+ */
+function arrancar() {
+  pintarListaEmpresas();
+  if (!hayServicio()) return abrirFormulario();
+
+  llamarApi({ accion: 'estado' })
+    .then(function (r) {
+      if (r && r.ok && r.pideClave) pedirClave();
+      else abrirFormulario();
+    })
+    .catch(function () {
+      /* Si no se pudo preguntar, se muestra el formulario igual: el servidor
+         rechaza cualquier registro sin clave válida, así que no se abre nada. */
+      abrirFormulario();
+    });
+}
+
+function pedirClave(mensaje) {
+  elemento('puerta').classList.remove('oculto');
+  elemento('pasos').classList.add('oculto');
+  elemento('contenido').classList.add('oculto');
+  elemento('errorClave').textContent = mensaje || '';
+  elemento('clave').focus();
+}
+
+/** La clave se venció o la quitaron de Config mientras alguien diligenciaba. */
+function volverAPedirClave() {
+  ACCESO.clave = '';
+  ACCESO.para = '';
+  elemento('quien').classList.add('oculto');
+  pedirClave('La clave dejó de ser válida. Pida una nueva a Holcim.');
+}
+
+function abrirFormulario() {
+  elemento('puerta').classList.add('oculto');
+  elemento('pasos').classList.remove('oculto');
+  elemento('contenido').classList.remove('oculto');
+
+  if (ACCESO.para) {
+    var quien = elemento('quien');
+    quien.innerHTML = 'Registrando a nombre de <b>' + escapar(ACCESO.para) + '</b>';
+    quien.classList.remove('oculto');
+  }
+  cargarEmpresas();
+}
+
+function entrarConClave(evento) {
+  evento.preventDefault();
+  var campo = elemento('clave');
+  var aviso = elemento('errorClave');
+  var boton = elemento('puerta').querySelector('button[type="submit"]');
+
+  var escrita = limpiar(campo.value).toUpperCase().replace(/\s+/g, '');
+  if (!escrita) {
+    aviso.textContent = 'Escriba la clave.';
+    campo.focus();
+    return;
+  }
+
+  aviso.textContent = '';
+  boton.disabled = true;
+  boton.textContent = 'Comprobando…';
+  ACCESO.clave = escrita;
+
+  llamarApi({ accion: 'entrar' })
+    .then(function (r) {
+      boton.disabled = false;
+      boton.textContent = 'Entrar';
+      if (r && r.ok) {
+        ACCESO.para = r.para || '';
+        campo.value = '';
+        abrirFormulario();
+        return;
+      }
+      ACCESO.clave = '';
+      aviso.textContent = (r && r.errores && r.errores[0]) || 'La clave no es válida.';
+      campo.focus();
+    })
+    .catch(function (error) {
+      boton.disabled = false;
+      boton.textContent = 'Entrar';
+      ACCESO.clave = '';
+      aviso.textContent = 'No se pudo comprobar la clave: ' + error.message;
+    });
+}
+
+arrancar();
 </script>
 <!--FIN-CONTENIDO-->
 </body>

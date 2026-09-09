@@ -5,6 +5,26 @@
 var CONFIG = {
 
   /**
+   * ► CLAVES DE ACCESO ◄
+   * Con la lista vacía el formulario queda abierto: cualquiera que tenga
+   * el enlace puede diligenciarlo.
+   *
+   * Con una o más claves, la pantalla no muestra nada hasta que se escriba
+   * una válida, y cada registro queda marcado con a quién se le entregó.
+   * Entregue una clave por empresa o por convocatoria, nunca una sola para
+   * todos: así se puede quitar la de uno sin dejar a los demás por fuera.
+   *
+   *   'LA-CLAVE': 'a quién se le entregó'
+   *
+   * Para retirar el acceso, borre la línea y vuelva a implementar. No hace
+   * falta cambiar la URL ni avisarle a nadie más.
+   */
+  CLAVES: {
+    // 'HOLCIM-2026-ANDINA': 'Constructora Andina S.A.S.',
+    // 'HOLCIM-2026-DELTA':  'Montajes Delta Ltda.',
+  },
+
+  /**
    * ► CORREOS QUE RECIBEN EL AVISO ◄
    * Cada vez que alguien registre una empresa o una persona, llega un
    * correo a estas direcciones diciendo quién lo hizo y qué registró.
@@ -51,11 +71,13 @@ var CONFIG = {
 
   ENCABEZADOS: {
     EMPRESAS: [
-      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono'
+      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono',
+      'Autorizado a'
     ],
     PERSONAS: [
       'ID', 'Fecha', 'Nombres', 'Primer apellido', 'Segundo apellido',
-      'Nombre completo', 'Cédula', 'Correo', 'NIT empresa', 'Nombre empresa'
+      'Nombre completo', 'Cédula', 'Correo', 'NIT empresa', 'Nombre empresa',
+      'Autorizado a'
     ],
     ERRORES: ['Fecha', 'Detalle']
   }

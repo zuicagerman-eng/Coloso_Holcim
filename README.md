@@ -6,6 +6,7 @@ de Google.
 
 ```
 vista/index.html            un solo archivo, se abre en cualquier navegador
+        │  pide la clave de acceso antes de mostrar nada
         │  fetch POST (JSON + token)
         ▼
 Apps Script  Api.gs         valida otra vez y escribe
@@ -43,11 +44,25 @@ sirve para mostrarlo sin montar nada.
 |---|---|
 | `vista/index.html` | El formulario completo: un archivo, sin dependencias |
 | `vista/assets/logo-holcim.svg` | Símbolo de la marca (reconstrucción, ver abajo) |
-| `apps-script/Config.gs` | **Lo único que se edita**: token y correos de aviso |
+| `apps-script/Config.gs` | **Lo único que se edita**: claves de acceso, correos de aviso y token |
 | `apps-script/Api.gs` | Recibe los registros y los guarda |
 | `apps-script/Validaciones.gs` | Las reglas, del lado del servidor |
 | `apps-script/Hoja.gs` | Único punto que toca la hoja de cálculo |
 | `apps-script/Correo.gs` | Aviso por correo, apagado mientras no haya destinatarios |
+| `docs/PROGRAMAS.md` | El listado de programas: dónde vive cada uno y quién puede entrar |
+
+## Quién puede entrar
+
+El formulario se publica en abierto —quien lo diligencia es externo y no tiene
+cuenta de Holcim—, así que la entrada la controla una **clave de acceso**: una
+por empresa o por convocatoria, que se pone en `CONFIG.CLAVES` y se entrega con
+la invitación. Sin clave válida no se ve el formulario, y cada registro queda
+marcado con a quién se le entregó la clave que se usó.
+
+La regla para este y para los demás programas del área —todo en el dominio de
+Holcim, privado por omisión, público solo lo que tiene que serlo y siempre con
+clave— está en **[`docs/PROGRAMAS.md`](docs/PROGRAMAS.md)**, junto con el
+listado.
 
 Las reglas están escritas dos veces a propósito: en el navegador para que quien
 diligencia vea el error mientras escribe, y en el servidor porque cualquiera

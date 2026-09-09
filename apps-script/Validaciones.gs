@@ -88,3 +88,57 @@ function depurarPersona_(datos) {
 
   return { ok: errores.length === 0, errores: errores, datos: d };
 }
+
+/* ------------------------------------------------------------------ *
+ * Claves de acceso
+ *
+ * La aplicación se publica con acceso "Cualquier usuario" porque quien
+ * diligencia es externo y no tiene cuenta de Holcim. Enlace abierto no es
+ * entrada libre: si CONFIG.CLAVES tiene alguna, la pantalla no muestra
+ * nada hasta que se escriba una válida, y este archivo es el que decide.
+ * ------------------------------------------------------------------ */
+
+/** Las claves se teclean a mano: no distinguen mayúsculas ni espacios. */
+function normalizarClave_(v) {
+  return String(v || '').trim().toUpperCase().replace(/\s+/g, '');
+}
+
+/** ¿Se exige clave? Lista vacía = formulario abierto. */
+function seExigeClave_() {
+  return Object.keys(CONFIG.CLAVES || {}).length > 0;
+}
+
+/**
+ * Devuelve a quién se le entregó la clave, o cadena vacía si no sirve.
+ * Ese nombre es el que queda en la columna "Autorizado a" de la hoja.
+ */
+function duenoDeClave_(clave) {
+  var buscada = normalizarClave_(clave);
+  if (!buscada) return '';
+  var claves = CONFIG.CLAVES || {};
+  var hallada = Object.keys(claves).filter(function (c) {
+    return normalizarClave_(c) === buscada;
+  })[0];
+  if (!hallada) return '';
+  return limpiar_(claves[hallada]) || hallada;
+}
+
+/**
+ * Arma una clave nueva para pegar en CONFIG.CLAVES. Ejecútela desde el
+ * editor y copie lo que salga en el registro.
+ * Sin vocales: no se forman palabras y no se confunde 0 con O ni 1 con I.
+ */
+function nuevaClave() {
+  var letras = 'BCDFGHJKLMNPQRSTVWXYZ23456789';
+  var partes = [];
+  for (var bloque = 0; bloque < 3; bloque++) {
+    var trozo = '';
+    for (var i = 0; i < 4; i++) {
+      trozo += letras.charAt(Math.floor(Math.random() * letras.length));
+    }
+    partes.push(trozo);
+  }
+  var clave = 'HOLCIM-' + partes.join('-');
+  console.log(clave);
+  return clave;
+}
