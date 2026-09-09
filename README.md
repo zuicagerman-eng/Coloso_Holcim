@@ -31,8 +31,14 @@ minúscula, NIT y cédula solo con dígitos.
 
 ## Puesta en marcha
 
-Cuatro pasos, unos 15 minutos: crear la hoja, pegar el script, publicarlo como
-aplicación web y pegar la URL en el formulario.
+**Para ponerlo a funcionar no hay que instalar nada**: se hace con el navegador,
+pegando archivos en el editor de Apps Script. La lista completa de lo que sí
+hace falta —cuentas, permisos y los datos que hay que tener a la mano— está en
+**[`docs/REQUISITOS.md`](docs/REQUISITOS.md)**. Revísela antes de empezar y no
+se topará con nada a mitad de camino.
+
+Después son cuatro pasos, unos 15 minutos: crear la hoja, pegar el script,
+publicarlo como aplicación web y pegar la URL en el formulario.
 Está detallado en **[`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)**.
 
 Mientras `API.url` esté vacía, el formulario funciona igual pero no guarda nada;
@@ -49,7 +55,9 @@ sirve para mostrarlo sin montar nada.
 | `apps-script/Validaciones.gs` | Las reglas, del lado del servidor |
 | `apps-script/Hoja.gs` | Único punto que toca la hoja de cálculo |
 | `apps-script/Correo.gs` | Aviso por correo, apagado mientras no haya destinatarios |
+| `docs/REQUISITOS.md` | Todo lo que hace falta antes de empezar: cuentas, permisos y programas |
 | `docs/PROGRAMAS.md` | El listado de programas: dónde vive cada uno y quién puede entrar |
+| `herramientas/empaquetar.py` | Arma el `.zip` que se sube a la unidad compartida del área |
 
 ## Quién puede entrar
 

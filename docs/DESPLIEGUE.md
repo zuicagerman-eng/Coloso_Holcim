@@ -1,6 +1,11 @@
 # Conectar el formulario a la hoja de cálculo
 
-Son cuatro pasos, unos 15 minutos.
+Son cuatro pasos, unos 15 minutos. No hay que instalar nada: todo se hace con el
+navegador.
+
+> **Antes de empezar**, revise [`REQUISITOS.md`](REQUISITOS.md): están ahí las
+> cuentas, los permisos y los datos que va a necesitar. Es para no descubrir a
+> mitad de camino que falta algo.
 
 ## Antes de empezar: ¿en qué cuenta se crea?
 

@@ -7,7 +7,8 @@ La regla, en una frase:
 > de usuario antes de mostrar nada.**
 
 Este archivo es el inventario. Un programa que no esté aquí no está listo para
-usarse con datos reales.
+usarse con datos reales. Lo que hace falta para montar cualquiera de ellos está
+en [`REQUISITOS.md`](REQUISITOS.md).
 
 ## La regla, por partes
 
@@ -49,7 +50,7 @@ recibe datos de personas.
 | 2 | **Hoja de registros** | La base: `EMPRESAS`, `PERSONAS`, `ERRORES` | Google Sheets, ligada al script | **N1** | En marcha, en cuenta personal |
 | 3 | **Copia en hoja de Holcim** | Cada registro se escribe también en una hoja propiedad de Holcim | Google Sheets, unidad compartida | **N1** | Configurable (`ID_HOJA_HOLCIM`), apagado si está vacío |
 | 4 | **Aviso por correo** | Notifica cada registro a los responsables | Apps Script (`MailApp`) | **N1** | En marcha; destinatarios en `NOTIFICAR_A` |
-| 5 | **Código fuente** | Este repositorio | GitHub | **Privado** | ⚠️ Hoy es público — ver deuda abajo |
+| 5 | **Código fuente** | Los archivos con los que se vuelve a montar todo | Ver *Dónde vive el código* | **Privado** | ⚠️ Hoy, GitHub personal y público |
 | 6 | **Vista de demostración** | `vista/index.html` sin `API.url`: valida y confirma en pantalla, no guarda nada | Archivo suelto | **N3** | Sirve para mostrar el formulario sin montar nada |
 
 ### 1 · Registro de Empresas y Personas — por qué es N2
@@ -70,6 +71,46 @@ Lo que eso **no** abre:
 
 Cómo se configuran las claves: `CONFIG.CLAVES` en `apps-script/Config.gs`, y el
 detalle en [`DESPLIEGUE.md`](DESPLIEGUE.md#claves-de-acceso).
+
+## Dónde vive el código
+
+Que el código esté versionado **no significa montar un servidor**. Los programas
+corren donde siempre: una hoja de cálculo con su script. Lo que se guarda aparte
+son los archivos con los que se vuelve a montar el programa si alguien borra la
+hoja — y eso es un archivo de texto en una carpeta, no infraestructura.
+
+La pregunta es en qué carpeta, y hay tres respuestas posibles:
+
+| Dónde | ¿Es de Holcim? | Historial | Qué cuesta conseguirlo |
+|---|---|---|---|
+| **El propio proyecto de Apps Script** | Sí, si la hoja está en una unidad compartida | Débil: guarda versiones de la implementación, sin diferencias ni comparación | Nada, ya está |
+| **Carpeta en una unidad compartida de Drive** | Sí, del área — no de una persona | Drive guarda el historial de cada archivo; una versión se puede marcar para que no se borre | Nada, ya está |
+| **Git corporativo de Holcim** (GitHub Enterprise, Azure DevOps, GitLab) | Sí | Completo: ramas, comparación, quién cambió qué | Hay que preguntarle a TI si existe y pedir el espacio |
+
+**Lo que se hace, en ese orden:**
+
+1. **Preguntar a TI si Holcim tiene Git corporativo.** Es la respuesta buena y no
+   cuesta nada averiguarla; el texto del pedido está en
+   [`SOLICITUD-TI.md`](SOLICITUD-TI.md). Si existe, el código se muda ahí y este
+   listado se actualiza.
+2. **Mientras tanto, la unidad compartida del área.** Para un programa de este
+   tamaño alcanza, porque lo que hay que garantizar son tres cosas y Drive las
+   da: que el código no viva solo en la cuenta de una persona, que un archivo
+   borrado se pueda recuperar, y que el programa se pueda volver a montar en 15
+   minutos. Para dejar la copia al día:
+
+   ```bash
+   python3 herramientas/empaquetar.py
+   ```
+
+   Arma un `.zip` con fecha —el código, la vista y los documentos— que se sube a
+   la carpeta del área. Súbalo cada vez que cambie algo que ya esté en marcha.
+3. **El repositorio de GitHub personal deja de ser la casa.** Hoy además es
+   público: eso se corrige ya (ver abajo). Sirve mientras se trabaja, no como
+   el sitio donde Holcim guarda lo suyo.
+
+Vaya donde vaya, viaja lo mismo: `apps-script/`, `vista/` y `docs/`. Con eso
+—y nada más— se vuelve a montar cualquiera de los programas del listado.
 
 ## Agregar un programa nuevo al listado
 
@@ -92,5 +133,9 @@ Dos cosas, y conviene tratarlas como temporales:
    se vuelve a montar en Holcim en 15 minutos porque el código está aquí. Mientras
    tanto, la copia en la hoja de Holcim (`ID_HOJA_HOLCIM`) hace que los datos
    estén desde el principio donde deben estar.
-2. **El repositorio es público.** Settings → General → Danger Zone → Make private.
-   Antes de que entren datos o correos reales.
+2. **El código está en un GitHub personal, y además público.** Dos arreglos, uno
+   hoy y otro cuando haya respuesta:
+   - Hoy: Settings → General → Danger Zone → Make private. Antes de que entren
+     datos o correos reales.
+   - Y en paralelo, dejar la copia en la unidad compartida del área y preguntarle
+     a TI por el Git corporativo, como dice *Dónde vive el código*.
