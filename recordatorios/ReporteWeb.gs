@@ -561,3 +561,59 @@ function excelDePlanta(planta, registros) {
     DriveApp.getFileById(libro.getId()).setTrashed(true);
   }
 }
+
+
+// ════════════════════════════════════════════════════════════════════
+//  DESCARGA SUELTA — una foto del reporte, con todas las plantas
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Genera el reporte completo como archivo HTML y lo guarda en el Drive.
+ *
+ * A diferencia del enlace, este archivo lleva los datos dentro: es una foto del
+ * momento en que se ejecuta y no se actualiza sola. Sirve para revisar, guardar
+ * un corte o mandarlo a alguien de fuera; para el uso diario está el enlace.
+ *
+ * La URL del archivo queda en el registro de ejecución.
+ *
+ * @param {boolean} sinPendientes  true para dejar fuera a quien nunca ha hecho
+ *                                 el curso, que es la mayor parte del volumen.
+ */
+function descargarHtmlCompleto(sinPendientes) {
+  let registros = construirRegistros().registros;
+
+  if (sinPendientes) {
+    registros = registros.filter(function (r) { return r.urg !== "pendiente"; });
+  }
+
+  const plantilla = HtmlService.createTemplateFromFile("reporte");
+  plantilla.datosJson     = JSON.stringify(registros);
+  plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
+  plantilla.plantaInicial = "__ALL__";
+
+  const contenido = plantilla.evaluate().getContent();
+  const nombre = "Vencimientos_todas_las_plantas_" +
+                 Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd_HHmm") +
+                 (sinPendientes ? "_sin_pendientes" : "") + ".html";
+
+  const archivo = DriveApp.createFile(nombre, contenido, MimeType.HTML);
+
+  Logger.log([
+    "Archivo generado en su Drive",
+    "  nombre ...... " + nombre,
+    "  registros ... " + registros.length,
+    "  tamaño ...... " + Math.round(contenido.length / 1024) + " KB",
+    "",
+    "Descárguelo desde:",
+    "  " + archivo.getUrl(),
+    "",
+    "Drive no muestra los HTML: use el botón de descarga y ábralo desde su equipo."
+  ].join("\n"));
+
+  return archivo.getUrl();
+}
+
+/** Lo mismo, pero dejando fuera a los pendientes. Pesa mucho menos. */
+function descargarHtmlSinPendientes() {
+  return descargarHtmlCompleto(true);
+}
