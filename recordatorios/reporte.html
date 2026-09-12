@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Tablero interno H&S Holcim Colombia: seguimiento de vencimientos de capacitaciones legales, de alto riesgo e internas por planta.">
+<meta name="color-scheme" content="light dark">
+<title>Vencimientos de Capacitaciones · H&S Holcim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%231D4370'/><stop offset='.55' stop-color='%2304BBF1'/><stop offset='1' stop-color='%2394C12E'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><text x='16' y='22' font-family='Arial' font-size='14' font-weight='bold' fill='white' text-anchor='middle'>H</text></svg>">
+<style>
+  /* ==========================================================================
+     Paleta Holcim — azul profundo · cian · verde (degradado del logo infinito)
+     ========================================================================== */
+  :root{
+    color-scheme:light;
+    --h-blue:#1d4370; --h-blue-2:#2a5c96; --h-cyan:#04bbf1; --h-green:#94c12e;
+    --grad:linear-gradient(135deg,#1d4370 0%,#04bbf1 55%,#94c12e 100%);
+
+    --ink:#0d1f33; --ink-2:#16324f;
+    --page:#eff3f7; --card:#ffffff; --card-2:#f7f9fb;
+    --text:#0f1e2b; --muted:#5d7186; --line:#e2e8ef; --line-2:#eef2f7;
+    --brand:var(--h-blue); --brand-2:var(--h-blue-2); --brand-soft:#e9f1fa; --on-brand:#fff;
+    --head-text:#ffffff; --head-dim:#9db4cb; --head-line:#20374f; --head-ctl:#16324f;
+
+    --u-vencida:#8f1d16; --u-critica:#d92f28; --u-alta:#e07a0c; --u-media:#bd9000; --u-baja:#1f9d57;
+    --u-vencida-s:#fbe9e7; --u-critica-s:#fdeceb; --u-alta-s:#fdf0e2; --u-media-s:#fbf3dc; --u-baja-s:#e6f6ed;
+
+    --shadow:0 1px 2px rgba(15,30,43,.05),0 6px 18px rgba(15,30,43,.06);
+    --shadow-lg:0 20px 60px rgba(9,20,32,.28);
+    --r:14px; --r-sm:10px;
+  }
+  [data-theme="dark"]{
+    color-scheme:dark;
+    --ink:#0a1119; --ink-2:#131c26;
+    --page:#0b1117; --card:#141c25; --card-2:#101820;
+    --text:#e7eef5; --muted:#94a8bd; --line:#243241; --line-2:#1b2732;
+    --brand:#3d86d6; --brand-2:#5ba0ea; --brand-soft:#152a40; --on-brand:#08131f;
+    --head-text:#eaf2fa; --head-dim:#8ba4bd; --head-line:#1d2b3a; --head-ctl:#1a2632;
+
+    --u-vencida:#ff6f63; --u-critica:#ff7a72; --u-alta:#f5a742; --u-media:#e2c14a; --u-baja:#4ecb87;
+    --u-vencida-s:#33191a; --u-critica-s:#3a1c1c; --u-alta-s:#382713; --u-media-s:#332c12; --u-baja-s:#122e21;
+
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--page); color:var(--text);
+    font-feature-settings:"tnum" 1,"cv05" 1; -webkit-font-smoothing:antialiased;
+  }
+  .tnum{font-variant-numeric:tabular-nums}
+  button,input,select{font-family:inherit}
+  :focus-visible{outline:2px solid var(--h-cyan); outline-offset:2px; border-radius:4px}
+  .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .skip{position:absolute;left:-9999px;top:0;background:var(--card);color:var(--text);padding:10px 16px;z-index:200;border-radius:0 0 8px 0}
+  .skip:focus{left:0}
+
+  /* ---------- Header ---------- */
+  header.top{position:sticky; top:0; z-index:40; background:var(--ink); color:var(--head-text)}
+  header.top::after{content:"";display:block;height:3px;background:var(--grad)}
+  .top-in{max-width:1320px; margin:0 auto; padding:11px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+  .brand{display:flex; align-items:center; gap:12px; margin-right:auto; min-width:0}
+  .logo{width:46px;height:23px;flex:none}
+  .wordmark{font-size:18px;font-weight:800;letter-spacing:.15em;color:#fff;line-height:1;padding-right:2px}
+  .vr{width:1px;height:30px;background:var(--head-line);flex:none}
+  .brand h1{font-size:15px;font-weight:700;margin:0;line-height:1.15;letter-spacing:-.2px}
+  .brand .sub{display:block;font-size:11.5px;color:var(--head-dim);font-weight:500;margin-top:3px}
+  .brand .sub b{color:var(--head-text);font-weight:700}
+  .qmark{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:11px;font-weight:800;line-height:1}
+  .plantpick{display:flex;align-items:center;gap:8px}
+  .plantpick label{font-size:11.5px;color:var(--head-dim);font-weight:600}
+  select.plant{
+    background:var(--head-ctl);color:var(--head-text);border:1px solid var(--head-line);border-radius:9px;
+    padding:8px 12px;font-size:13.5px;font-weight:600;min-width:200px;cursor:pointer;
+  }
+  select.plant:hover{border-color:var(--h-cyan)}
+  .btn-ghost{
+    background:transparent;color:var(--head-text);border:1px solid var(--head-line);border-radius:9px;
+    padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;gap:7px;align-items:center;white-space:nowrap
+  }
+  .btn-ghost:hover{background:var(--head-ctl);border-color:var(--h-cyan)}
+  .icon-btn{width:36px;height:36px;padding:0;justify-content:center}
+
+  /* ---------- Tabs ---------- */
+  .tabs{max-width:1320px;margin:0 auto;padding:0 20px;display:flex;gap:2px;overflow-x:auto}
+  .tab{
+    background:none;border:none;color:var(--head-dim);padding:11px 16px;font-size:13.5px;font-weight:600;
+    cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;display:inline-flex;align-items:center;gap:7px
+  }
+  .tab .n{font-size:11px;background:var(--head-ctl);border-radius:999px;padding:1px 7px;font-weight:700}
+  .tab[aria-selected="true"]{color:#fff;border-bottom-color:var(--h-cyan)}
+  .tab:hover:not([aria-selected="true"]){color:#dceaf6}
+
+  /* ---------- Layout ---------- */
+  main{max-width:1320px;margin:0 auto;padding:20px}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px;box-shadow:var(--shadow)}
+  .seg button{
+    border:none;background:none;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--muted);
+    border-radius:7px;cursor:pointer;white-space:nowrap
+  }
+  .seg button.on{background:var(--brand);color:var(--on-brand)}
+  .seg button:hover:not(.on){color:var(--text);background:var(--line-2)}
+  .search{
+    flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r-sm);padding:8px 12px;box-shadow:var(--shadow)
+  }
+  .search:focus-within{border-color:var(--h-cyan);box-shadow:0 0 0 3px rgba(4,187,241,.15)}
+  .search input{border:none;outline:none;font-size:13.5px;width:100%;background:none;color:var(--text)}
+  .search svg{flex:none;color:var(--muted)}
+  .search kbd{font:600 10.5px/1 Inter,sans-serif;color:var(--muted);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:3px 5px;flex:none}
+  select.mini{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 11px;font-size:12.5px;
+    font-weight:600;color:var(--text);cursor:pointer;box-shadow:var(--shadow);max-width:260px
+  }
+  .btn{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-size:12.5px;
+    font-weight:700;color:var(--text);cursor:pointer;box-shadow:var(--shadow);display:inline-flex;gap:6px;align-items:center;white-space:nowrap
+  }
+  .btn:hover{border-color:var(--brand);color:var(--brand)}
+  .btn-primary{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
+  .btn-primary:hover{background:var(--brand-2);border-color:var(--brand-2);color:var(--on-brand)}
+
+  /* ---------- Chips de urgencia ---------- */
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+  .chip{
+    border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:600;
+    color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:var(--shadow)
+  }
+  .chip i{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+  .chip .c{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+  .chip:hover{border-color:var(--muted)}
+  .chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+  .chip[aria-pressed="true"] .c{color:var(--on-brand)}
+  .chip.c-vencida{color:var(--u-vencida)} .chip.c-critica{color:var(--u-critica)}
+  .chip.c-alta{color:var(--u-alta)} .chip.c-media{color:var(--u-media)} .chip.c-baja{color:var(--u-baja)}
+
+  /* ---------- KPIs ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .kpi{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px 15px 19px;
+    box-shadow:var(--shadow);position:relative;overflow:hidden;text-align:left;cursor:pointer;transition:transform .12s,box-shadow .12s
+  }
+  .kpi:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(15,30,43,.10)}
+  .kpi .n{font-size:31px;font-weight:800;line-height:1;letter-spacing:-.8px}
+  .kpi .l{font-size:12px;color:var(--muted);font-weight:600;margin-top:7px}
+  .kpi .s{font-size:11px;color:var(--muted);font-weight:500;margin-top:3px;opacity:.85}
+  .kpi .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
+  .kpi.k-total .bar{background:var(--grad)} .kpi.k-total .n{color:var(--brand)}
+  .kpi.k-now .bar{background:var(--u-critica)} .kpi.k-now .n{color:var(--u-critica)}
+  .kpi.k-30 .bar{background:var(--u-alta)} .kpi.k-30 .n{color:var(--u-alta)}
+  .kpi.k-ppl .bar{background:var(--h-cyan)} .kpi.k-ppl .n{color:var(--text)}
+
+  /* ---------- Lista ---------- */
+  .listhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap}
+  .listhead h2{font-size:15px;margin:0;font-weight:700}
+  .listhead .cnt{font-size:12.5px;color:var(--muted);font-weight:600}
+  .rows{display:flex;flex-direction:column;gap:8px}
+  .sep{display:flex;align-items:center;gap:10px;margin:14px 0 2px;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .sep::after{content:"";flex:1;height:1px;background:var(--line)}
+  .sep:first-child{margin-top:0}
+  .row{
+    background:var(--card);border:1px solid var(--line);border-left-width:5px;border-radius:12px;
+    padding:12px 15px;display:grid;grid-template-columns:76px 1fr auto;gap:14px;align-items:center;box-shadow:var(--shadow)
+  }
+  .row:hover{border-color:var(--line);box-shadow:0 6px 20px rgba(15,30,43,.10)}
+  .row.u-vencida{border-left-color:var(--u-vencida)}
+  .row.u-critica{border-left-color:var(--u-critica)}
+  .row.u-alta{border-left-color:var(--u-alta)}
+  .row.u-media{border-left-color:var(--u-media)}
+  .row.u-baja{border-left-color:var(--u-baja)}
+  .days{text-align:center}
+  .days .d{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px}
+  .days .dl{font-size:10px;color:var(--muted);font-weight:600;margin-top:3px}
+  .u-vencida .days .d{color:var(--u-vencida)} .u-critica .days .d{color:var(--u-critica)}
+  .u-alta .days .d{color:var(--u-alta)} .u-media .days .d{color:var(--u-media)} .u-baja .days .d{color:var(--u-baja)}
+  .who .nm{font-size:14px;font-weight:700;line-height:1.25}
+  .who .meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .who .course{font-size:12.5px;margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+  .b-alto{background:var(--u-vencida-s);color:var(--u-vencida);border-color:color-mix(in srgb,var(--u-vencida) 22%,transparent)}
+  .b-norm{background:var(--brand-soft);color:var(--brand);border-color:color-mix(in srgb,var(--brand) 22%,transparent)}
+  .b-int{background:var(--line-2);color:var(--muted);border-color:var(--line)}
+  .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .right .fecha{font-size:13px;font-weight:700;white-space:nowrap}
+  .pill{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff;white-space:nowrap}
+  .pill.u-vencida{background:var(--u-vencida)} .pill.u-critica{background:var(--u-critica)}
+  .pill.u-alta{background:var(--u-alta)} .pill.u-media{background:var(--u-media)} .pill.u-baja{background:var(--u-baja)}
+  [data-theme="dark"] .pill{color:#0b1117}
+  .empty{background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:44px 20px;text-align:center;color:var(--muted);font-size:13.5px}
+  .empty b{display:block;color:var(--text);font-size:15px;margin-bottom:6px}
+  .more{margin:14px auto 0;display:block}
+
+  /* ---------- Vista por persona ---------- */
+  .pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+  .person{background:var(--card);border:1px solid var(--line);border-left-width:5px;border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+  .person.u-vencida{border-left-color:var(--u-vencida)} .person.u-critica{border-left-color:var(--u-critica)}
+  .person.u-alta{border-left-color:var(--u-alta)} .person.u-media{border-left-color:var(--u-media)} .person.u-baja{border-left-color:var(--u-baja)}
+  .person>summary{list-style:none;cursor:pointer;padding:12px 15px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+  .person>summary::-webkit-details-marker{display:none}
+  .person>summary:hover{background:var(--card-2)}
+  .person .nm{font-size:14px;font-weight:700;line-height:1.25}
+  .person .meta{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .person .cta{text-align:right;font-size:11px;color:var(--muted);font-weight:600}
+  .person .cta .big{font-size:19px;font-weight:800;color:var(--text);display:block;line-height:1.1}
+  .person ul{list-style:none;margin:0;padding:2px 15px 13px;border-top:1px dashed var(--line)}
+  .person li{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:7px 0;font-size:12.5px;border-bottom:1px solid var(--line-2)}
+  .person li:last-child{border-bottom:none}
+  .person li .cn{min-width:0}
+  .person li .cf{white-space:nowrap;font-weight:700;font-size:11.5px}
+
+  /* ---------- Dashboard ---------- */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+  .panel h3{font-size:13.5px;margin:0 0 14px;font-weight:700;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+  .panel h3 small{font-weight:500;color:var(--muted);font-size:11.5px}
+  .distro{display:flex;height:36px;border-radius:9px;overflow:hidden;margin-bottom:12px;background:var(--line-2)}
+  .distro span{display:grid;place-items:center;color:#fff;font-size:11.5px;font-weight:700;min-width:0;transition:flex .4s}
+  [data-theme="dark"] .distro span{color:#0b1117}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .bars{display:flex;flex-direction:column;gap:9px}
+  .brow{display:grid;grid-template-columns:150px 1fr 46px;gap:10px;align-items:center;font-size:12px}
+  .brow .lb{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track{background:var(--line-2);border-radius:6px;height:17px;overflow:hidden}
+  .fill{height:100%;border-radius:6px;background-image:var(--grad);background-repeat:no-repeat;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .brow .vv{text-align:right;font-weight:700;color:var(--muted)}
+  .mt14{margin-top:14px}
+  /* Agenda semanal */
+  .weeks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,116px);justify-content:space-between;gap:8px;align-items:end;height:170px}
+  .wk{display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:6px;text-align:center;min-width:0}
+  .wk .stack{display:flex;flex-direction:column-reverse;border-radius:6px 6px 3px 3px;overflow:hidden;min-height:3px}
+  .wk .stack i{display:block}
+  .wk .wl{font-size:10.5px;color:var(--muted);font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wk .wv{font-size:12px;font-weight:800}
+  .wk.hot .wv{color:var(--u-critica)}
+  footer{max-width:1320px;margin:0 auto;padding:18px 20px 44px;color:var(--muted);font-size:11.5px;line-height:1.6}
+
+  /* ---------- Modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(7,16,26,.66);backdrop-filter:blur(4px);z-index:100;display:grid;place-items:center;padding:18px;overflow:auto}
+  .overlay[hidden]{display:none}
+  .modal{background:var(--card);border-radius:18px;max-width:600px;width:100%;box-shadow:var(--shadow-lg);overflow:hidden;animation:pop .28s cubic-bezier(.2,.9,.3,1.1)}
+  @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  .modal-h{background:var(--ink);color:#fff;padding:22px 26px;position:relative}
+  .modal-h::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--grad)}
+  .modal-h .mark{margin-bottom:12px}
+  .modal-h h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.3px}
+  .modal-h p{margin:7px 0 0;font-size:13px;color:#a9bccd;line-height:1.5}
+  .modal-b{padding:20px 26px 24px}
+  .step-l{font-size:11px;font-weight:800;color:var(--muted);margin:0 0 9px;letter-spacing:.6px}
+  .plant-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:18px;padding:2px}
+  .pcard{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;transition:.15s;color:var(--text)}
+  .pcard.all{grid-column:1/-1;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;background:var(--card-2)}
+  .pcard:hover{border-color:var(--brand);background:var(--brand-soft)}
+  .pcard[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 3px var(--brand-soft)}
+  .pcard .pn{display:block;font-size:12.5px;font-weight:700;line-height:1.2}
+  .pcard .pc{display:block;font-size:10.5px;color:var(--muted);margin-top:3px}
+  .pcard .pu{display:flex;gap:5px;align-items:center;font-size:10.5px;font-weight:700;color:var(--u-critica);margin-top:2px}
+  .pcard.all .pn{font-size:13.5px} .pcard.all .pc,.pcard.all .pu{margin-top:0}
+  .pcard .dot{width:7px;height:7px;border-radius:50%;background:var(--u-critica);flex:none}
+  .view-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+  .vopt{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.15s;background:var(--card);text-align:left;color:var(--text)}
+  .vopt:hover{border-color:var(--brand)}
+  .vopt[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+  .vopt .vt{display:block;font-size:13px;font-weight:700}
+  .vopt .vd{display:block;font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .modal-cta{width:100%;background:var(--brand);color:var(--on-brand);border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:700;cursor:pointer;transition:.15s}
+  .modal-cta:hover:not(:disabled){background:var(--brand-2)}
+  .modal-cta:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+  .modal-hint{text-align:center;font-size:11.5px;color:var(--muted);margin:11px 0 0}
+  /* Ventana de ayuda */
+  .modal.wide{max-width:720px}
+  .help-b{padding:20px 26px 24px;max-height:min(70vh,620px);overflow:auto}
+  .help-b h3{font-size:13px;margin:18px 0 8px;font-weight:800;letter-spacing:.3px;color:var(--brand)}
+  .help-b h3:first-child{margin-top:0}
+  .help-b p,.help-b li{font-size:13px;line-height:1.55;margin:0 0 7px}
+  .help-b ul{margin:0 0 4px;padding-left:18px}
+  .help-b b{font-weight:700}
+  .help-key{display:grid;grid-template-columns:auto 1fr;gap:8px 11px;align-items:center;margin:2px 0 6px}
+  .help-key i{width:13px;height:13px;border-radius:4px;display:block}
+  .help-key span{font-size:12.5px}
+  .modal-x{position:absolute;top:16px;right:18px;background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;line-height:1}
+  .modal-x:hover{background:rgba(255,255,255,.24)}
+
+  /* ---------- Responsive ---------- */
+  @media(max-width:980px){ .brow{grid-template-columns:118px 1fr 40px} }
+  @media(max-width:860px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .grid2{grid-template-columns:1fr}
+    .row{grid-template-columns:58px 1fr;gap:11px}
+    .right{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding-top:8px;border-top:1px dashed var(--line-2)}
+    .plantpick{order:3;width:100%}
+    select.plant{flex:1;min-width:0}
+    .weeks{height:140px}
+    .view-opts{grid-template-columns:1fr 1fr}
+    .plant-grid{grid-template-columns:1fr 1fr}
+    .wordmark,.vr{display:none}
+    .modal-b{padding:16px 18px 20px}
+    .help-b{padding:16px 18px 20px}
+  }
+  @media(max-width:520px){
+    .pcard{padding:8px 10px} .pcard .pc{display:none} .pcard.all .pc{display:block}
+    .kpi .n{font-size:26px}
+    .brow{grid-template-columns:96px 1fr 34px}
+    .wk .wl{font-size:9px}
+  }
+
+  /* ---------- Impresión ---------- */
+  @media print{
+    body{background:#fff}
+    header.top,.toolbar,.chips,.overlay,.more,.tabs,footer .no-print{display:none!important}
+    main{max-width:none;padding:0}
+    .kpis{grid-template-columns:repeat(4,1fr)}
+    .kpi,.row,.panel,.person{box-shadow:none;break-inside:avoid}
+    .row{padding:7px 10px}
+    .print-head{display:block!important;margin-bottom:14px;border-bottom:2px solid #1d4370;padding-bottom:8px}
+  }
+  .print-head{display:none}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<!-- ===== Modal de bienvenida ===== -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="mTitle" hidden>
+  <div class="modal wide">
+    <div class="modal-h">
+      <svg class="logo" viewBox="0 0 64 32" role="img" aria-label="Holcim"><defs><linearGradient id="hg2" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#94c12e"/><stop offset=".5" stop-color="#04bbf1"/><stop offset="1" stop-color="#1d4370"/></linearGradient></defs><path d="M18.6 6.6C13.5 6.6 9.4 10.7 9.4 15.8S13.5 25 18.6 25c5.1 0 9.2-4.1 13.4-9.2 4.2-5.1 8.3-9.2 13.4-9.2s9.2 4.1 9.2 9.2S50.5 25 45.4 25c-5.1 0-9.2-4.1-13.4-9.2C27.8 10.7 23.7 6.6 18.6 6.6Z" fill="none" stroke="url(#hg2)" stroke-width="6.4" stroke-linecap="round"/></svg>
+      <h2 id="mTitle">Vencimientos de capacitaciones</h2>
+      <p>Elige tu planta y qué capacitaciones quieres revisar. Todo se puede cambiar después.</p>
+    </div>
+    <div class="modal-b">
+      <p class="step-l">PASO 1 · ¿EN QUÉ PLANTA TRABAJAS?</p>
+      <div class="plant-grid" id="plantGrid"></div>
+      <p class="step-l">PASO 2 · ¿QUÉ CAPACITACIONES QUIERES VER?</p>
+      <div class="view-opts" id="viewOpts">
+        <button class="vopt" type="button" data-g="todas" aria-pressed="true"><span class="vt">Todas</span><span class="vd">Legales e internas juntas</span></button>
+        <button class="vopt" type="button" data-g="alto_riesgo" aria-pressed="false"><span class="vt">Alto riesgo</span><span class="vd">Alturas, confinados, conducción, izajes</span></button>
+        <button class="vopt" type="button" data-g="legales" aria-pressed="false"><span class="vt">Legales</span><span class="vd">Alto riesgo + normativas (brigada, LOTO…)</span></button>
+        <button class="vopt" type="button" data-g="interna" aria-pressed="false"><span class="vt">Internas</span><span class="vd">Formación y programas internos</span></button>
+      </div>
+      <button class="modal-cta" id="enter">Ver capacitaciones</button>
+      <p class="modal-hint">¿Primera vez? Pulsa <b>Ayuda</b> arriba a la derecha en cualquier momento.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Ventana de ayuda ===== -->
+<div class="overlay" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle" hidden>
+  <div class="modal wide">
+    <div class="modal-h">
+      <button class="modal-x" id="helpX" aria-label="Cerrar la ayuda">✕</button>
+      <h2 id="hTitle">Cómo usar este tablero</h2>
+      <p>Una guía corta. Nada de lo que toques se daña: todo se puede devolver.</p>
+    </div>
+    <div class="help-b">
+      <h3>QUÉ ESTÁS VIENDO</h3>
+      <p>Las capacitaciones de tu planta que ya vencieron o están por vencer, con los datos del reporte al <b>3 de septiembre de 2026</b>. Los días que faltan se cuentan desde esa fecha.</p>
+
+      <h3>LOS COLORES</h3>
+      <div class="help-key">
+        <i style="background:var(--u-vencida)"></i><span><b>Vino tinto:</b> ya venció. Programar de inmediato.</span>
+        <i style="background:var(--u-critica)"></i><span><b>Rojo:</b> vence en 7 días o menos.</span>
+        <i style="background:var(--u-alta)"></i><span><b>Naranja:</b> vence entre 8 y 15 días.</span>
+        <i style="background:var(--u-media)"></i><span><b>Amarillo:</b> vence entre 16 y 30 días.</span>
+        <i style="background:var(--u-baja)"></i><span><b>Verde:</b> falta más de un mes. Hay tiempo.</span>
+      </div>
+
+      <h3>LAS TRES PESTAÑAS DE ARRIBA</h3>
+      <ul>
+        <li><b>Lista:</b> una línea por cada capacitación, de la más urgente a la menos.</li>
+        <li><b>Por persona:</b> agrupa los cursos de cada trabajador, para citarlo una sola vez por todos sus cursos. Pulsa el nombre para ver el detalle.</li>
+        <li><b>Resumen y gráficas:</b> los totales por planta, curso y semana. Útil para presentar.</li>
+      </ul>
+
+      <h3>PARA FILTRAR</h3>
+      <ul>
+        <li>Los <b>botones de colores</b> (Vencidas, ≤ 7 días…) dejan ver solo ese grupo. Púlsalos otra vez para quitarlos.</li>
+        <li>Los <b>recuadros grandes</b> con los números también filtran al pulsarlos.</li>
+        <li>El <b>buscador</b> encuentra por nombre, cédula, cargo o curso.</li>
+        <li>Si te pierdes, pulsa <b>Quitar filtros</b> y todo vuelve a la normalidad.</li>
+      </ul>
+
+      <h3>LOS BOTONES</h3>
+      <ul>
+        <li><b>Descargar Excel:</b> baja la lista que estás viendo, con los filtros puestos.</li>
+        <li><b>Imprimir / PDF:</b> imprime en papel o guarda un PDF para enviar.</li>
+        <li><b>Copiar enlace:</b> copia la dirección con tus filtros, para pasársela a otra persona.</li>
+        <li><b>Modo oscuro / Modo claro:</b> cambia los colores de la pantalla. Se queda como lo dejes.</li>
+        <li><b>Cambiar planta:</b> vuelve a la ventana del inicio.</li>
+      </ul>
+      <button class="modal-cta" id="helpOk" type="button" style="margin-top:20px">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== App ===== -->
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 64 32" role="img" aria-label="Holcim"><defs><linearGradient id="hg1" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#94c12e"/><stop offset=".5" stop-color="#04bbf1"/><stop offset="1" stop-color="#1d4370"/></linearGradient></defs><path d="M18.6 6.6C13.5 6.6 9.4 10.7 9.4 15.8S13.5 25 18.6 25c5.1 0 9.2-4.1 13.4-9.2 4.2-5.1 8.3-9.2 13.4-9.2s9.2 4.1 9.2 9.2S50.5 25 45.4 25c-5.1 0-9.2-4.1-13.4-9.2C27.8 10.7 23.7 6.6 18.6 6.6Z" fill="none" stroke="url(#hg1)" stroke-width="6.4" stroke-linecap="round"/></svg>
+      <span class="wordmark">HOLCIM</span>
+      <span class="vr"></span>
+      <div>
+        <h1>Vencimientos de capacitaciones</h1>
+        <span class="sub">Salud y Seguridad · Colombia — datos al <b id="corteTxt">—</b></span>
+      </div>
+    </div>
+    <div class="plantpick">
+      <label for="plantSel">Planta</label>
+      <select class="plant" id="plantSel"></select>
+    </div>
+    <button class="btn-ghost" id="theme">🌙 Modo oscuro</button>
+    <button class="btn-ghost" id="helpBtn"><span class="qmark">?</span> Ayuda</button>
+    <button class="btn-ghost" id="reopen">⚙ Cambiar planta</button>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Vistas">
+    <button class="tab" role="tab" id="tab-lista" aria-selected="true" aria-controls="view-lista" data-tab="lista">Lista <span class="n tnum" id="nLista">0</span></button>
+    <button class="tab" role="tab" id="tab-persona" aria-selected="false" aria-controls="view-persona" data-tab="persona">Por persona <span class="n tnum" id="nPersona">0</span></button>
+    <button class="tab" role="tab" id="tab-dash" aria-selected="false" aria-controls="view-dash" data-tab="dash">Resumen y gráficas</button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="print-head" id="printHead"></div>
+
+  <!-- Barra de herramientas -->
+  <div class="toolbar">
+    <div class="seg" id="grpSeg" role="group" aria-label="Tipo de capacitación">
+      <button type="button" data-g="todas" class="on">Todas</button>
+      <button type="button" data-g="alto_riesgo">Alto riesgo</button>
+      <button type="button" data-g="legales">Legales</button>
+      <button type="button" data-g="interna">Internas</button>
+    </div>
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="search" placeholder="Buscar persona, cédula, cargo o curso…" aria-label="Buscar">
+      <kbd>/</kbd>
+    </div>
+    <select class="mini" id="cursoSel" aria-label="Filtrar por curso"><option value="">Todos los cursos</option></select>
+    <select class="mini" id="sortSel" aria-label="Ordenar">
+      <option value="fecha">Ordenar: más próximas</option>
+      <option value="prioridad">Ordenar: prioridad (ley primero)</option>
+      <option value="planta">Ordenar: planta</option>
+      <option value="nombre">Ordenar: nombre A–Z</option>
+    </select>
+    <button class="btn" id="csv" title="Descarga la lista que estás viendo; se abre en Excel">↓ Descargar Excel</button>
+    <button class="btn" id="print" title="Imprimir la lista o guardarla como PDF">⎙ Imprimir / PDF</button>
+    <button class="btn" id="share" title="Copia el enlace con los filtros que tienes puestos">⧉ Copiar enlace</button>
+    <button class="btn btn-primary" id="reset" hidden>✕ Quitar filtros</button>
+  </div>
+
+  <!-- Chips de urgencia -->
+  <div class="chips" id="chips" role="group" aria-label="Filtrar por urgencia"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <!-- Vista LISTA -->
+  <section id="view-lista" role="tabpanel" aria-labelledby="tab-lista">
+    <div class="listhead">
+      <h2 id="listTitle">Capacitaciones por vencer</h2>
+      <span class="cnt" id="listCnt"></span>
+    </div>
+    <div class="rows" id="rows"></div>
+    <button class="btn more" id="more" hidden>Mostrar más</button>
+  </section>
+
+  <!-- Vista POR PERSONA -->
+  <section id="view-persona" role="tabpanel" aria-labelledby="tab-persona" hidden>
+    <div class="listhead">
+      <h2>Personas con capacitaciones por vencer</h2>
+      <span class="cnt" id="pplCnt"></span>
+    </div>
+    <div class="pcards" id="ppl"></div>
+    <button class="btn more" id="morePpl" hidden>Mostrar más</button>
+  </section>
+
+  <!-- Vista DASHBOARD -->
+  <section id="view-dash" role="tabpanel" aria-labelledby="tab-dash" hidden>
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Distribución por urgencia <small id="distSub"></small></h3>
+      <div class="distro" id="distro"></div>
+      <div class="legend">
+        <span><i style="background:var(--u-vencida)"></i>Vencidas</span>
+        <span><i style="background:var(--u-critica)"></i>≤ 7 días</span>
+        <span><i style="background:var(--u-alta)"></i>8–15 días</span>
+        <span><i style="background:var(--u-media)"></i>16–30 días</span>
+        <span><i style="background:var(--u-baja)"></i>+30 días</span>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Agenda semanal <small>capacitaciones que vencen cada semana · planifica con anticipación</small></h3>
+      <div class="weeks" id="weeks"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h3>Por categoría</h3><div class="bars" id="barCat"></div></div>
+      <div class="panel"><h3 id="barPlTitle">Por planta</h3><div class="bars" id="barPlanta"></div></div>
+    </div>
+    <div class="grid2 mt14">
+      <div class="panel"><h3>Cursos con más vencimientos</h3><div class="bars" id="barCurso"></div></div>
+      <div class="panel"><h3>Personas con más pendientes</h3><div class="bars" id="barPersona"></div></div>
+    </div>
+  </section>
+</main>
+
+<footer id="foot"></footer>
+<script>
+/* ============================================================================
+   Vencimientos de capacitaciones · H&S Holcim Colombia
+Datos leidos de la matriz al abrir el enlace.
+   ============================================================================ */
+const DATA = <?!= datosJson ?>;
+
+const CORTE = new Date(2026,8,3);            // 3 sep 2026 · fecha de corte del reporte
+const CORTE_TXT = "<?!= corteTxt ?>";
+const GRUPO_LABEL = {alto_riesgo:"Alto riesgo", normativa:"Normativa/Legal", interna:"Interna"};
+const URG = {
+  vencida:{lb:"Vencida",  cls:"u-vencida", short:"Vencidas"},
+  critica:{lb:"≤ 7 días", cls:"u-critica", short:"≤ 7 días"},
+  alta:   {lb:"8–15 días",cls:"u-alta",    short:"8–15 días"},
+  media:  {lb:"16–30 días",cls:"u-media",  short:"16–30 días"},
+  baja:   {lb:"+30 días", cls:"u-baja",    short:"+30 días"}
+};
+const URG_ORDER = ["vencida","critica","alta","media","baja"];
+const PAGE = 60;                              // filas por tanda (render progresivo)
+
+const state = {planta:"<?!= plantaInicial ?>", grupo:"todas", curso:"", q:"", urg:"", sort:"fecha", tab:"lista"};
+let shown = PAGE, shownPpl = 30;
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const fmtFecha = iso => { const [y,m,d] = iso.split("-"); return `${+d} ${MES[+m-1]} ${y}`; };
+const fmtCorto = iso => { const [,m,d] = iso.split("-"); return `${+d} ${MES[+m-1]}`; };
+const parseISO = iso => { const [y,m,d] = iso.split("-").map(Number); return new Date(y,m-1,d); };
+
+/* Conteo por planta (una sola pasada) y orden por volumen */
+const PLANTA_N = DATA.reduce((m,d)=>(m[d.planta]=(m[d.planta]||0)+1,m),{});
+const PLANTA_URG = DATA.reduce((m,d)=>{ if(d.dias<=7) m[d.planta]=(m[d.planta]||0)+1; return m; },{});
+const plantasList = Object.keys(PLANTA_N).sort((a,b)=>PLANTA_N[b]-PLANTA_N[a] || a.localeCompare(b));
+
+/* ---------- Tema claro / oscuro ---------- */
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  const b = $("#theme");
+  b.textContent = t==="dark" ? "☀ Modo claro" : "🌙 Modo oscuro";
+  b.title = t==="dark" ? "Volver a los colores claros" : "Cambiar a colores oscuros, más suaves de noche";
+  try{ localStorage.setItem("hs_theme", t); }catch(e){}
+}
+(function initTheme(){
+  let t = null;
+  try{ t = localStorage.getItem("hs_theme"); }catch(e){}
+  if(!t) t = document.documentElement.getAttribute("data-theme");
+  if(!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  applyTheme(t);
+})();
+$("#theme").onclick = () => applyTheme(document.documentElement.getAttribute("data-theme")==="dark" ? "light" : "dark");
+
+/* ---------- Persistencia: URL (compartible) + localStorage ---------- */
+function stateToHash(){
+  const p = new URLSearchParams();
+  if(state.planta!=="__ALL__") p.set("p", state.planta);
+  if(state.grupo!=="todas")    p.set("g", state.grupo);
+  if(state.urg)                p.set("u", state.urg);
+  if(state.curso)              p.set("c", state.curso);
+  if(state.q)                  p.set("q", state.q);
+  if(state.sort!=="fecha")     p.set("s", state.sort);
+  if(state.tab!=="lista")      p.set("t", state.tab);
+  const h = p.toString();
+  try{ history.replaceState(null, "", h ? "#"+h : location.pathname + location.search); }catch(e){}
+}
+function hashToState(){
+  const h = location.hash.replace(/^#/,"");
+  if(!h) return false;
+  const p = new URLSearchParams(h);
+  if(p.has("p")) state.planta = p.get("p");
+  if(p.has("g")) state.grupo  = p.get("g");
+  if(p.has("u")) state.urg    = p.get("u");
+  if(p.has("c")) state.curso  = p.get("c");
+  if(p.has("q")) state.q      = p.get("q");
+  if(p.has("s")) state.sort   = p.get("s");
+  if(p.has("t")) state.tab    = p.get("t");
+  return true;
+}
+function savePref(){ try{ localStorage.setItem("hs_pref", JSON.stringify({planta:state.planta, grupo:state.grupo})); }catch(e){} }
+function loadPref(){ try{ return JSON.parse(localStorage.getItem("hs_pref")||"null"); }catch(e){ return null; } }
+
+/* ---------- Filtros ---------- */
+const byPlanta = d => state.planta==="__ALL__" || d.planta===state.planta;
+const byGrupo  = d => {
+  if(state.grupo==="todas")       return true;
+  if(state.grupo==="alto_riesgo") return d.grupo==="alto_riesgo";
+  if(state.grupo==="legales")     return d.grupo==="alto_riesgo" || d.grupo==="normativa";
+  if(state.grupo==="interna")     return d.grupo==="interna";
+  return true;
+};
+const byCurso = d => !state.curso || d.curso===state.curso;
+const byQ     = d => !state.q || (d.nombre+" "+d.pos+" "+d.curso+" "+d.id+" "+d.planta).toLowerCase().includes(state.q);
+const byUrg   = d => {
+  if(!state.urg) return true;
+  if(state.urg==="urgente") return d.dias<=7;
+  if(state.urg==="d30")     return d.dias<=30;
+  return d.urg===state.urg;
+};
+/* Base sin el filtro de urgencia: alimenta los contadores de los chips */
+function base(){ return DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byCurso(d)&&byQ(d)); }
+function filtered(){ return base().filter(byUrg); }
+
+const grpRank = {alto_riesgo:0, normativa:1, interna:2};
+function sortRows(a,b){
+  if(state.sort==="prioridad") return (grpRank[a.grupo]-grpRank[b.grupo]) || (a.dias-b.dias) || a.nombre.localeCompare(b.nombre);
+  if(state.sort==="planta")    return a.planta.localeCompare(b.planta) || (a.dias-b.dias);
+  if(state.sort==="nombre")    return a.nombre.localeCompare(b.nombre) || (a.dias-b.dias);
+  return (a.dias-b.dias) || a.nombre.localeCompare(b.nombre);
+}
+
+/* ---------- Modal de bienvenida ---------- */
+let modalPlanta = null, modalGrupo = "todas";
+function buildModal(){
+  const g = $("#plantGrid");
+  const cards = [{p:"__ALL__", n:DATA.length, u:DATA.filter(d=>d.dias<=7).length, label:"Todas las plantas", all:true}]
+    .concat(plantasList.map(p=>({p, n:PLANTA_N[p], u:PLANTA_URG[p]||0, label:p})));
+  g.innerHTML = cards.map(c=>`
+    <button class="pcard${c.all?" all":""}" type="button" data-p="${esc(c.p)}" aria-pressed="false">
+      <span class="pn">${esc(c.label)}</span>
+      <span class="pc">${c.n} registros</span>
+      ${c.u?`<span class="pu"><i class="dot"></i>${c.u} urgente${c.u===1?"":"s"}</span>`:""}
+    </button>`).join("");
+  g.querySelectorAll(".pcard").forEach(b=>b.onclick=()=>selPlanta(b.dataset.p));
+  const vo = $("#viewOpts");
+  vo.querySelectorAll(".vopt").forEach(b=>b.onclick=()=>{
+    vo.querySelectorAll(".vopt").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); modalGrupo = b.dataset.g;
+  });
+  selPlanta(state.planta);
+}
+/* Marca la planta elegida y dice en el botón qué se va a abrir */
+function selPlanta(p){
+  const g = $("#plantGrid");
+  let card = g.querySelector(`.pcard[data-p="${CSS.escape(p)}"]`);
+  if(!card){ card = g.querySelector(".pcard"); p = card.dataset.p; }
+  g.querySelectorAll(".pcard").forEach(x=>x.setAttribute("aria-pressed","false"));
+  card.setAttribute("aria-pressed","true");
+  modalPlanta = p;
+  $("#enter").textContent = "Ver capacitaciones de " + (p==="__ALL__" ? "todas las plantas" : p);
+}
+function openModal(){
+  selPlanta(state.planta);
+  $("#overlay").hidden = false;
+  const sel = $(`.pcard[aria-pressed="true"]`) || $(".pcard");
+  setTimeout(()=>sel && sel.focus(), 40);
+}
+function closeModal(){ $("#overlay").hidden = true; $("#reopen").focus(); }
+function applyModal(planta, grupo){
+  state.planta = planta; state.grupo = grupo;
+  state.curso = ""; state.q = ""; state.urg = ""; shown = PAGE;
+  $("#plantSel").value = planta; $("#q").value = "";
+  syncGrpSeg(); refreshCursos(); savePref(); closeModal(); render();
+}
+$("#enter").onclick  = () => applyModal(modalPlanta || "__ALL__", modalGrupo);
+$("#reopen").onclick = openModal;
+$("#overlay").addEventListener("click", e => { if(e.target.id==="overlay") closeModal(); });
+
+/* Ventana de ayuda */
+function openHelp(){ $("#help").hidden = false; setTimeout(()=>$("#helpX").focus(), 40); }
+function closeHelp(){ $("#help").hidden = true; $("#helpBtn").focus(); }
+$("#helpBtn").onclick = openHelp;
+$("#helpX").onclick   = closeHelp;
+$("#helpOk").onclick  = closeHelp;
+$("#help").addEventListener("click", e => { if(e.target.id==="help") closeHelp(); });
+
+document.addEventListener("keydown", e => {
+  if(e.key==="Escape"){
+    if(!$("#help").hidden) closeHelp();
+    else if(!$("#overlay").hidden) closeModal();
+  }
+  if(e.key==="/" && document.activeElement.tagName!=="INPUT" && document.activeElement.tagName!=="SELECT"){
+    e.preventDefault(); $("#q").focus();
+  }
+});
+
+/* ---------- Controles ---------- */
+function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+function buildControls(){
+  const ps = $("#plantSel");
+  ps.innerHTML = `<option value="__ALL__">Todas las plantas (${DATA.length})</option>`
+    + plantasList.map(p=>`<option value="${esc(p)}">${esc(p)} (${PLANTA_N[p]})</option>`).join("");
+  ps.onchange = () => { state.planta = ps.value; state.curso=""; shown=PAGE; refreshCursos(); savePref(); render(); };
+
+  $("#grpSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    state.grupo = b.dataset.g; state.curso=""; shown=PAGE; syncGrpSeg(); refreshCursos(); savePref(); render();
+  });
+  $("#q").oninput = debounce(e => { state.q = e.target.value.toLowerCase().trim(); shown=PAGE; render(); }, 160);
+  $("#cursoSel").onchange = e => { state.curso = e.target.value; shown=PAGE; render(); };
+  $("#sortSel").onchange  = e => { state.sort  = e.target.value; render(); };
+  $("#csv").onclick   = exportCSV;
+  $("#print").onclick = () => window.print();
+  $("#share").onclick = async () => {
+    try{ await navigator.clipboard.writeText(location.href); flash($("#share"), "✓ Copiado"); }
+    catch(e){ flash($("#share"), location.href.slice(0,28)+"…"); }
+  };
+  $("#reset").onclick = () => { state.curso=""; state.q=""; state.urg=""; state.grupo="todas"; $("#q").value=""; shown=PAGE; syncGrpSeg(); refreshCursos(); render(); };
+  $("#more").onclick    = () => { shown += PAGE*2; render(); };
+  $("#morePpl").onclick = () => { shownPpl += 40; render(); };
+
+  $$(".tab").forEach(t=>t.onclick=()=>setTab(t.dataset.tab));
+}
+function flash(btn, txt){ const o = btn.textContent; btn.textContent = txt; setTimeout(()=>btn.textContent=o, 1600); }
+function setTab(tab){
+  state.tab = tab;
+  $$(".tab").forEach(x=>x.setAttribute("aria-selected", String(x.dataset.tab===tab)));
+  $("#view-lista").hidden   = tab!=="lista";
+  $("#view-persona").hidden = tab!=="persona";
+  $("#view-dash").hidden    = tab!=="dash";
+  render();
+}
+function syncGrpSeg(){
+  $("#grpSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.g===state.grupo));
+  $("#viewOpts").querySelectorAll(".vopt").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.g===state.grupo)));
+  modalGrupo = state.grupo;
+}
+function refreshCursos(){
+  const cursos = [...new Set(DATA.filter(d=>byPlanta(d)&&byGrupo(d)).map(d=>d.curso))].sort((a,b)=>a.localeCompare(b));
+  const sel = $("#cursoSel"), cur = state.curso;
+  sel.innerHTML = `<option value="">Todos los cursos (${cursos.length})</option>`
+    + cursos.map(c=>`<option value="${esc(c)}">${esc(c.length>52 ? c.slice(0,52)+"…" : c)}</option>`).join("");
+  if(cursos.includes(cur)) sel.value = cur; else state.curso = "";
+}
+
+/* ---------- Render principal ---------- */
+function render(){
+  const b = base(), rows = b.filter(byUrg);
+  renderChips(b);
+  renderKpis(rows);
+  $("#nLista").textContent   = rows.length;
+  $("#nPersona").textContent = new Set(rows.map(r=>r.id)).size;
+  $("#reset").hidden = !(state.curso || state.q || state.urg || state.grupo!=="todas");
+  if(state.tab==="lista")        renderList(rows);
+  else if(state.tab==="persona") renderPeople(rows);
+  else                           renderDash(rows);
+  renderFoot(rows);
+  stateToHash();
+}
+
+function renderChips(b){
+  const counts = URG_ORDER.reduce((m,u)=>(m[u]=0,m),{});
+  b.forEach(r=>counts[r.urg]++);
+  const items = [{k:"", lb:"Todas", n:b.length, cls:""}]
+    .concat(URG_ORDER.map(u=>({k:u, lb:URG[u].short, n:counts[u], cls:"c-"+u})));
+  $("#chips").innerHTML = items.map(i=>`
+    <button class="chip ${i.cls}" type="button" data-u="${i.k}" aria-pressed="${state.urg===i.k}" ${i.n===0&&i.k?'disabled style="opacity:.45"':''}>
+      ${i.cls?'<i></i>':""}${i.lb} <span class="c">${i.n}</span>
+    </button>`).join("");
+  $("#chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+    state.urg = (state.urg===c.dataset.u) ? "" : c.dataset.u; shown=PAGE; render();
+  });
+}
+
+function renderKpis(rows){
+  const venc = rows.filter(r=>r.dias<0).length;
+  const d7   = rows.filter(r=>r.dias>=0 && r.dias<=7).length;
+  const d30  = rows.filter(r=>r.dias<=30).length;
+  const ppl  = new Set(rows.map(r=>r.id)).size;
+  $("#kpis").innerHTML = `
+    <button class="kpi k-total" data-act="all">
+      <span class="bar"></span><div class="n tnum">${rows.length}</div>
+      <div class="l">Registros en vista</div><div class="s">${state.planta==="__ALL__"?"Todas las plantas":esc(state.planta)}</div>
+    </button>
+    <button class="kpi k-now" data-act="urgente">
+      <span class="bar"></span><div class="n tnum">${venc+d7}</div>
+      <div class="l">Acción inmediata</div><div class="s">${venc} vencida${venc===1?"":"s"} · ${d7} vence${d7===1?"":"n"} en ≤ 7 días</div>
+    </button>
+    <button class="kpi k-30" data-act="d30">
+      <span class="bar"></span><div class="n tnum">${d30}</div>
+      <div class="l">Vencen en ≤ 30 días</div><div class="s">Programar antes del cierre de mes</div>
+    </button>
+    <button class="kpi k-ppl" data-act="ppl">
+      <span class="bar"></span><div class="n tnum">${ppl}</div>
+      <div class="l">Personas involucradas</div><div class="s">${(rows.length/(ppl||1)).toFixed(1)} cursos por persona</div>
+    </button>`;
+  $("#kpis").querySelectorAll(".kpi").forEach(k=>k.onclick=()=>{
+    const a = k.dataset.act;
+    if(a==="ppl"){ setTab("persona"); return; }
+    state.urg = a==="all" ? "" : (state.urg===a ? "" : a); shown=PAGE; render();
+  });
+}
+
+/* ---------- Vista lista ---------- */
+function badgeClass(g){ return g==="alto_riesgo" ? "b-alto" : g==="normativa" ? "b-norm" : "b-int"; }
+function renderList(rows){
+  rows = [...rows].sort(sortRows);
+  $("#listTitle").textContent = state.planta==="__ALL__"
+    ? "Capacitaciones por vencer · todas las plantas"
+    : `Capacitaciones por vencer · ${state.planta}`;
+  $("#listCnt").textContent = `${rows.length} resultado${rows.length!==1?"s":""}` + (rows.length>shown ? ` · mostrando ${shown}` : "");
+  if(!rows.length){
+    $("#rows").innerHTML = `<div class="empty"><b>Sin resultados</b>No hay capacitaciones con estos filtros. Prueba cambiar la planta, el tipo de capacitación o el buscador.</div>`;
+    $("#more").hidden = true; return;
+  }
+  const slice = rows.slice(0, shown);
+  /* Separadores por urgencia cuando el orden es cronológico */
+  let last = null;
+  $("#rows").innerHTML = slice.map(r=>{
+    const u = URG[r.urg];
+    let sep = "";
+    if(state.sort==="fecha" && r.urg!==last){ last = r.urg; sep = `<div class="sep">${u.short}</div>`; }
+    const dtxt = Math.abs(r.dias);
+    const dlab = r.dias<0 ? (r.dias===-1?"día vencida":"días vencida") : r.dias===0 ? "vence hoy" : r.dias===1 ? "día" : "días";
+    return sep + `<article class="row ${u.cls}">
+      <div class="days"><div class="d tnum">${dtxt}</div><div class="dl">${dlab}</div></div>
+      <div class="who">
+        <div class="nm">${esc(r.nombre)}</div>
+        <div class="meta">${esc(r.pos)} · CC ${esc(r.id)}${state.planta==="__ALL__" ? " · "+esc(r.planta) : ""}</div>
+        <div class="course"><span class="badge ${badgeClass(r.grupo)}">${esc(r.cat)}</span> ${esc(r.curso)}</div>
+      </div>
+      <div class="right">
+        <div class="fecha tnum">${fmtFecha(r.fecha)}</div>
+        <span class="pill ${u.cls}">${u.lb}</span>
+      </div>
+    </article>`;
+  }).join("");
+  $("#more").hidden = rows.length<=shown;
+  $("#more").textContent = `Mostrar más (${rows.length-shown} restantes)`;
+}
+
+/* ---------- Vista por persona ---------- */
+function groupPeople(rows){
+  const m = new Map();
+  rows.forEach(r=>{
+    let p = m.get(r.id);
+    if(!p){ p = {id:r.id, nombre:r.nombre, pos:r.pos, planta:r.planta, items:[]}; m.set(r.id,p); }
+    p.items.push(r);
+  });
+  const arr = [...m.values()];
+  arr.forEach(p=>{ p.items.sort((a,b)=>a.dias-b.dias); p.min = p.items[0].dias; p.urg = p.items[0].urg; });
+  arr.sort((a,b)=> a.min-b.min || b.items.length-a.items.length || a.nombre.localeCompare(b.nombre));
+  return arr;
+}
+function renderPeople(rows){
+  const ppl = groupPeople(rows);
+  $("#pplCnt").textContent = `${ppl.length} persona${ppl.length!==1?"s":""} · ${rows.length} ${rows.length===1?"capacitación":"capacitaciones"}`;
+  if(!ppl.length){
+    $("#ppl").innerHTML = `<div class="empty"><b>Sin resultados</b>Ajusta los filtros para ver personas.</div>`;
+    $("#morePpl").hidden = true; return;
+  }
+  $("#ppl").innerHTML = ppl.slice(0, shownPpl).map(p=>`
+    <details class="person ${URG[p.urg].cls}"${p.items.length>1?"":""}>
+      <summary>
+        <div>
+          <div class="nm">${esc(p.nombre)}</div>
+          <div class="meta">${esc(p.pos)} · CC ${esc(p.id)} · ${esc(p.planta)}</div>
+        </div>
+        <div class="cta"><span class="big tnum">${p.items.length}</span>curso${p.items.length!==1?"s":""}</div>
+      </summary>
+      <ul>${p.items.map(i=>`
+        <li>
+          <span class="cn"><span class="badge ${badgeClass(i.grupo)}">${esc(i.cat)}</span> ${esc(i.curso)}</span>
+          <span class="cf" style="color:var(--${URG[i.urg].cls})">${fmtCorto(i.fecha)} · ${i.dias<0?"vencida":i.dias===0?"hoy":i.dias+"d"}</span>
+        </li>`).join("")}</ul>
+    </details>`).join("");
+  $("#morePpl").hidden = ppl.length<=shownPpl;
+  $("#morePpl").textContent = `Mostrar más (${ppl.length-shownPpl} restantes)`;
+}
+
+/* ---------- Dashboard ---------- */
+const URG_COLOR = {vencida:"var(--u-vencida)", critica:"var(--u-critica)", alta:"var(--u-alta)", media:"var(--u-media)", baja:"var(--u-baja)"};
+function renderDash(rows){
+  const tot = rows.length || 1;
+  $("#distSub").textContent = (state.planta==="__ALL__" ? "todas las plantas" : state.planta) + ` · ${rows.length} registros`;
+  $("#distro").innerHTML = URG_ORDER.map(u=>{
+    const n = rows.filter(r=>r.urg===u).length; if(!n) return "";
+    const pct = n/tot*100;
+    return `<span style="background:${URG_COLOR[u]};flex:${n}" title="${URG[u].lb}: ${n} (${pct.toFixed(1)}%)">${pct>7?n:""}</span>`;
+  }).join("");
+
+  renderWeeks(rows);
+  bars("#barCat",     tally(rows,"cat"),         true);
+  bars("#barCurso",   tally(rows,"curso",8),     true);
+  bars("#barPersona", tallyPersona(rows,8),      true);
+  if(state.planta==="__ALL__"){
+    $("#barPlTitle").textContent = "Por planta";
+    bars("#barPlanta", tally(rows,"planta",10), true);
+  }else{
+    $("#barPlTitle").textContent = "Por cargo";
+    bars("#barPlanta", tally(rows,"pos",10), true);
+  }
+}
+/* Agenda semanal: agrupa por semana (lunes) desde el corte */
+function renderWeeks(rows){
+  const mon = d => { const x = new Date(d); x.setDate(x.getDate() - ((x.getDay()+6)%7)); x.setHours(0,0,0,0); return x; };
+  const buckets = new Map();
+  rows.forEach(r=>{
+    const k = +mon(parseISO(r.fecha));
+    if(!buckets.has(k)) buckets.set(k, {n:0, urg:{}});
+    const b = buckets.get(k); b.n++; b.urg[r.urg] = (b.urg[r.urg]||0)+1;
+  });
+  if(!buckets.size){ $("#weeks").innerHTML = `<div style="color:var(--muted);font-size:12.5px">Sin datos</div>`; return; }
+  const keys = [...buckets.keys()].sort((a,b)=>a-b);
+  const max  = Math.max(...keys.map(k=>buckets.get(k).n));
+  const thisWeek = +mon(CORTE);
+  $("#weeks").innerHTML = keys.map(k=>{
+    const b = buckets.get(k), ini = new Date(k), fin = new Date(k+6*864e5);
+    const h = Math.max(4, b.n/max*100);
+    const stack = URG_ORDER.filter(u=>b.urg[u]).map(u=>
+      `<i style="height:${b.urg[u]/b.n*100}%;background:${URG_COLOR[u]}" title="${URG[u].lb}: ${b.urg[u]}"></i>`).join("");
+    const lbl = `${ini.getDate()}–${fin.getDate()} ${MES[fin.getMonth()]}`;
+    return `<div class="wk ${k===thisWeek?"hot":""}" title="Semana del ${ini.getDate()} ${MES[ini.getMonth()]}: ${b.n} vencimientos">
+      <div class="wv tnum">${b.n}</div>
+      <div class="stack" style="height:${h}%">${stack}</div>
+      <div class="wl">${k===thisWeek?"Esta sem.":lbl}</div>
+    </div>`;
+  }).join("");
+}
+function tally(rows, key, limit){
+  const m = {}; rows.forEach(r => m[r[key]] = (m[r[key]]||0)+1);
+  let arr = Object.entries(m).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0]));
+  return limit ? arr.slice(0,limit) : arr;
+}
+function tallyPersona(rows, limit){
+  const m = {}; rows.forEach(r => { const k = r.nombre; m[k] = (m[k]||0)+1; });
+  return Object.entries(m).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0])).slice(0,limit);
+}
+function bars(sel, arr, trunc){
+  const max = Math.max(1, ...arr.map(a=>a[1]));
+  $(sel).innerHTML = arr.length
+    ? arr.map(([k,v])=>{
+        const lb = trunc && k.length>28 ? k.slice(0,28)+"…" : k;
+        const pct = v/max*100;
+        return `<div class="brow"><div class="lb" title="${esc(k)}">${esc(lb)}</div>
+          <div class="track"><div class="fill" style="width:${pct}%;background-size:${(100/pct*100).toFixed(1)}% 100%"></div></div>
+          <div class="vv tnum">${v}</div></div>`;
+      }).join("")
+    : `<div style="color:var(--muted);font-size:12.5px">Sin datos</div>`;
+}
+
+/* ---------- Exportar ---------- */
+function exportCSV(){
+  const rows = [...filtered()].sort(sortRows);
+  if(!rows.length){ flash($("#csv"), "Sin datos"); return; }
+  const head = ["Planta","Nombre","Cedula","Cargo","Curso","Categoria","Grupo","Fecha_vencimiento","Dias_restantes","Estado"];
+  const lines = [head.join(";")].concat(rows.map(r=>[
+    r.planta, r.nombre, r.id, r.pos, r.curso, r.cat, GRUPO_LABEL[r.grupo], r.fecha, r.dias, URG[r.urg].lb
+  ].map(x=>`"${String(x).replace(/"/g,'""')}"`).join(";")));
+  const blob = new Blob(["﻿"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+  const tag  = state.planta==="__ALL__" ? "todas" : state.planta.replace(/[^\w]+/g,"_");
+  guardar(blob, `vencimientos_${tag}_${state.grupo}_2026-09-03.csv`, rows.length);
+}
+
+/* Guarda el archivo: descarga directa al abrirlo en el computador, y a través
+   del anfitrión cuando el tablero corre embebido (allí el enlace no funciona). */
+let DESCARGAS = null;
+async function guardar(blob, name, n){
+  if(DESCARGAS){
+    try{
+      await DESCARGAS.save({filename:name, data:blob});
+      flash($("#csv"), `\u2713 ${n} filas`);
+    }catch(err){
+      const c = err && err.code;
+      flash($("#csv"), c==="declined" ? "Cancelado" : c==="rate_limited" ? "Espera un momento" : "No se pudo guardar");
+    }
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  flash($("#csv"), `\u2713 ${n} filas`);
+}
+if(window.claude && typeof window.claude.use === "function"){
+  window.claude.use("downloads").then(d => { DESCARGAS = d; }).catch(()=>{});
+}
+
+/* ---------- Pie y encabezado de impresión ---------- */
+function renderFoot(rows){
+  const f = [];
+  f.push(`Planta: <b>${state.planta==="__ALL__" ? "todas" : esc(state.planta)}</b>`);
+  f.push(`Vista: <b>${esc({todas:"Todas",alto_riesgo:"Alto riesgo",legales:"Legales",interna:"Internas"}[state.grupo])}</b>`);
+  if(state.urg)   f.push(`Urgencia: <b>${esc(state.urg==="urgente"?"Acción inmediata":state.urg==="d30"?"≤ 30 días":URG[state.urg].lb)}</b>`);
+  if(state.curso) f.push(`Curso: <b>${esc(state.curso)}</b>`);
+  if(state.q)     f.push(`Búsqueda: <b>${esc(state.q)}</b>`);
+  $("#printHead").innerHTML =
+    `<h2 style="margin:0 0 4px;font-size:16px">Vencimientos de capacitaciones · H&amp;S Holcim Colombia</h2>
+     <div style="font-size:11.5px;color:#5d7186">${f.join(" · ")} · ${rows.length} registros · Corte ${CORTE_TXT}</div>`;
+  $("#foot").innerHTML =
+    `<span class="no-print">Fecha de corte del reporte: <b>3 de septiembre de 2026</b> · ${DATA.length} registros totales ·
+     ${new Set(DATA.map(d=>d.id)).size} personas · ${plantasList.length} plantas.<br>
+     Los días restantes se calculan desde esa fecha. ¿Dudas sobre cómo usarlo? El botón <b>Ayuda</b> está arriba a la derecha.<br>
+     Herramienta interna de Salud y Seguridad — contiene datos personales, no distribuir fuera de la organización.</span>`;
+}
+
+/* ---------- Inicio ---------- */
+/* Vuelca el estado en los controles (arranque y navegación por enlace) */
+function syncUI(){
+  if(state.planta!=="__ALL__" && !plantasList.includes(state.planta)) state.planta = "__ALL__";
+  $("#plantSel").value = state.planta;
+  $("#q").value = state.q;
+  $("#sortSel").value = state.sort;
+  syncGrpSeg(); refreshCursos();
+  $("#cursoSel").value = state.curso;
+  modalPlanta = state.planta;
+  shown = PAGE; shownPpl = 30;
+  setTab(["lista","persona","dash"].includes(state.tab) ? state.tab : "lista");
+}
+$("#corteTxt").textContent = CORTE_TXT;
+buildModal(); buildControls();
+(function init(){
+  const fromHash = hashToState();
+  const pref = loadPref();
+  if(!fromHash && pref && pref.planta){ state.planta = pref.planta; state.grupo = pref.grupo || "todas"; }
+  syncUI();
+  if(!fromHash && !pref) openModal();
+})();
+/* Enlaces compartidos abiertos con la página ya cargada */
+addEventListener("hashchange", () => { if(hashToState()) syncUI(); });
+</script>
+</body>
+</html>
