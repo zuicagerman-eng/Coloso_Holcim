@@ -42,10 +42,10 @@ const CORREOS_PLANTA = {
 const CFG = {
   HOJA_MATRIZ:         "Matriz de Capacitaciones H&S",
   FILA_CURSOS:         6,    // fila con el nombre de cada curso
+  FILA_TITULOS:        7,    // fila con Aplicabilidad · Fecha de vencimiento · Soporte
   PRIMERA_FILA_DATOS:  8,
   PRIMERA_COL_CURSO:   10,   // columna J
-  COLUMNAS_POR_CURSO:  3,    // Aplicabilidad · Fecha de vencimiento · Soporte
-  NUM_CURSOS:          62,
+  CURSOS_ESPERADOS:    62,   // solo para avisar si el número cambia
   VENTANA_DIAS:        60,   // hasta dónde mirar hacia adelante
   ZONA:                "GMT-5"
 };
@@ -81,7 +81,22 @@ const CATEGORIA_CURSO = {
   "Supervisor de izaje":                                                                     ["Izajes",                    "alto_riesgo"],
   "Titular de candado":                                                                      ["Energías peligrosas (LOTO)", "normativa"],
   "Trabajador autorizado de trabajo en caliente":                                            ["Trabajo en caliente",       "normativa"],
-  "Trabajo seguro con computador":                                                           ["Interna / formación",       "interna"]
+  "Trabajo seguro con computador":                                                           ["Interna / formación",       "interna"],
+
+  // ─── Cursos que no aparecían en el HTML original ────────────────────────
+  // La clasificación de estos la propuse yo siguiendo el mismo criterio.
+  // Revíselos y corrija los que no correspondan.
+  "Emisor de Permiso de Trabajo en Caliente":                                                ["Trabajo en caliente",       "normativa"],
+  "Centinela de Fuego para trabajos en caliente":                                            ["Trabajo en caliente",       "normativa"],
+  "Entrenamiento Brigadista Clase I Resolución 0256":                                        ["Brigada de emergencia",     "normativa"],
+  "Uso DEA / Soporte Vital Básico":                                                          ["Brigada de emergencia",     "normativa"],
+  "Reglas basicas y habitos seguros de conduccion en vias internas":                         ["Conducción defensiva",      "alto_riesgo"],
+  "Montaje y Desmontaje de Andamios":                                                        ["Alturas",                   "alto_riesgo"],
+  "Trabajador autorizado / Ayudante de seguridad Trabajo en alturas":                        ["Alturas",                   "alto_riesgo"],
+  "Trabajo cerca al agua":                                                                   ["Alturas",                   "alto_riesgo"],
+  "Trabajador Entrante en espacios confinados":                                              ["Espacios confinados",       "alto_riesgo"],
+  "Vigía de Seguridad para Trabajos en Espacios Confinados":                                 ["Espacios confinados",       "alto_riesgo"],
+  "Supervisor / Emisor de permisos de espacios confinados (debe contar previamente con curso de entrante y vigía de EC)": ["Espacios confinados", "alto_riesgo"]
 };
 
 const CATEGORIA_POR_DEFECTO = ["Interna / formación", "interna"];
@@ -139,9 +154,41 @@ function indicePlantas() {
 // ════════════════════════════════════════════════════════════════════
 
 /**
+ * Ubica el bloque de columnas de cada curso.
+ *
+ * Los cursos NO se cuentan de tres en tres: se recorre la fila de nombres y,
+ * dentro del tramo de cada curso, se busca su columna de fecha por el título.
+ * Contar posiciones fijas parecía funcionar, pero dos de los 62 cursos no caían
+ * donde les tocaba y sus fechas se leían del bloque vecino.
+ *
+ * Devuelve [{curso, fecha, ancho}, ...] solo con los bloques que tienen fecha.
+ */
+function detectarBloques(nombres, titulos) {
+  const inicios = [];
+  for (let i = 0; i < nombres.length; i++) {
+    if (limpiarCurso(nombres[i])) inicios.push(i);
+  }
+
+  const bloques = [];
+  for (let n = 0; n < inicios.length; n++) {
+    const ini = inicios[n];
+    const fin = (n + 1 < inicios.length) ? inicios[n + 1] : titulos.length;
+
+    let iFecha = -1;
+    for (let j = ini; j < fin; j++) {
+      if (normalizar(titulos[j]).indexOf("FECHA") !== -1) { iFecha = j; break; }
+    }
+    // Un tramo sin columna de fecha no es un curso (suele ser un rótulo suelto)
+    if (iFecha === -1) continue;
+
+    bloques.push({ curso: limpiarCurso(nombres[ini]), fecha: iFecha, ancho: fin - ini });
+  }
+  return bloques;
+}
+
+/**
  * Recorre la matriz y devuelve un registro por cada vencimiento dentro de la
- * ventana. Las columnas NO se ubican a ciegas: se verifica que el bloque de
- * cada curso tenga su nombre, y los cursos omitidos se comparan normalizados.
+ * ventana.
  *
  * Devuelve { registros, avisos }.
  */
@@ -155,11 +202,14 @@ function construirRegistros() {
   }
 
   const filas       = ultimaFila - CFG.PRIMERA_FILA_DATOS + 1;
-  const anchoCursos = CFG.NUM_CURSOS * CFG.COLUMNAS_POR_CURSO;   // 62 × 3 = 186
+  const anchoCursos = hoja.getLastColumn() - CFG.PRIMERA_COL_CURSO + 1;
 
-  const nombresCurso = hoja.getRange(CFG.FILA_CURSOS, CFG.PRIMERA_COL_CURSO, 1, anchoCursos).getValues()[0];
+  const nombresCurso = hoja.getRange(CFG.FILA_CURSOS,  CFG.PRIMERA_COL_CURSO, 1, anchoCursos).getValues()[0];
+  const titulosCurso = hoja.getRange(CFG.FILA_TITULOS, CFG.PRIMERA_COL_CURSO, 1, anchoCursos).getValues()[0];
   const personas     = hoja.getRange(CFG.PRIMERA_FILA_DATOS, 1, filas, 7).getValues();
   const vencimientos = hoja.getRange(CFG.PRIMERA_FILA_DATOS, CFG.PRIMERA_COL_CURSO, filas, anchoCursos).getValues();
+
+  const bloques = detectarBloques(nombresCurso, titulosCurso);
 
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -171,8 +221,12 @@ function construirRegistros() {
     personasActivas:   0,
     plantasSinCorreo:  {},
     cursosSinCategoria: {},
-    bloquesSinNombre:  0
+    cursosDetectados:  bloques.length,
+    anchosDeBloque:    {}
   };
+  bloques.forEach(function (b) {
+    avisos.anchosDeBloque[b.ancho] = (avisos.anchosDeBloque[b.ancho] || 0) + 1;
+  });
 
   for (let f = 0; f < personas.length; f++) {
     const fila    = personas[f];
@@ -193,12 +247,11 @@ function construirRegistros() {
 
     const celdas = vencimientos[f];
 
-    for (let c = 0; c < celdas.length; c += CFG.COLUMNAS_POR_CURSO) {
-      const curso = limpiarCurso(nombresCurso[c]);
-      if (!curso) { avisos.bloquesSinNombre++; continue; }
+    for (let b = 0; b < bloques.length; b++) {
+      const curso = bloques[b].curso;
       if (omitir.indexOf(normalizar(curso)) !== -1) continue;
 
-      const valor = celdas[c + 1];                       // la 2ª del trío es la fecha
+      const valor = celdas[bloques[b].fecha];
       if (!(valor instanceof Date) || isNaN(valor)) continue;
 
       const vence = new Date(valor);
@@ -369,9 +422,11 @@ function probar() {
     linea.push("  todos los cursos tienen categoría");
   }
 
-  if (a.bloquesSinNombre) {
-    linea.push("  bloques de curso sin nombre en la fila " + CFG.FILA_CURSOS + ": " + a.bloquesSinNombre);
-  }
+  linea.push("  cursos detectados: " + a.cursosDetectados +
+             (a.cursosDetectados === CFG.CURSOS_ESPERADOS ? "" : "  <-- CAMBIO, revisar la matriz"));
+  const anchos = Object.keys(a.anchosDeBloque).sort();
+  linea.push("  columnas por curso: " +
+    anchos.map(function (w) { return w + " -> " + a.anchosDeBloque[w] + " cursos"; }).join(" · "));
 
   linea.push("");
   const url = ScriptApp.getService().getUrl();
