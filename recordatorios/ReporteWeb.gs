@@ -50,6 +50,19 @@ const CFG = {
   ZONA:                "GMT-5"
 };
 
+/**
+ * Incluir a quien nunca ha hecho el curso (la celda dice PENDIENTE en vez de
+ * traer fecha). Van al final de la lista, en gris, con su propia sección.
+ */
+const INCLUIR_PENDIENTES = true;
+
+/**
+ * Los pendientes no tienen fecha, pero el tablero ordena y agrupa por días.
+ * Este número los deja siempre de últimos sin alterar ningún conteo: queda
+ * fuera de "vence en 7 días", de "en 30" y de "ya vencida".
+ */
+const DIAS_PENDIENTE = 99999;
+
 /** Cursos que no entran al reporte. Se comparan normalizados, sin espacios. */
 const CURSOS_OMITIR = [
   "Operador de equipos para elevación de personas (manlift)",
@@ -252,12 +265,22 @@ function construirRegistros() {
       if (omitir.indexOf(normalizar(curso)) !== -1) continue;
 
       const valor = celdas[bloques[b].fecha];
-      if (!(valor instanceof Date) || isNaN(valor)) continue;
 
-      const vence = new Date(valor);
-      vence.setHours(0, 0, 0, 0);
-      const dias = Math.round((vence - hoy) / 86400000);
-      if (dias > CFG.VENTANA_DIAS) continue;
+      let fecha = null, dias = DIAS_PENDIENTE, urg = "pendiente";
+
+      if (valor instanceof Date && !isNaN(valor)) {
+        const vence = new Date(valor);
+        vence.setHours(0, 0, 0, 0);
+        dias = Math.round((vence - hoy) / 86400000);
+        if (dias > CFG.VENTANA_DIAS) continue;      // vence más allá de la ventana
+        fecha = Utilities.formatDate(vence, CFG.ZONA, "yyyy-MM-dd");
+        urg = urgenciaPorDias(dias);
+      } else {
+        // Sin fecha. Solo entra si la celda dice PENDIENTE: ahí sí es alguien
+        // que nunca ha hecho el curso. "NO APLICA" o "EXCEPTUADO" no cuentan.
+        if (!INCLUIR_PENDIENTES) continue;
+        if (normalizar(valor) !== "PENDIENTE") continue;
+      }
 
       let categoria = categoriaDe(curso);
       if (!categoria) {
@@ -273,9 +296,9 @@ function construirRegistros() {
         curso:  curso,
         cat:    categoria[0],
         grupo:  categoria[1],
-        fecha:  Utilities.formatDate(vence, CFG.ZONA, "yyyy-MM-dd"),
+        fecha:  fecha,
         dias:   dias,
-        urg:    urgenciaPorDias(dias)
+        urg:    urg
       });
     }
   }
@@ -391,7 +414,7 @@ function probar() {
   });
 
   linea.push("URGENCIA");
-  ["vencida", "critica", "alta", "media", "baja"].forEach(function (u) {
+  ["vencida", "critica", "alta", "media", "baja", "pendiente"].forEach(function (u) {
     linea.push("  " + u + new Array(Math.max(1, 12 - u.length)).join(" ") + (porUrg[u] || 0));
   });
   linea.push("");
@@ -465,14 +488,17 @@ function enviarEnlacesSemanales() {
     const registros = porPlanta[planta] || [];
     const enlace    = url + "?planta=" + encodeURIComponent(planta);
 
-    const vencidas = registros.filter(function (r) { return r.urg === "vencida"; }).length;
-    const criticas = registros.filter(function (r) { return r.urg === "critica"; }).length;
+    const vencidas   = registros.filter(function (r) { return r.urg === "vencida"; }).length;
+    const criticas   = registros.filter(function (r) { return r.urg === "critica"; }).length;
+    const pendientes = registros.filter(function (r) { return r.urg === "pendiente"; }).length;
 
     const resumen = registros.length === 0
       ? "<p>Esta semana <b>no hay vencimientos</b> en los próximos " + CFG.VENTANA_DIAS + " días.</p>"
       : "<p>Hay <b>" + registros.length + "</b> vencimientos en los próximos " + CFG.VENTANA_DIAS + " días" +
         (vencidas ? ", de los cuales <b style=\"color:#8f1d16\">" + vencidas + " ya vencieron</b>" : "") +
-        (criticas ? " y <b style=\"color:#d92f28\">" + criticas + " vencen esta semana</b>" : "") + ".</p>";
+        (criticas ? " y <b style=\"color:#d92f28\">" + criticas + " vencen esta semana</b>" : "") + ".</p>" +
+        (pendientes ? "<p>Además hay <b>" + pendientes + "</b> capacitaciones que nunca se han realizado, " +
+                      "al final del listado.</p>" : "");
 
     const cuerpo =
       "<div style=\"font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:14px;color:#0f1e2b;line-height:1.6\">" +

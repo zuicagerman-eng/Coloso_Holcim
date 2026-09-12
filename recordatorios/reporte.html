@@ -25,8 +25,8 @@
     --brand:var(--h-blue); --brand-2:var(--h-blue-2); --brand-soft:#e9f1fa; --on-brand:#fff;
     --head-text:#ffffff; --head-dim:#9db4cb; --head-line:#20374f; --head-ctl:#16324f;
 
-    --u-vencida:#8f1d16; --u-critica:#d92f28; --u-alta:#e07a0c; --u-media:#bd9000; --u-baja:#1f9d57;
-    --u-vencida-s:#fbe9e7; --u-critica-s:#fdeceb; --u-alta-s:#fdf0e2; --u-media-s:#fbf3dc; --u-baja-s:#e6f6ed;
+    --u-vencida:#8f1d16; --u-critica:#d92f28; --u-alta:#e07a0c; --u-media:#bd9000; --u-baja:#1f9d57; --u-pendiente:#5d7186;
+    --u-vencida-s:#fbe9e7; --u-critica-s:#fdeceb; --u-alta-s:#fdf0e2; --u-media-s:#fbf3dc; --u-baja-s:#e6f6ed; --u-pendiente-s:#eceff3;
 
     --shadow:0 1px 2px rgba(15,30,43,.05),0 6px 18px rgba(15,30,43,.06);
     --shadow-lg:0 20px 60px rgba(9,20,32,.28);
@@ -40,8 +40,8 @@
     --brand:#3d86d6; --brand-2:#5ba0ea; --brand-soft:#152a40; --on-brand:#08131f;
     --head-text:#eaf2fa; --head-dim:#8ba4bd; --head-line:#1d2b3a; --head-ctl:#1a2632;
 
-    --u-vencida:#ff6f63; --u-critica:#ff7a72; --u-alta:#f5a742; --u-media:#e2c14a; --u-baja:#4ecb87;
-    --u-vencida-s:#33191a; --u-critica-s:#3a1c1c; --u-alta-s:#382713; --u-media-s:#332c12; --u-baja-s:#122e21;
+    --u-vencida:#ff6f63; --u-critica:#ff7a72; --u-alta:#f5a742; --u-media:#e2c14a; --u-baja:#4ecb87; --u-pendiente:#8fa2b5;
+    --u-vencida-s:#33191a; --u-critica-s:#3a1c1c; --u-alta-s:#382713; --u-media-s:#332c12; --u-baja-s:#122e21; --u-pendiente-s:#1b2732;
 
     --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.28);
   }
@@ -141,6 +141,7 @@
   .chip[aria-pressed="true"] .c{color:var(--on-brand)}
   .chip.c-vencida{color:var(--u-vencida)} .chip.c-critica{color:var(--u-critica)}
   .chip.c-alta{color:var(--u-alta)} .chip.c-media{color:var(--u-media)} .chip.c-baja{color:var(--u-baja)}
+  .chip.c-pendiente{color:var(--u-pendiente)}
 
   /* ---------- KPIs ---------- */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
@@ -176,11 +177,13 @@
   .row.u-alta{border-left-color:var(--u-alta)}
   .row.u-media{border-left-color:var(--u-media)}
   .row.u-baja{border-left-color:var(--u-baja)}
+  .row.u-pendiente{border-left-color:var(--u-pendiente)}
   .days{text-align:center}
   .days .d{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px}
   .days .dl{font-size:10px;color:var(--muted);font-weight:600;margin-top:3px}
   .u-vencida .days .d{color:var(--u-vencida)} .u-critica .days .d{color:var(--u-critica)}
   .u-alta .days .d{color:var(--u-alta)} .u-media .days .d{color:var(--u-media)} .u-baja .days .d{color:var(--u-baja)}
+  .u-pendiente .days .d{color:var(--u-pendiente);font-size:15px}
   .who .nm{font-size:14px;font-weight:700;line-height:1.25}
   .who .meta{font-size:12px;color:var(--muted);margin-top:3px}
   .who .course{font-size:12.5px;margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -193,6 +196,7 @@
   .pill{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff;white-space:nowrap}
   .pill.u-vencida{background:var(--u-vencida)} .pill.u-critica{background:var(--u-critica)}
   .pill.u-alta{background:var(--u-alta)} .pill.u-media{background:var(--u-media)} .pill.u-baja{background:var(--u-baja)}
+  .pill.u-pendiente{background:var(--u-pendiente)}
   [data-theme="dark"] .pill{color:#0b1117}
   .empty{background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:44px 20px;text-align:center;color:var(--muted);font-size:13.5px}
   .empty b{display:block;color:var(--text);font-size:15px;margin-bottom:6px}
@@ -203,6 +207,7 @@
   .person{background:var(--card);border:1px solid var(--line);border-left-width:5px;border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
   .person.u-vencida{border-left-color:var(--u-vencida)} .person.u-critica{border-left-color:var(--u-critica)}
   .person.u-alta{border-left-color:var(--u-alta)} .person.u-media{border-left-color:var(--u-media)} .person.u-baja{border-left-color:var(--u-baja)}
+  .person.u-pendiente{border-left-color:var(--u-pendiente)}
   .person>summary{list-style:none;cursor:pointer;padding:12px 15px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
   .person>summary::-webkit-details-marker{display:none}
   .person>summary:hover{background:var(--card-2)}
@@ -527,9 +532,11 @@ const URG = {
   critica:{lb:"≤ 7 días", cls:"u-critica", short:"≤ 7 días"},
   alta:   {lb:"8–15 días",cls:"u-alta",    short:"8–15 días"},
   media:  {lb:"16–30 días",cls:"u-media",  short:"16–30 días"},
-  baja:   {lb:"+30 días", cls:"u-baja",    short:"+30 días"}
+  baja:   {lb:"+30 días", cls:"u-baja",    short:"+30 días"},
+  // Sin fecha de vencimiento: nunca se ha hecho el curso.
+  pendiente:{lb:"Sin realizar", cls:"u-pendiente", short:"Sin realizar"}
 };
-const URG_ORDER = ["vencida","critica","alta","media","baja"];
+const URG_ORDER = ["vencida","critica","alta","media","baja","pendiente"];
 const PAGE = 60;                              // filas por tanda (render progresivo)
 
 const state = {planta:"<?!= plantaInicial ?>", grupo:"todas", curso:"", q:"", urg:"", sort:"fecha", tab:"lista"};
@@ -539,7 +546,7 @@ const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-const fmtFecha = iso => { const [y,m,d] = iso.split("-"); return `${+d} ${MES[+m-1]} ${y}`; };
+const fmtFecha = iso => { if(!iso) return "—"; const [y,m,d] = iso.split("-"); return `${+d} ${MES[+m-1]} ${y}`; };
 const fmtCorto = iso => { const [,m,d] = iso.split("-"); return `${+d} ${MES[+m-1]}`; };
 const parseISO = iso => { const [y,m,d] = iso.split("-").map(Number); return new Date(y,m-1,d); };
 
@@ -813,8 +820,10 @@ function renderList(rows){
     const u = URG[r.urg];
     let sep = "";
     if(state.sort==="fecha" && r.urg!==last){ last = r.urg; sep = `<div class="sep">${u.short}</div>`; }
-    const dtxt = Math.abs(r.dias);
-    const dlab = r.dias<0 ? (r.dias===-1?"día vencida":"días vencida") : r.dias===0 ? "vence hoy" : r.dias===1 ? "día" : "días";
+    const pend = r.urg==="pendiente";
+    const dtxt = pend ? "—" : Math.abs(r.dias);
+    const dlab = pend ? "sin realizar"
+               : r.dias<0 ? (r.dias===-1?"día vencida":"días vencida") : r.dias===0 ? "vence hoy" : r.dias===1 ? "día" : "días";
     return sep + `<article class="row ${u.cls}">
       <div class="days"><div class="d tnum">${dtxt}</div><div class="dl">${dlab}</div></div>
       <div class="who">
@@ -864,7 +873,7 @@ function renderPeople(rows){
       <ul>${p.items.map(i=>`
         <li>
           <span class="cn"><span class="badge ${badgeClass(i.grupo)}">${esc(i.cat)}</span> ${esc(i.curso)}</span>
-          <span class="cf" style="color:var(--${URG[i.urg].cls})">${fmtCorto(i.fecha)} · ${i.dias<0?"vencida":i.dias===0?"hoy":i.dias+"d"}</span>
+          <span class="cf" style="color:var(--${URG[i.urg].cls})">${i.urg==="pendiente" ? "sin realizar" : fmtCorto(i.fecha)+" · "+(i.dias<0?"vencida":i.dias===0?"hoy":i.dias+"d")}</span>
         </li>`).join("")}</ul>
     </details>`).join("");
   $("#morePpl").hidden = ppl.length<=shownPpl;
@@ -872,7 +881,7 @@ function renderPeople(rows){
 }
 
 /* ---------- Dashboard ---------- */
-const URG_COLOR = {vencida:"var(--u-vencida)", critica:"var(--u-critica)", alta:"var(--u-alta)", media:"var(--u-media)", baja:"var(--u-baja)"};
+const URG_COLOR = {vencida:"var(--u-vencida)", critica:"var(--u-critica)", alta:"var(--u-alta)", media:"var(--u-media)", baja:"var(--u-baja)", pendiente:"var(--u-pendiente)"};
 function renderDash(rows){
   const tot = rows.length || 1;
   $("#distSub").textContent = (state.planta==="__ALL__" ? "todas las plantas" : state.planta) + ` · ${rows.length} registros`;
@@ -899,6 +908,7 @@ function renderWeeks(rows){
   const mon = d => { const x = new Date(d); x.setDate(x.getDate() - ((x.getDay()+6)%7)); x.setHours(0,0,0,0); return x; };
   const buckets = new Map();
   rows.forEach(r=>{
+    if(!r.fecha) return;   // los pendientes no tienen fecha que ubicar en el calendario
     const k = +mon(parseISO(r.fecha));
     if(!buckets.has(k)) buckets.set(k, {n:0, urg:{}});
     const b = buckets.get(k); b.n++; b.urg[r.urg] = (b.urg[r.urg]||0)+1;
@@ -948,7 +958,8 @@ function exportCSV(){
   if(!rows.length){ flash($("#csv"), "Sin datos"); return; }
   const head = ["Planta","Nombre","Cedula","Cargo","Curso","Categoria","Grupo","Fecha_vencimiento","Dias_restantes","Estado"];
   const lines = [head.join(";")].concat(rows.map(r=>[
-    r.planta, r.nombre, r.id, r.pos, r.curso, r.cat, GRUPO_LABEL[r.grupo], r.fecha, r.dias, URG[r.urg].lb
+    r.planta, r.nombre, r.id, r.pos, r.curso, r.cat, GRUPO_LABEL[r.grupo],
+    r.fecha || "", r.urg==="pendiente" ? "" : r.dias, URG[r.urg].lb
   ].map(x=>`"${String(x).replace(/"/g,'""')}"`).join(";")));
   const blob = new Blob(["﻿"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
   const tag  = state.planta==="__ALL__" ? "todas" : state.planta.replace(/[^\w]+/g,"_");
