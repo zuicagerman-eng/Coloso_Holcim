@@ -153,6 +153,14 @@ const CORREO_TABLA = {
   maxFilas:      80    // si son más, se indica cuántas quedan por ver en el reporte
 };
 
+/**
+ * Cuánto se guarda en caché lo leído de la matriz.
+ *
+ * Más minutos = abre más rápido, pero una corrección en la matriz tarda más en
+ * verse. limpiarCache() lo fuerza cuando hace falta verlo ya.
+ */
+const CACHE_MINUTOS = 15;
+
 /** Tope de personas por solicitud, para que un envío no se desborde. */
 const MAX_POR_SOLICITUD = 60;
 
@@ -477,29 +485,96 @@ function doGet(e) {
 }
 
 /**
- * Registros de una planta, con caché corta.
+ * Caché por trozos.
  *
- * Leer la matriz entera toma varios segundos; sin caché, cada persona que
- * abre el enlace pagaría esa espera. Diez minutos es suficiente para una
- * mañana de consultas y bastante corto para no mostrar datos viejos.
+ * Cada entrada admite como mucho 100 KB, y los registros de una planta grande
+ * pasan de eso con holgura. Guardarlos de una pieza no fallaba: simplemente no
+ * se guardaban, y esas plantas releían la matriz entera en cada visita. Aquí se
+ * parten y se vuelven a unir al leer.
+ */
+const CACHE_TROZO = 90000;
+const CACHE_MAX_TROZOS = 40;
+
+function claveDeCache(planta) {
+  return "rep_v2_" + Utilities.base64EncodeWebSafe(planta);
+}
+
+function cacheGuardar(clave, texto) {
+  const trozos = [];
+  for (let i = 0; i < texto.length; i += CACHE_TROZO) {
+    trozos.push(texto.slice(i, i + CACHE_TROZO));
+  }
+  if (!trozos.length || trozos.length > CACHE_MAX_TROZOS) return false;
+
+  const mapa = {};
+  mapa[clave + "_n"] = String(trozos.length);
+  trozos.forEach(function (t, i) { mapa[clave + "_" + i] = t; });
+
+  try {
+    CacheService.getScriptCache().putAll(mapa, CACHE_MINUTOS * 60);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function cacheLeer(clave) {
+  const cache = CacheService.getScriptCache();
+  const n = parseInt(cache.get(clave + "_n"), 10);
+  if (!n) return null;
+
+  const claves = [];
+  for (let i = 0; i < n; i++) claves.push(clave + "_" + i);
+  const partes = cache.getAll(claves);
+
+  let texto = "";
+  for (let i = 0; i < n; i++) {
+    const t = partes[clave + "_" + i];
+    if (t == null) return null;      // expiró un trozo: se recalcula entero
+    texto += t;
+  }
+  return texto;
+}
+
+/**
+ * Registros de una planta.
+ *
+ * Cuando hay que releer, se recorre la matriz UNA vez y se guardan las
+ * dieciséis plantas de golpe. Antes cada planta pagaba su propia lectura
+ * completa, así que la misma matriz se leía dieciséis veces por ciclo.
  */
 function registrosDePlanta(planta) {
-  const cache = CacheService.getScriptCache();
-  const clave = "rep_v1_" + Utilities.base64EncodeWebSafe(planta);
-
-  const guardado = cache.get(clave);
+  const guardado = cacheLeer(claveDeCache(planta));
   if (guardado) {
-    try { return JSON.parse(guardado); } catch (err) { /* caché ilegible: se recalcula */ }
+    try { return JSON.parse(guardado); } catch (err) { /* ilegible: se recalcula */ }
   }
 
   const todos = construirRegistros().registros;
-  const mios  = todos.filter(function (r) { return r.planta === planta; });
 
-  const texto = JSON.stringify(mios);
-  if (texto.length < 90000) {            // el límite por entrada son 100 KB
-    try { cache.put(clave, texto, 600); } catch (err) { /* si no cabe, seguimos sin caché */ }
-  }
-  return mios;
+  const porPlanta = {};
+  todos.forEach(function (r) {
+    (porPlanta[r.planta] = porPlanta[r.planta] || []).push(r);
+  });
+
+  Object.keys(CORREOS_PLANTA).forEach(function (p) {
+    cacheGuardar(claveDeCache(p), JSON.stringify(porPlanta[p] || []));
+  });
+
+  return porPlanta[planta] || [];
+}
+
+/**
+ * Deja la caché lista para que nadie espere.
+ *
+ * Pensada para un activador cada hora: quien abra el enlace encuentra el
+ * trabajo hecho en vez de ser quien lo paga.
+ */
+function calentarCache() {
+  const inicio = new Date().getTime();
+  limpiarCache();
+  const n = registrosDePlanta(Object.keys(CORREOS_PLANTA)[0]).length;
+  Logger.log("Caché lista en " + Math.round((new Date().getTime() - inicio) / 1000) +
+             " s. La primera planta trae " + n + " registros.");
 }
 
 /**
@@ -981,6 +1056,45 @@ function probarCorreo() {
   return "Enviado a " + yo;
 }
 
+/**
+ * Mide cuánto tarda cada pieza en abrirse, con la caché vacía y con la caché
+ * lista. Sirve para saber si una optimización sirvió de algo, en vez de ir a
+ * ojo. El resultado sale en el registro de ejecución.
+ */
+function medirVelocidad() {
+  const planta = indicePlantas()[normalizar(PLANTA_DE_PRUEBA)] || Object.keys(CORREOS_PLANTA)[0];
+  const ahora  = function () { return new Date().getTime(); };
+  let t;
+
+  limpiarCache();
+
+  t = ahora();
+  const nFrio  = registrosDePlanta(planta).length;
+  const msFrio = ahora() - t;
+
+  t = ahora();
+  const nCaliente  = registrosDePlanta(planta).length;
+  const msCaliente = ahora() - t;
+
+  t = ahora();
+  const bytesLogo = logoIncrustado().length;
+  const msLogo    = ahora() - t;
+
+  Logger.log([
+    "VELOCIDAD · " + planta,
+    "",
+    "  caché vacía ....... " + (msFrio / 1000).toFixed(1) + " s   (lee la matriz y guarda las 16 plantas)",
+    "  caché lista ....... " + (msCaliente / 1000).toFixed(1) + " s   <- lo que espera la gente",
+    "  logotipo .......... " + (msLogo / 1000).toFixed(1) + " s   (" + Math.round(bytesLogo / 1024) + " KB)",
+    "",
+    "  registros de la planta: " + nCaliente + (nFrio === nCaliente ? "" : "  (!! frío " + nFrio + ")"),
+    "",
+    "Si 'caché lista' sigue alto, el peso está en el tamaño de la planta, no en",
+    "la lectura. Si 'caché vacía' es lo alto, conviene el activador que la deja",
+    "lista cada hora: así nadie es quien la paga."
+  ].join("\n"));
+}
+
 /** Excel (.xlsx) con los registros de una planta. */
 function excelDePlanta(planta, registros) {
   const libro = SpreadsheetApp.create("TMP_" + planta + "_" + new Date().getTime());
@@ -1027,12 +1141,14 @@ function excelDePlanta(planta, registros) {
  * diez minutos.
  */
 function limpiarCache() {
-  const cache = CacheService.getScriptCache();
-  const claves = Object.keys(CORREOS_PLANTA).map(function (planta) {
-    return "rep_v1_" + Utilities.base64EncodeWebSafe(planta);
+  const claves = [];
+  Object.keys(CORREOS_PLANTA).forEach(function (planta) {
+    const base = claveDeCache(planta);
+    claves.push(base + "_n");
+    for (let i = 0; i < CACHE_MAX_TROZOS; i++) claves.push(base + "_" + i);
   });
   claves.push("logo_v1");
-  cache.removeAll(claves);
+  CacheService.getScriptCache().removeAll(claves);
   Logger.log("Caché vacía. El próximo que abra un enlace leerá la matriz de nuevo.");
 }
 
