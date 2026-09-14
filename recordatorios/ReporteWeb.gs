@@ -50,7 +50,7 @@ const CORREOS_PLANTA = {
  *
  * Mientras esté vacío se usa el dibujo que ya trae el HTML.
  */
-const ID_LOGO = "";
+const ID_LOGO = "1T-gc0mAXvHnSUZxUxayVzA-tQxhQ96bN";
 
 /**
  * Cuánto del ancho del logotipo se muestra, en píxeles.

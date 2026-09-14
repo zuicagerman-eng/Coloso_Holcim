@@ -90,6 +90,38 @@
     padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;gap:7px;align-items:center;white-space:nowrap
   }
   .btn-ghost:hover{background:var(--head-ctl);border-color:var(--h-cyan)}
+
+  /* Botón de instrucciones con su globo, que se queda siempre a la vista */
+  .guia-wrap{position:relative;display:inline-flex;flex:none}
+  .btn-guia{background:var(--h-cyan);color:#062a3c;border-color:transparent;font-weight:700}
+  .btn-guia:hover{background:#3ecdf7;border-color:transparent;color:#062a3c}
+  .burbuja{
+    position:absolute;top:calc(100% + 10px);right:0;z-index:6;pointer-events:none;
+    background:var(--h-green);color:#16300a;font-size:11.5px;font-weight:700;
+    line-height:1.3;padding:7px 11px;border-radius:9px;white-space:nowrap;
+    box-shadow:0 8px 20px rgba(3,12,20,.38);animation:flota 2.8s ease-in-out infinite
+  }
+  .burbuja::before{
+    content:"";position:absolute;bottom:100%;right:18px;
+    border:6px solid transparent;border-bottom-color:var(--h-green)
+  }
+  @keyframes flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @media (prefers-reduced-motion:reduce){.burbuja{animation:none}}
+  /* En pantallas angostas no cabe: el propio botón ya dice de qué va */
+  @media (max-width:820px){.burbuja{display:none}}
+
+  /* Pasos numerados de la guía */
+  .paso{display:flex;gap:13px;align-items:flex-start;margin:0 0 16px}
+  .paso .num{
+    flex:none;width:25px;height:25px;border-radius:50%;background:var(--brand);
+    color:var(--on-brand);font-size:12.5px;font-weight:800;display:grid;place-items:center;margin-top:1px
+  }
+  .paso .txt{font-size:13.5px;line-height:1.62}
+  .paso .txt b{color:var(--text)}
+  .nota{
+    background:var(--brand-soft);border-left:3px solid var(--brand);
+    padding:11px 14px;border-radius:0 9px 9px 0;font-size:13px;line-height:1.6;margin:16px 0
+  }
   .icon-btn{width:36px;height:36px;padding:0;justify-content:center}
 
   /* ---------- Tabs ---------- */
@@ -363,6 +395,107 @@
 </div>
 
 <!-- ===== Ventana de ayuda ===== -->
+<div class="overlay" id="guia" role="dialog" aria-modal="true" aria-labelledby="gTitle" hidden>
+  <div class="modal wide">
+    <div class="modal-h">
+      <button class="modal-x" id="guiaX" aria-label="Cerrar la guía">&#10005;</button>
+      <h2 id="gTitle">Guía completa</h2>
+      <p>Qué es cada cosa de la pantalla, una por una. Con leerla una vez basta.</p>
+    </div>
+    <div class="help-b">
+
+      <h3>1 · QUÉ ESTÁ VIENDO</h3>
+      <p>Las capacitaciones de su planta que <b>ya vencieron</b>, las que <b>vencen en los próximos 60 días</b>, y las que <b>nunca se han realizado</b>.</p>
+      <p>Los datos salen de la <b>Matriz de Capacitaciones H&amp;S</b> en el momento en que usted abre el enlace. No hay una copia guardada: si esta mañana alguien cargó una capacitación en la matriz, al recargar esta página esa persona ya no aparece.</p>
+      <div class="nota">El enlace es solo de su planta. No puede ver las de otras, y en las otras no ven la suya.</div>
+
+      <h3>2 · LA BARRA DE ARRIBA</h3>
+      <div class="paso"><span class="num">1</span><span class="txt"><b>Planta</b> — el nombre de su planta y, entre paréntesis, cuántos registros tiene en total.</span></div>
+      <div class="paso"><span class="num">2</span><span class="txt"><b>Modo oscuro / claro</b> — cambia los colores de la pantalla. Queda guardado para la próxima vez.</span></div>
+      <div class="paso"><span class="num">3</span><span class="txt"><b>¿Primera vez?</b> — este botón. Abre esta guía.</span></div>
+      <div class="paso"><span class="num">4</span><span class="txt"><b>Ayuda</b> — un resumen más corto, para cuando solo quiera recordar un detalle.</span></div>
+      <div class="paso"><span class="num">5</span><span class="txt"><b>La fecha</b> — al lado del título dice el día y la hora en que se leyeron los datos. Si recarga, cambia.</span></div>
+
+      <h3>3 · LAS TRES PESTAÑAS</h3>
+      <ul>
+        <li><b>Lista</b> — una fila por cada capacitación pendiente, ordenadas por urgencia. Es la vista para trabajar.</li>
+        <li><b>Por persona</b> — agrupa por trabajador. Sirve para ver de un vistazo quién acumula varias y programarlas juntas.</li>
+        <li><b>Resumen y gráficas</b> — los totales, el reparto por urgencia y el calendario de las próximas semanas. Para reportar hacia arriba.</li>
+      </ul>
+      <p>El número al lado de cada pestaña es cuántos registros hay con los filtros que tenga puestos.</p>
+
+      <h3>4 · LOS BOTONES DE COLORES</h3>
+      <p>Son la parte más importante. Cada uno deja ver solo ese grupo; púlselo otra vez para quitarlo.</p>
+      <ul>
+        <li><b>Vencidas</b> (vino tinto) — la fecha ya pasó. Hay que programarlas de inmediato.</li>
+        <li><b>&#8804; 7 días</b> (rojo) — vencen esta semana. Si no se programan ahora, la semana entrante son vencidas.</li>
+        <li><b>8&#8211;15 días</b> (naranja) — hay margen, pero conviene agendarlas ya.</li>
+        <li><b>16&#8211;30 días</b> (mostaza) — para el mes en curso.</li>
+        <li><b>+30 días</b> (verde) — avisadas con tiempo. No requieren acción todavía.</li>
+        <li><b>Sin realizar</b> (gris) — la persona <b>nunca ha hecho</b> ese curso. No tienen fecha porque no hay nada que vencer, y por eso van al final. No las pase por alto: suelen ser las más importantes.</li>
+      </ul>
+
+      <h3>5 · LOS CUATRO RECUADROS GRANDES</h3>
+      <ul>
+        <li><b>Registros en vista</b> — cuántas filas está viendo ahora mismo, con los filtros puestos.</li>
+        <li><b>Acción inmediata</b> — las vencidas más las que vencen en 7 días. Si solo va a mirar un número, mire este.</li>
+        <li><b>Vencen en &#8804; 30 días</b> — lo que debería quedar programado antes de cerrar el mes.</li>
+        <li><b>Personas involucradas</b> — cuántos trabajadores distintos, y cuántos cursos le toca a cada uno en promedio.</li>
+      </ul>
+      <p>Los recuadros también filtran: al pulsarlos, la lista se reduce a eso.</p>
+
+      <h3>6 · CÓMO SE LEE UNA FILA</h3>
+      <div class="paso"><span class="num">1</span><span class="txt"><b>El número grande de la izquierda</b> — los días. Si dice «12 días vencida», hace doce días que caducó. Si dice «&#8212; sin realizar», nunca se hizo.</span></div>
+      <div class="paso"><span class="num">2</span><span class="txt"><b>Nombre, cargo y cédula</b> — para ubicar a la persona y poder convocarla.</span></div>
+      <div class="paso"><span class="num">3</span><span class="txt"><b>La etiqueta de color</b> — la categoría: Alturas, Izajes, Espacios confinados, LOTO… Indica de qué tipo de riesgo se trata.</span></div>
+      <div class="paso"><span class="num">4</span><span class="txt"><b>El nombre del curso</b> — tal como está escrito en la matriz.</span></div>
+      <div class="paso"><span class="num">5</span><span class="txt"><b>La fecha y la pastilla de la derecha</b> — cuándo vence y en qué grupo de urgencia cayó.</span></div>
+      <p>La <b>franja de color del borde izquierdo</b> repite la urgencia, para que se vea al recorrer la lista con la vista.</p>
+
+      <h3>7 · LOS FILTROS</h3>
+      <ul>
+        <li><b>Todas / Alto riesgo / Legales / Internas</b> — por tipo de capacitación. «Alto riesgo» son alturas, izajes, espacios confinados y conducción; «Legales» las exigidas por norma; «Internas» las de formación propia.</li>
+        <li><b>El buscador</b> — encuentra por nombre, cédula, cargo o curso. Con la tecla <b>/</b> salta directo a él.</li>
+        <li><b>Todos los cursos</b> — deja ver un solo curso. Útil para programar una jornada: filtra el curso y ya tiene la lista de convocados.</li>
+        <li><b>Ordenar</b> — por fecha, por prioridad, por nombre o por planta.</li>
+      </ul>
+      <div class="nota">Los filtros se suman. Si algo no cuadra, pulse <b>Quitar filtros</b> y vuelve todo a como estaba.</div>
+
+      <h3>8 · LOS BOTONES DE ACCIÓN</h3>
+      <ul>
+        <li><b>Descargar Excel</b> — baja lo que está viendo, con los filtros puestos. Para trabajarlo o pasarlo a un tercero.</li>
+        <li><b>Imprimir / PDF</b> — imprime en papel o guarda un PDF. Se imprime lo filtrado, no todo.</li>
+        <li><b>Copiar enlace</b> — copia la dirección <b>con sus filtros dentro</b>. Se la pasa a un compañero y él abre exactamente lo mismo que usted está viendo.</li>
+        <li><b>Quitar filtros</b> — vuelve al estado inicial.</li>
+      </ul>
+
+      <h3>9 · LA VISTA POR PERSONA</h3>
+      <p>Cada tarjeta es un trabajador, con cuántos cursos tiene pendientes. Al pulsarla se abre y muestra cuáles, con su fecha y urgencia.</p>
+      <p>Están ordenadas por lo más urgente de cada uno. Si alguien acumula tres o cuatro, conviene citarlo una sola vez para todos.</p>
+
+      <h3>10 · RESUMEN Y GRÁFICAS</h3>
+      <ul>
+        <li><b>La barra de distribución</b> — el reparto por urgencia, en proporción.</li>
+        <li><b>Las barras por curso</b> — qué capacitaciones concentran más pendientes. De ahí salen las jornadas grupales.</li>
+        <li><b>Las semanas</b> — cuánto vence cada semana próxima, para repartir la carga y no dejarlo todo para el final.</li>
+      </ul>
+
+      <h3>11 · CADA CUÁNTO SE ACTUALIZA</h3>
+      <p>El enlace es siempre el mismo y los datos se leen al abrir, así que <b>puede guardarlo en favoritos</b> y entrar cuando quiera. No hace falta esperar al correo del martes.</p>
+      <p>Si acaban de corregir la matriz y aún ve lo viejo, espere unos diez minutos y recargue: la página guarda una copia breve para cargar rápido.</p>
+
+      <h3>12 · QUÉ HACER CON ESTO</h3>
+      <div class="paso"><span class="num">1</span><span class="txt">Mire <b>Acción inmediata</b>. Eso es lo de esta semana.</span></div>
+      <div class="paso"><span class="num">2</span><span class="txt">Pase a <b>Resumen y gráficas</b> y vea qué curso concentra más gente. Una jornada grupal resuelve muchos de un golpe.</span></div>
+      <div class="paso"><span class="num">3</span><span class="txt">Filtre ese curso, <b>descargue el Excel</b> y tiene la lista de convocados.</span></div>
+      <div class="paso"><span class="num">4</span><span class="txt">Cuando se dicte, que quede cargada en la matriz. Al recargar, esas personas desaparecen solas de aquí.</span></div>
+      <div class="nota">Si un dato no le cuadra &#8212; una persona que ya no trabaja, un curso que no le aplica, una fecha rara &#8212; no se corrige aquí: se corrige en la matriz, y el reporte lo refleja al instante.</div>
+
+      <button class="modal-cta" id="guiaOk" type="button" style="margin-top:20px">Listo, entendido</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="saludo" role="dialog" aria-modal="true" aria-labelledby="sTitle" hidden>
   <div class="modal">
     <div class="modal-h">
@@ -443,6 +576,10 @@
       <select class="plant" id="plantSel"></select>
     </div>
     <button class="btn-ghost" id="theme">🌙 Modo oscuro</button>
+    <span class="guia-wrap">
+      <button class="btn-ghost btn-guia" id="guiaBtn">📖 ¿Primera vez?</button>
+      <span class="burbuja" aria-hidden="true">Presióname para las instrucciones</span>
+    </span>
     <button class="btn-ghost" id="helpBtn"><span class="qmark">?</span> Ayuda</button>
     <button class="btn-ghost" id="reopen">⚙ Cambiar planta</button>
   </div>
@@ -698,6 +835,13 @@ $("#reopen").onclick = openModal;
 $("#overlay").addEventListener("click", e => { if(e.target.id==="overlay") closeModal(); });
 
 /* Ventana de ayuda */
+function openGuia(){ $("#guia").hidden = false; setTimeout(()=>$("#guiaX").focus(), 40); }
+function closeGuia(){ $("#guia").hidden = true; $("#guiaBtn").focus(); }
+$("#guiaBtn").addEventListener("click", openGuia);
+$("#guiaX").addEventListener("click", closeGuia);
+$("#guiaOk").addEventListener("click", closeGuia);
+$("#guia").addEventListener("click", e => { if(e.target.id==="guia") closeGuia(); });
+
 function openSaludo(){
   $("#sTitle").textContent = SALUDO.nombres ? "Hola " + SALUDO.nombres : "Hola";
   $("#sSub").textContent   = "Reporte de capacitaciones · " + SALUDO.planta;
@@ -721,7 +865,8 @@ $("#help").addEventListener("click", e => { if(e.target.id==="help") closeHelp()
 
 document.addEventListener("keydown", e => {
   if(e.key==="Escape"){
-    if(!$("#saludo").hidden) closeSaludo();
+    if(!$("#guia").hidden) closeGuia();
+    else if(!$("#saludo").hidden) closeSaludo();
     else if(!$("#help").hidden) closeHelp();
     else if(!$("#overlay").hidden) closeModal();
   }
