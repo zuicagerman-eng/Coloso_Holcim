@@ -368,7 +368,7 @@
     </div>
     <div class="help-b">
       <h3>QUÉ ESTÁS VIENDO</h3>
-      <p>Las capacitaciones de tu planta que ya vencieron o están por vencer, con los datos del reporte al <b>3 de septiembre de 2026</b>. Los días que faltan se cuentan desde esa fecha.</p>
+      <p>Las capacitaciones de tu planta que ya vencieron o están por vencer, con los datos de la matriz al <b><?!= corteTxt ?></b>. Los días que faltan se cuentan desde hoy.</p>
 
       <h3>LOS COLORES</h3>
       <div class="help-key">
@@ -524,7 +524,7 @@ Datos leidos de la matriz al abrir el enlace.
    ============================================================================ */
 const DATA = <?!= datosJson ?>;
 
-const CORTE = new Date(2026,8,3);            // 3 sep 2026 · fecha de corte del reporte
+const CORTE = new Date("<?!= corteIso ?>T00:00:00");   // el día en que se abre, no una fecha fija
 const CORTE_TXT = "<?!= corteTxt ?>";
 const GRUPO_LABEL = {alto_riesgo:"Alto riesgo", normativa:"Normativa/Legal", interna:"Interna"};
 const URG = {
@@ -1003,9 +1003,9 @@ function renderFoot(rows){
     `<h2 style="margin:0 0 4px;font-size:16px">Vencimientos de capacitaciones · H&amp;S Holcim Colombia</h2>
      <div style="font-size:11.5px;color:#5d7186">${f.join(" · ")} · ${rows.length} registros · Corte ${CORTE_TXT}</div>`;
   $("#foot").innerHTML =
-    `<span class="no-print">Fecha de corte del reporte: <b>3 de septiembre de 2026</b> · ${DATA.length} registros totales ·
+    `<span class="no-print">Datos de la matriz al <b>${CORTE_TXT}</b> · ${DATA.length} registros totales ·
      ${new Set(DATA.map(d=>d.id)).size} personas · ${plantasList.length} plantas.<br>
-     Los días restantes se calculan desde esa fecha. ¿Dudas sobre cómo usarlo? El botón <b>Ayuda</b> está arriba a la derecha.<br>
+     Los días restantes se calculan desde hoy. ¿Dudas sobre cómo usarlo? El botón <b>Ayuda</b> está arriba a la derecha.<br>
      Herramienta interna de Salud y Seguridad — contiene datos personales, no distribuir fuera de la organización.</span>`;
 }
 

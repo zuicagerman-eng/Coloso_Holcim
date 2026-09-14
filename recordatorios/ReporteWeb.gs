@@ -341,6 +341,7 @@ function doGet(e) {
   const plantilla = HtmlService.createTemplateFromFile("reporte");
   plantilla.datosJson     = JSON.stringify(registros);
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
+  plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -589,6 +590,7 @@ function descargarHtmlCompleto(sinPendientes) {
   const plantilla = HtmlService.createTemplateFromFile("reporte");
   plantilla.datosJson     = JSON.stringify(registros);
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
+  plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();
