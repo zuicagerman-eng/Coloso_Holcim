@@ -763,6 +763,69 @@ function probar() {
 // ════════════════════════════════════════════════════════════════════
 
 /**
+ * Arma el correo semanal de una planta. La usan tanto el envío real como la
+ * prueba, para que lo que se revisa sea exactamente lo que sale.
+ *
+ * @return {{asunto:string, cuerpo:string}}
+ */
+function armarCorreoDePlanta(planta, registros, enlace, fecha) {
+  const tabla = tablaDelCorreo(registros);
+
+    // Lo que no va en la tabla se menciona, para que se sepa que está y dónde verlo
+  const aparte = [];
+    if (tabla.internas) {
+    aparte.push("<b>" + tabla.internas + "</b> de formación interna");
+    }
+    if (tabla.pendientes) {
+    aparte.push("<b>" + tabla.pendientes + "</b> que nunca se han realizado");
+    }
+
+  const puntos = tabla.listadas
+    ? "<p>Los puntos relevantes de esta semana son las capacitaciones de <b>alto riesgo y legales</b> " +
+      "vencidas en el último mes o por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días:</p>" +
+      tabla.html
+    : "<p>Esta semana <b>no hay capacitaciones de alto riesgo ni legales</b> vencidas en el último mes " +
+      "ni por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días.</p>";
+
+    // Las de más atraso no se listan, pero no se callan
+  const viejas = tabla.antiguas
+    ? "<p style=\"background:#fbe9e7;border-left:3px solid #8f1d16;padding:11px 14px;" +
+      "border-radius:0 8px 8px 0;margin:0 0 14px\">Hay además <b style=\"color:#8f1d16\">" +
+      tabla.antiguas + "</b> de alto riesgo o legales con <b>más de " + CORREO_TABLA.vencidasDesde +
+      " días vencidas</b>. No se listan aquí para no alargar el correo: se consultan en el reporte.</p>"
+    : "";
+
+  const cola = aparte.length
+    ? "<p>Aparte de lo anterior, la planta tiene " + aparte.join(" y ") +
+      ". Todo eso se consulta en el reporte.</p>"
+    : "";
+
+  const cuerpo =
+    "<div style=\"font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:14px;color:#0f1e2b;line-height:1.6\">" +
+    "<p>Buen día.</p>" +
+    "<p>De parte de <b>Capacitaciones H&amp;S</b> enviamos el informe semanal de las capacitaciones de la " +
+    "planta <b>" + escapar(planta) + "</b>, con corte al " + fecha + ".</p>" +
+    puntos +
+    viejas +
+    cola +
+    "<p style=\"margin:22px 0 10px\">Para más información sobre las capacitaciones internas, " +
+    "o para solicitar las que estén pendientes, entre al siguiente enlace:</p>" +
+    "<p style=\"margin:0 0 22px\">" +
+    "<a href=\"" + enlace + "\" style=\"background:#1d4370;color:#fff;text-decoration:none;" +
+    "padding:12px 22px;border-radius:8px;display:inline-block;font-weight:700\">Ver el reporte de " +
+    escapar(planta) + "</a></p>" +
+    "<p style=\"color:#5d7186;font-size:12.5px\">El enlace muestra siempre los datos del momento en que se abre " +
+    "y solo funciona con su cuenta de Holcim. Se adjunta el Excel para quien necesite trabajar los datos.</p>" +
+    "</div>";
+
+
+  return {
+    asunto: "Informe semanal de capacitaciones · " + planta,
+    cuerpo: cuerpo
+  };
+}
+
+/**
  * Manda a cada planta su enlace, con el Excel adjunto para quien necesite
  * trabajar los datos. Sustituye el PDF por el enlace al tablero.
  *
@@ -784,70 +847,19 @@ function enviarEnlacesSemanales() {
     const registros = porPlanta[planta] || [];
     const enlace    = url + "?planta=" + encodeURIComponent(planta);
 
-    const tabla = tablaDelCorreo(registros);
-
-    // Lo que no va en la tabla se menciona, para que se sepa que está y dónde verlo
-    const aparte = [];
-    if (tabla.internas) {
-      aparte.push("<b>" + tabla.internas + "</b> de formación interna");
-    }
-    if (tabla.pendientes) {
-      aparte.push("<b>" + tabla.pendientes + "</b> que nunca se han realizado");
-    }
-
-    const puntos = tabla.listadas
-      ? "<p>Los puntos relevantes de esta semana son las capacitaciones de <b>alto riesgo y legales</b> " +
-        "vencidas en el último mes o por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días:</p>" +
-        tabla.html
-      : "<p>Esta semana <b>no hay capacitaciones de alto riesgo ni legales</b> vencidas en el último mes " +
-        "ni por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días.</p>";
-
-    // Las de más atraso no se listan, pero no se callan
-    const viejas = tabla.antiguas
-      ? "<p style=\"background:#fbe9e7;border-left:3px solid #8f1d16;padding:11px 14px;" +
-        "border-radius:0 8px 8px 0;margin:0 0 14px\">Hay además <b style=\"color:#8f1d16\">" +
-        tabla.antiguas + "</b> de alto riesgo o legales con <b>más de " + CORREO_TABLA.vencidasDesde +
-        " días vencidas</b>. No se listan aquí para no alargar el correo: se consultan en el reporte.</p>"
-      : "";
-
-    const cola = aparte.length
-      ? "<p>Aparte de lo anterior, la planta tiene " + aparte.join(" y ") +
-        ". Todo eso se consulta en el reporte.</p>"
-      : "";
-
-    const cuerpo =
-      "<div style=\"font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:14px;color:#0f1e2b;line-height:1.6\">" +
-      "<p>Buen día.</p>" +
-      "<p>De parte de <b>Capacitaciones H&amp;S</b> enviamos el informe semanal de las capacitaciones de la " +
-      "planta <b>" + escapar(planta) + "</b>, con corte al " + fecha + ".</p>" +
-      puntos +
-      viejas +
-      cola +
-      "<p style=\"margin:22px 0 10px\">Para más información sobre las capacitaciones internas, " +
-      "o para solicitar las que estén pendientes, entre al siguiente enlace:</p>" +
-      "<p style=\"margin:0 0 22px\">" +
-      "<a href=\"" + enlace + "\" style=\"background:#1d4370;color:#fff;text-decoration:none;" +
-      "padding:12px 22px;border-radius:8px;display:inline-block;font-weight:700\">Ver el reporte de " +
-      escapar(planta) + "</a></p>" +
-      "<p style=\"color:#5d7186;font-size:12.5px\">El enlace muestra siempre los datos del momento en que se abre " +
-      "y solo funciona con su cuenta de Holcim. Se adjunta el Excel para quien necesite trabajar los datos.</p>" +
-      "</div>";
+    const armado = armarCorreoDePlanta(planta, registros, enlace, fecha);
 
     const adjuntos = [excelDePlanta(planta, registros)];
 
     if (!ENVIAR_CORREOS) {
-      Logger.log("[PRUEBA] " + planta + "  tabla=" + tabla.listadas +
-                 (tabla.restantes ? "(+" + tabla.restantes + ")" : "") +
-                 "  antiguas=" + tabla.antiguas +
-                 "  internas=" + tabla.internas + "  sin realizar=" + tabla.pendientes +
-                 "\n          " + enlace);
+      Logger.log("[PRUEBA] " + planta + "  " + registros.length + " registros\n          " + enlace);
       return;
     }
 
     MailApp.sendEmail({
       to:          CORREOS_PLANTA[planta],
-      subject:     "Informe semanal de capacitaciones · " + planta,
-      htmlBody:    cuerpo,
+      subject:     armado.asunto,
+      htmlBody:    armado.cuerpo,
       attachments: adjuntos
     });
   });
@@ -925,6 +937,48 @@ function tablaDelCorreo(registros) {
 
   cuentas.html = html;
   return cuentas;
+}
+
+/** Planta que se usa al probar el correo. */
+const PLANTA_DE_PRUEBA = "HC-MONDOÑEDO";
+
+/**
+ * Manda a su propio correo el informe de PLANTA_DE_PRUEBA, igual que saldría el
+ * martes: mismo asunto, mismo cuerpo, misma tabla y el mismo Excel adjunto.
+ *
+ * No toca la lista de destinatarios, no depende de ENVIAR_CORREOS y no altera
+ * el activador. Sirve para revisar antes de soltarlo.
+ */
+function probarCorreo() {
+  const url = ScriptApp.getService().getUrl();
+  if (!url) throw new Error("Publique la aplicación web antes de probar el correo.");
+
+  const planta = indicePlantas()[normalizar(PLANTA_DE_PRUEBA)];
+  if (!planta) throw new Error("PLANTA_DE_PRUEBA no coincide con ninguna de CORREOS_PLANTA.");
+
+  const registros = construirRegistros().registros
+    .filter(function (r) { return r.planta === planta; });
+
+  const enlace = url + "?planta=" + encodeURIComponent(planta);
+  const fecha  = Utilities.formatDate(new Date(), CFG.ZONA, "d 'de' MMMM 'de' yyyy");
+  const armado = armarCorreoDePlanta(planta, registros, enlace, fecha);
+
+  const yo = Session.getEffectiveUser().getEmail();
+
+  MailApp.sendEmail({
+    to:          yo,
+    subject:     "[PRUEBA] " + armado.asunto,
+    htmlBody:    "<p style=\"background:#fbf3dc;border-left:3px solid #bd9000;padding:10px 14px;" +
+                 "border-radius:0 8px 8px 0;font-family:system-ui,Arial,sans-serif;font-size:13px\">" +
+                 "Esto es una prueba. El martes sale igual, pero a los destinatarios de la planta.</p>" +
+                 armado.cuerpo,
+    attachments: [excelDePlanta(planta, registros)]
+  });
+
+  Logger.log("Enviado a " + yo + "\n  planta: " + planta +
+             "\n  registros: " + registros.length +
+             "\n  enlace: " + enlace);
+  return "Enviado a " + yo;
 }
 
 /** Excel (.xlsx) con los registros de una planta. */
