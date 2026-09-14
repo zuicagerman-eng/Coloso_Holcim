@@ -796,9 +796,19 @@ function enviarEnlacesSemanales() {
     }
 
     const puntos = tabla.listadas
-      ? "<p>Los puntos relevantes de esta semana son:</p>" + tabla.html
+      ? "<p>Los puntos relevantes de esta semana son las capacitaciones de <b>alto riesgo y legales</b> " +
+        "vencidas en el último mes o por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días:</p>" +
+        tabla.html
       : "<p>Esta semana <b>no hay capacitaciones de alto riesgo ni legales</b> vencidas en el último mes " +
         "ni por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días.</p>";
+
+    // Las de más atraso no se listan, pero no se callan
+    const viejas = tabla.antiguas
+      ? "<p style=\"background:#fbe9e7;border-left:3px solid #8f1d16;padding:11px 14px;" +
+        "border-radius:0 8px 8px 0;margin:0 0 14px\">Hay además <b style=\"color:#8f1d16\">" +
+        tabla.antiguas + "</b> de alto riesgo o legales con <b>más de " + CORREO_TABLA.vencidasDesde +
+        " días vencidas</b>. No se listan aquí para no alargar el correo: se consultan en el reporte.</p>"
+      : "";
 
     const cola = aparte.length
       ? "<p>Aparte de lo anterior, la planta tiene " + aparte.join(" y ") +
@@ -811,6 +821,7 @@ function enviarEnlacesSemanales() {
       "<p>De parte de <b>Capacitaciones H&amp;S</b> enviamos el informe semanal de las capacitaciones de la " +
       "planta <b>" + escapar(planta) + "</b>, con corte al " + fecha + ".</p>" +
       puntos +
+      viejas +
       cola +
       "<p style=\"margin:22px 0 10px\">Para más información sobre las capacitaciones internas, " +
       "o para solicitar las que estén pendientes, entre al siguiente enlace:</p>" +
@@ -827,6 +838,7 @@ function enviarEnlacesSemanales() {
     if (!ENVIAR_CORREOS) {
       Logger.log("[PRUEBA] " + planta + "  tabla=" + tabla.listadas +
                  (tabla.restantes ? "(+" + tabla.restantes + ")" : "") +
+                 "  antiguas=" + tabla.antiguas +
                  "  internas=" + tabla.internas + "  sin realizar=" + tabla.pendientes +
                  "\n          " + enlace);
       return;
@@ -864,7 +876,21 @@ function tablaDelCorreo(registros) {
   }).length;
   const pendientes = registros.filter(function (r) { return r.urg === "pendiente"; }).length;
 
-  if (!muestra.length) return { html: "", listadas: 0, restantes: 0, internas: internas, pendientes: pendientes };
+  // Las de riesgo o de ley con más atraso del que abarca la tabla. No se listan
+  // para no alargar el correo, pero se dice cuántas son y dónde verlas.
+  const antiguas = registros.filter(function (r) {
+    return r.urg !== "pendiente" &&
+           CORREO_TABLA.grupos.indexOf(r.grupo) !== -1 &&
+           r.dias < -CORREO_TABLA.vencidasDesde;
+  }).length;
+
+  const cuentas = { listadas: muestra.length, restantes: restantes, antiguas: antiguas,
+                    internas: internas, pendientes: pendientes };
+
+  if (!muestra.length) {
+    cuentas.html = "";
+    return cuentas;
+  }
 
   const filas = muestra.map(function (r) {
     const vencida = r.dias < 0;
@@ -897,8 +923,8 @@ function tablaDelCorreo(registros) {
         " más en el reporte.</p>"
       : "");
 
-  return { html: html, listadas: muestra.length, restantes: restantes,
-           internas: internas, pendientes: pendientes };
+  cuentas.html = html;
+  return cuentas;
 }
 
 /** Excel (.xlsx) con los registros de una planta. */
