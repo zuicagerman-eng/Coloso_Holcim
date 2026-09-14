@@ -363,6 +363,21 @@
 </div>
 
 <!-- ===== Ventana de ayuda ===== -->
+<div class="overlay" id="saludo" role="dialog" aria-modal="true" aria-labelledby="sTitle" hidden>
+  <div class="modal">
+    <div class="modal-h">
+      <button class="modal-x" id="saludoX" aria-label="Cerrar">✕</button>
+      <h2 id="sTitle">Hola</h2>
+      <p id="sSub"></p>
+    </div>
+    <div class="modal-b">
+      <p id="sTexto" style="margin:0 0 18px;font-size:14px;line-height:1.6;color:var(--text)"></p>
+      <button class="modal-cta" id="saludoOk">Ver el reporte</button>
+      <p class="modal-hint">Puede cerrarlo con Escape o tocando fuera.</p>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="help" role="dialog" aria-modal="true" aria-labelledby="hTitle" hidden>
   <div class="modal wide">
     <div class="modal-h">
@@ -528,6 +543,7 @@ Datos leidos de la matriz al abrir el enlace.
    ============================================================================ */
 const DATA = <?!= datosJson ?>;
 
+const SALUDO = <?!= saludoJson ?>;
 const CORTE = new Date("<?!= corteIso ?>T00:00:00");   // el día en que se abre, no una fecha fija
 const CORTE_TXT = "<?!= corteTxt ?>";
 const GRUPO_LABEL = {alto_riesgo:"Alto riesgo", normativa:"Normativa/Legal", interna:"Interna"};
@@ -682,6 +698,20 @@ $("#reopen").onclick = openModal;
 $("#overlay").addEventListener("click", e => { if(e.target.id==="overlay") closeModal(); });
 
 /* Ventana de ayuda */
+function openSaludo(){
+  $("#sTitle").textContent = SALUDO.nombres ? "Hola " + SALUDO.nombres : "Hola";
+  $("#sSub").textContent   = "Reporte de capacitaciones · " + SALUDO.planta;
+  $("#sTexto").textContent =
+    "Aquí están las capacitaciones de " + SALUDO.planta + " que ya vencieron o vencen pronto. " +
+    "Los datos se leen de la matriz en el momento de abrir, así que siempre ve lo último.";
+  $("#saludo").hidden = false;
+  setTimeout(()=>$("#saludoOk").focus(), 40);
+}
+function closeSaludo(){ $("#saludo").hidden = true; }
+$("#saludoX").addEventListener("click", closeSaludo);
+$("#saludoOk").addEventListener("click", closeSaludo);
+$("#saludo").addEventListener("click", e => { if(e.target.id==="saludo") closeSaludo(); });
+
 function openHelp(){ $("#help").hidden = false; setTimeout(()=>$("#helpX").focus(), 40); }
 function closeHelp(){ $("#help").hidden = true; $("#helpBtn").focus(); }
 $("#helpBtn").onclick = openHelp;
@@ -691,7 +721,8 @@ $("#help").addEventListener("click", e => { if(e.target.id==="help") closeHelp()
 
 document.addEventListener("keydown", e => {
   if(e.key==="Escape"){
-    if(!$("#help").hidden) closeHelp();
+    if(!$("#saludo").hidden) closeSaludo();
+    else if(!$("#help").hidden) closeHelp();
     else if(!$("#overlay").hidden) closeModal();
   }
   if(e.key==="/" && document.activeElement.tagName!=="INPUT" && document.activeElement.tagName!=="SELECT"){
@@ -1033,7 +1064,10 @@ buildModal(); buildControls();
   const pref = loadPref();
   if(!fromHash && pref && pref.planta){ state.planta = pref.planta; state.grupo = pref.grupo || "todas"; }
   syncUI();
-  if(!fromHash && !pref) openModal();
+  // Con una sola planta el selector no tiene sentido: el enlace ya viene con la suya.
+  const unaPlanta = new Set(DATA.map(d => d.planta)).size <= 1;
+  if(SALUDO && SALUDO.planta) openSaludo();
+  else if(!fromHash && !pref && !unaPlanta) openModal();
 })();
 /* Enlaces compartidos abiertos con la página ya cargada */
 addEventListener("hashchange", () => { if(hashToState()) syncUI(); });

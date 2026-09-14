@@ -20,22 +20,22 @@ const ENVIAR_CORREOS = false;
 
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
 const CORREOS_PLANTA = {
-  "AF-NOBSA":           "yeison.monroy.ext@holcim.com, carlos.vargash@holcim.com, maria.diazp@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
-  "AF-TELEPORT":        "yeison.monroy.ext@holcim.com, juan.narvaezsalazar@holcim.com, german.zuica@holcim.com",
-  "CJ-NOBSA":           "yeison.monroy.ext@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
-  "HC-BARRANCABERMEJA": "yeison.monroy.ext@holcim.com, leidys.blanco@holcim.com, german.zuica@holcim.com",
-  "HC-BELLO":           "yeison.monroy.ext@holcim.com, mayra.ramirez@holcim.com, wilson.toledo@holcim.com, edwin.yepes@holcim.com, leidy.perez2@holcim.com, juan.sanchez6@holcim.com, german.zuica@holcim.com",
-  "HC-CALI":            "yeison.monroy.ext@holcim.com, mayra.ramirez@holcim.com, german.zuica@holcim.com",
-  "HC-CHIA":            "yeison.monroy.ext@holcim.com, w.otalora@holcim.com, sara.garzon.ext@holcim.com, german.zuica@holcim.com",
-  "HC-MEDELLIN":        "yeison.monroy.ext@holcim.com, wilson.toledo@holcim.com, german.zuica@holcim.com",
-  "HC-MONDOÑEDO":       "yeison.monroy.ext@holcim.com, paula.catano@holcim.com, marisol.miranda@holcim.com, german.zuica@holcim.com",
-  "HC-NOBSA CEMENTO":   "yeison.monroy.ext@holcim.com, leidy.rodriguez@holcim.com, carlos.vargash@holcim.com, maria.diazp@holcim.com, german.zuica@holcim.com",
-  "HC-NOBSA CONCRETO":  "yeison.monroy.ext@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
-  "HC-PALMIRA":         "yeison.monroy.ext@holcim.com, mayra.ramirez@holcim.com, german.zuica@holcim.com",
-  "HC-PUENTE ARANDA":   "german.zuica@holcim.com, yeison.monroy.ext@holcim.com, wilson.toledo@holcim.com, edwin.nastacuas@holcim.com, yineth.barrera@holcim.com",
-  "HC-SIBATE":          "yeison.monroy.ext@holcim.com, edwin.nastacuas@holcim.com, wilson.toledo@holcim.com, miller.mahecharueda@holcim.com, german.zuica@holcim.com",
-  "HC-TELEPORT":        "yeison.monroy.ext@holcim.com, juan.narvaezsalazar@holcim.com, german.zuica@holcim.com",
-  "HC-TQC":             "yeison.monroy.ext@holcim.com, lizeth.novoa@holcim.com, german.zuica@holcim.com"
+  "AF-NOBSA":           "carlos.vargash@holcim.com, maria.diazp@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
+  "AF-TELEPORT":        "juan.narvaezsalazar@holcim.com, german.zuica@holcim.com",
+  "CJ-NOBSA":           "leidy.rodriguez@holcim.com, german.zuica@holcim.com",
+  "HC-BARRANCABERMEJA": "leidys.blanco@holcim.com, german.zuica@holcim.com",
+  "HC-BELLO":           "mayra.ramirez@holcim.com, wilson.toledo@holcim.com, edwin.yepes@holcim.com, leidy.perez2@holcim.com, juan.sanchez6@holcim.com, german.zuica@holcim.com",
+  "HC-CALI":            "mayra.ramirez@holcim.com, german.zuica@holcim.com",
+  "HC-CHIA":            "w.otalora@holcim.com, sara.garzon.ext@holcim.com, german.zuica@holcim.com",
+  "HC-MEDELLIN":        "wilson.toledo@holcim.com, german.zuica@holcim.com",
+  "HC-MONDOÑEDO":       "paula.catano@holcim.com, marisol.miranda@holcim.com, german.zuica@holcim.com",
+  "HC-NOBSA CEMENTO":   "leidy.rodriguez@holcim.com, carlos.vargash@holcim.com, maria.diazp@holcim.com, german.zuica@holcim.com",
+  "HC-NOBSA CONCRETO":  "leidy.rodriguez@holcim.com, german.zuica@holcim.com",
+  "HC-PALMIRA":         "mayra.ramirez@holcim.com, german.zuica@holcim.com",
+  "HC-PUENTE ARANDA":   "german.zuica@holcim.com, wilson.toledo@holcim.com, edwin.nastacuas@holcim.com, yineth.barrera@holcim.com",
+  "HC-SIBATE":          "edwin.nastacuas@holcim.com, wilson.toledo@holcim.com, miller.mahecharueda@holcim.com, german.zuica@holcim.com",
+  "HC-TELEPORT":        "juan.narvaezsalazar@holcim.com, german.zuica@holcim.com",
+  "HC-TQC":             "lizeth.novoa@holcim.com, german.zuica@holcim.com"
 };
 
 /**
@@ -65,6 +65,21 @@ const ID_LOGO = "";
  * Si queda cortado de más o de menos, mueva este número y vuelva a mirar.
  */
 const LOGO_ANCHO_PX = 26;
+
+/**
+ * A quién NO se saluda en el mensaje de bienvenida, aunque reciba el correo.
+ * Va el texto anterior a la arroba.
+ */
+const NOMBRES_SIN_SALUDO = ["german.zuica"];
+
+/**
+ * El nombre se deduce del correo: lo que va antes del primer punto.
+ * Aquí se corrigen los que no salen bien — tildes, iniciales, apodos.
+ */
+const NOMBRES_ESPECIALES = {
+  "maria.diazp": "María",
+  "w.otalora":   "Otálora"
+};
 
 /** Geometría de la matriz. Coincide con lo que ya usa el correo actual. */
 const CFG = {
@@ -372,6 +387,7 @@ function doGet(e) {
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.logo          = logoIncrustado();
   plantilla.logoAncho     = LOGO_ANCHO_PX;
+  plantilla.saludoJson    = JSON.stringify({ nombres: saludoDePlanta(planta), planta: planta });
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -437,6 +453,44 @@ function logoIncrustado() {
     Logger.log("No se pudo leer el logo (" + ID_LOGO + "): " + err.message);
     return "";
   }
+}
+
+/**
+ * Nombre de pila a partir del correo: juan.narvaezsalazar@… -> "Juan".
+ *
+ * Se quitan los números del final (leidy.perez2) y, cuando el primer trozo es
+ * una inicial suelta (w.otalora), se usa el apellido.
+ */
+function nombreDeCorreo(local) {
+  if (NOMBRES_ESPECIALES[local]) return NOMBRES_ESPECIALES[local];
+
+  const trozos = local.split(".");
+  let nombre = (trozos[0] || "").replace(/\d+$/, "");
+
+  if (nombre.length <= 2) {
+    const apellido = (trozos[1] || "").replace(/\d+$/, "");
+    if (apellido.length > 2 && apellido !== "ext") nombre = apellido;
+  }
+  if (!nombre) return "";
+  return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+}
+
+/** "Paula y Marisol" — los nombres de quienes reciben el reporte de la planta. */
+function saludoDePlanta(planta) {
+  const nombres = [];
+
+  String(CORREOS_PLANTA[planta] || "").split(",").forEach(function (correo) {
+    const local = String(correo).split("@")[0].trim().toLowerCase();
+    if (!local) return;
+    if (NOMBRES_SIN_SALUDO.indexOf(local) !== -1) return;
+
+    const nombre = nombreDeCorreo(local);
+    if (nombre && nombres.indexOf(nombre) === -1) nombres.push(nombre);
+  });
+
+  if (!nombres.length) return "";
+  if (nombres.length === 1) return nombres[0];
+  return nombres.slice(0, -1).join(", ") + " y " + nombres[nombres.length - 1];
 }
 
 /** Página de aviso, con la misma tipografía sobria del reporte. */
@@ -656,6 +710,7 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.logo          = logoIncrustado();
   plantilla.logoAncho     = LOGO_ANCHO_PX;
+  plantilla.saludoJson    = JSON.stringify({ nombres: "", planta: "" });   // sin saludo: son todas
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();
