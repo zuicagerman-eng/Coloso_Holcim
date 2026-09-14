@@ -918,6 +918,13 @@ function enviarEnlacesSemanales() {
     (porPlanta[r.planta] = porPlanta[r.planta] || []).push(r);
   });
 
+  // La matriz ya está leída: se deja la caché lista antes de mandar los correos.
+  // Es el momento en que más falta hace, porque en cuanto salgan van a entrar
+  // todos a la vez y nadie debería ser quien pague la primera lectura.
+  Object.keys(CORREOS_PLANTA).forEach(function (planta) {
+    cacheGuardar(claveDeCache(planta), JSON.stringify(porPlanta[planta] || []));
+  });
+
   Object.keys(CORREOS_PLANTA).forEach(function (planta) {
     const registros = porPlanta[planta] || [];
     const enlace    = url + "?planta=" + encodeURIComponent(planta);
