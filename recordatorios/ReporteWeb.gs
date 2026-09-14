@@ -139,6 +139,20 @@ function enlaceDeCurso(curso, diasVencida) {
   return "";
 }
 
+/**
+ * Qué entra en la tabla del correo semanal.
+ *
+ * El correo no repite el reporte: destaca lo que exige acción y deja el resto
+ * a un clic. Por eso la tabla se limita a las capacitaciones de riesgo y de
+ * ley, en la franja de tiempo donde todavía se puede hacer algo.
+ */
+const CORREO_TABLA = {
+  grupos:        ["alto_riesgo", "normativa"],  // el resto se menciona, no se lista
+  vencidasDesde: 30,   // vencidas de los últimos 30 días (más atrás ya no es novedad)
+  proximosHasta: 60,   // y lo que vence en los próximos 60
+  maxFilas:      80    // si son más, se indica cuántas quedan por ver en el reporte
+};
+
 /** Tope de personas por solicitud, para que un envío no se desborde. */
 const MAX_POR_SOLICITUD = 60;
 
@@ -770,26 +784,40 @@ function enviarEnlacesSemanales() {
     const registros = porPlanta[planta] || [];
     const enlace    = url + "?planta=" + encodeURIComponent(planta);
 
-    const vencidas   = registros.filter(function (r) { return r.urg === "vencida"; }).length;
-    const criticas   = registros.filter(function (r) { return r.urg === "critica"; }).length;
-    const pendientes = registros.filter(function (r) { return r.urg === "pendiente"; }).length;
+    const tabla = tablaDelCorreo(registros);
 
-    const resumen = registros.length === 0
-      ? "<p>Esta semana <b>no hay vencimientos</b> en los próximos " + CFG.VENTANA_DIAS + " días.</p>"
-      : "<p>Hay <b>" + registros.length + "</b> vencimientos en los próximos " + CFG.VENTANA_DIAS + " días" +
-        (vencidas ? ", de los cuales <b style=\"color:#8f1d16\">" + vencidas + " ya vencieron</b>" : "") +
-        (criticas ? " y <b style=\"color:#d92f28\">" + criticas + " vencen esta semana</b>" : "") + ".</p>" +
-        (pendientes ? "<p>Además hay <b>" + pendientes + "</b> capacitaciones que nunca se han realizado, " +
-                      "al final del listado.</p>" : "");
+    // Lo que no va en la tabla se menciona, para que se sepa que está y dónde verlo
+    const aparte = [];
+    if (tabla.internas) {
+      aparte.push("<b>" + tabla.internas + "</b> de formación interna");
+    }
+    if (tabla.pendientes) {
+      aparte.push("<b>" + tabla.pendientes + "</b> que nunca se han realizado");
+    }
+
+    const puntos = tabla.listadas
+      ? "<p>Los puntos relevantes de esta semana son:</p>" + tabla.html
+      : "<p>Esta semana <b>no hay capacitaciones de alto riesgo ni legales</b> vencidas en el último mes " +
+        "ni por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días.</p>";
+
+    const cola = aparte.length
+      ? "<p>Aparte de lo anterior, la planta tiene " + aparte.join(" y ") +
+        ". Todo eso se consulta en el reporte.</p>"
+      : "";
 
     const cuerpo =
       "<div style=\"font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:14px;color:#0f1e2b;line-height:1.6\">" +
-      "<p>Cordial saludo.</p>" +
-      "<p>Reporte de capacitaciones de <b>" + planta + "</b> al " + fecha + ".</p>" +
-      resumen +
-      "<p style=\"margin:22px 0\">" +
+      "<p>Buen día.</p>" +
+      "<p>De parte de <b>Capacitaciones H&amp;S</b> enviamos el informe semanal de las capacitaciones de la " +
+      "planta <b>" + escapar(planta) + "</b>, con corte al " + fecha + ".</p>" +
+      puntos +
+      cola +
+      "<p style=\"margin:22px 0 10px\">Para más información sobre las capacitaciones internas, " +
+      "o para solicitar las que estén pendientes, entre al siguiente enlace:</p>" +
+      "<p style=\"margin:0 0 22px\">" +
       "<a href=\"" + enlace + "\" style=\"background:#1d4370;color:#fff;text-decoration:none;" +
-      "padding:11px 20px;border-radius:8px;display:inline-block;font-weight:600\">Abrir el reporte</a></p>" +
+      "padding:12px 22px;border-radius:8px;display:inline-block;font-weight:700\">Ver el reporte de " +
+      escapar(planta) + "</a></p>" +
       "<p style=\"color:#5d7186;font-size:12.5px\">El enlace muestra siempre los datos del momento en que se abre " +
       "y solo funciona con su cuenta de Holcim. Se adjunta el Excel para quien necesite trabajar los datos.</p>" +
       "</div>";
@@ -797,19 +825,80 @@ function enviarEnlacesSemanales() {
     const adjuntos = [excelDePlanta(planta, registros)];
 
     if (!ENVIAR_CORREOS) {
-      Logger.log("[PRUEBA] " + planta + ": " + registros.length + " registros · " + enlace);
+      Logger.log("[PRUEBA] " + planta + "  tabla=" + tabla.listadas +
+                 (tabla.restantes ? "(+" + tabla.restantes + ")" : "") +
+                 "  internas=" + tabla.internas + "  sin realizar=" + tabla.pendientes +
+                 "\n          " + enlace);
       return;
     }
 
     MailApp.sendEmail({
       to:          CORREOS_PLANTA[planta],
-      subject:     "Reporte de capacitaciones · " + planta,
+      subject:     "Informe semanal de capacitaciones · " + planta,
       htmlBody:    cuerpo,
       attachments: adjuntos
     });
   });
 
   Logger.log(ENVIAR_CORREOS ? "Correos enviados." : "Prueba terminada: no se envió nada.");
+}
+
+/**
+ * La tabla del correo semanal y las cuentas que la acompañan.
+ *
+ * Devuelve { html, listadas, restantes, internas, pendientes }.
+ */
+function tablaDelCorreo(registros) {
+  const enFranja = registros.filter(function (r) {
+    if (r.urg === "pendiente") return false;                       // sin fecha, van aparte
+    if (CORREO_TABLA.grupos.indexOf(r.grupo) === -1) return false;
+    return r.dias >= -CORREO_TABLA.vencidasDesde &&
+           r.dias <=  CORREO_TABLA.proximosHasta;
+  }).sort(function (a, b) { return a.dias - b.dias; });            // lo más vencido primero
+
+  const muestra   = enFranja.slice(0, CORREO_TABLA.maxFilas);
+  const restantes = enFranja.length - muestra.length;
+
+  const internas   = registros.filter(function (r) {
+    return r.urg !== "pendiente" && CORREO_TABLA.grupos.indexOf(r.grupo) === -1;
+  }).length;
+  const pendientes = registros.filter(function (r) { return r.urg === "pendiente"; }).length;
+
+  if (!muestra.length) return { html: "", listadas: 0, restantes: 0, internas: internas, pendientes: pendientes };
+
+  const filas = muestra.map(function (r) {
+    const vencida = r.dias < 0;
+    const estado  = vencida      ? "Vencida hace " + Math.abs(r.dias) + " días"
+                  : r.dias === 0 ? "Vence hoy"
+                  : "Vence en " + r.dias + " días";
+    const color   = vencida ? "#8f1d16" : r.dias <= 7 ? "#d92f28" : r.dias <= 15 ? "#e07a0c" : "#5d7186";
+    const celda   = "padding:8px 10px;border-bottom:1px solid #e2e8ef;font-size:12.5px";
+
+    return "<tr>" +
+      "<td style='" + celda + "'>" + escapar(r.nombre) + "<br>" +
+        "<span style='color:#5d7186;font-size:11.5px'>CC " + escapar(r.id) + " &middot; " + escapar(r.pos) + "</span></td>" +
+      "<td style='" + celda + "'>" + escapar(r.curso) + "<br>" +
+        "<span style='color:#5d7186;font-size:11.5px'>" + escapar(r.cat) + "</span></td>" +
+      "<td style='" + celda + ";white-space:nowrap'>" + (r.fecha ? escapar(r.fecha) : "&mdash;") + "</td>" +
+      "<td style='" + celda + ";white-space:nowrap;color:" + color + ";font-weight:700'>" + estado + "</td>" +
+      "</tr>";
+  }).join("");
+
+  const html =
+    "<table style=\"border-collapse:collapse;width:100%;margin:16px 0\">" +
+    "<thead><tr style=\"background:#1d4370;color:#fff\">" +
+    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Persona</th>" +
+    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Capacitación</th>" +
+    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Vence</th>" +
+    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Estado</th>" +
+    "</tr></thead><tbody>" + filas + "</tbody></table>" +
+    (restantes
+      ? "<p style=\"font-size:12.5px;color:#5d7186;margin:-6px 0 14px\">Y " + restantes +
+        " más en el reporte.</p>"
+      : "");
+
+  return { html: html, listadas: muestra.length, restantes: restantes,
+           internas: internas, pendientes: pendientes };
 }
 
 /** Excel (.xlsx) con los registros de una planta. */
