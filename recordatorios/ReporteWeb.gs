@@ -96,6 +96,49 @@ const CORREO_SOLICITUDES = "CAMBIAR@holcim.com";
  */
 const GRUPOS_CON_SOLICITUD = ["alto_riesgo"];
 
+/**
+ * Capacitaciones que la persona puede hacer por su cuenta, en línea.
+ *
+ * En estas no hay jornada que programar: en la fila aparece un botón que lleva
+ * directo al curso, y si además se solicitan, el enlace viaja en el correo.
+ *
+ * Por curso se indica:
+ *   url          a dónde lleva. Sin url el enlace no aparece.
+ *   texto        lo que dice el botón.
+ *   desdeDias    solo se ofrece si lleva vencida al menos estos días.
+ *   hastaDias    solo se ofrece si lleva vencida como mucho estos días.
+ *
+ * Los dos límites son opcionales y se cuentan en días vencida: 180 son seis
+ * meses. Quien nunca la ha hecho ("Sin realizar") cuenta como vencida hace
+ * mucho, así que entra en cualquier tramo que empiece en desdeDias.
+ *
+ * El nombre del curso debe ser el de la matriz, aunque no importan mayúsculas
+ * ni espacios de sobra.
+ */
+const CURSOS_CON_ENLACE = {
+  "(Re) Inducción General H&S": {
+    url:   "",                  // <-- PENDIENTE: el enlace del curso
+    texto: "Hacer ahora"
+    // desdeDias: 180,          // descomentar para ofrecerlo solo pasados 6 meses
+    // hastaDias: 180           // o al revés: solo dentro de los 6 primeros meses
+  }
+};
+
+/** El enlace de un curso, si aplica a ese estado. Devuelve "" si no aplica. */
+function enlaceDeCurso(curso, diasVencida) {
+  const buscado = normalizar(curso);
+  for (const clave in CURSOS_CON_ENLACE) {
+    if (normalizar(clave) !== buscado) continue;
+
+    const cfg = CURSOS_CON_ENLACE[clave];
+    if (!cfg || !cfg.url) return "";
+    if (cfg.desdeDias != null && diasVencida < cfg.desdeDias) return "";
+    if (cfg.hastaDias != null && diasVencida > cfg.hastaDias) return "";
+    return cfg.url;
+  }
+  return "";
+}
+
 /** Tope de personas por solicitud, para que un envío no se desborde. */
 const MAX_POR_SOLICITUD = 60;
 
@@ -349,7 +392,11 @@ function construirRegistros() {
         categoria = CATEGORIA_POR_DEFECTO;
       }
 
+      // Días que lleva vencida; quien nunca la hizo cuenta como vencida hace mucho
+      const diasVencida = (urg === "pendiente") ? DIAS_PENDIENTE : -dias;
+
       registros.push({
+        enlace: enlaceDeCurso(curso, diasVencida),
         planta: planta,
         nombre: String(nombre).trim(),
         id:     String(cedula == null ? "" : cedula).trim(),
@@ -560,7 +607,12 @@ function enviarSolicitud(datos) {
       "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.pos, 120))   + "</td>" +
       "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.curso, 200)) + "</td>" +
       "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef;white-space:nowrap'>" +
-        escapar(recorta(p.estado, 40)) + "</td></tr>";
+        escapar(recorta(p.estado, 40)) + "</td>" +
+      // El enlace se resuelve aquí, no se toma del navegador
+      "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + (function () {
+        const url = enlaceDeCurso(recorta(p.curso, 200), 99999);
+        return url ? "<a href='" + escapar(url) + "'>se hace en línea</a>" : "";
+      })() + "</td></tr>";
   }).join("");
 
   const cuerpo =
@@ -575,6 +627,7 @@ function enviarSolicitud(datos) {
     "<th style='padding:8px 10px;text-align:left'>Cargo</th>" +
     "<th style='padding:8px 10px;text-align:left'>Capacitación</th>" +
     "<th style='padding:8px 10px;text-align:left'>Estado</th>" +
+    "<th style='padding:8px 10px;text-align:left'></th>" +
     "</tr></thead><tbody>" + filas + "</tbody></table>" +
     (nota
       ? "<p><b>Observaciones de quien solicita:</b></p>" +

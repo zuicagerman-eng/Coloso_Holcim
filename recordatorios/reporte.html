@@ -121,6 +121,20 @@
   .btn-sol.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
   .row.sel{box-shadow:0 0 0 2px var(--brand) inset,var(--shadow)}
 
+  /* Cursos que se hacen en línea: no hay nada que programar */
+  .btn-enlace{
+    display:inline-block;margin-top:7px;background:var(--u-baja);color:#fff;
+    border:1.5px solid transparent;border-radius:8px;padding:5px 10px;
+    font-size:11.5px;font-weight:700;text-decoration:none;white-space:nowrap;transition:.14s
+  }
+  .btn-enlace:hover{filter:brightness(1.08);color:#fff}
+  .sol-online{
+    background:var(--u-baja-s);border-left:3px solid var(--u-baja);
+    padding:11px 14px;border-radius:0 9px 9px 0;font-size:12.5px;line-height:1.6;margin:0 0 16px
+  }
+  .sol-online b{color:var(--u-baja)}
+  .sol-online a{color:var(--u-baja);font-weight:700}
+
   .barra-sol{
     position:fixed;right:20px;bottom:20px;z-index:60;display:flex;align-items:center;gap:12px;
     background:var(--ink);color:#fff;border-radius:13px;padding:12px 14px 12px 18px;
@@ -459,6 +473,7 @@
     <div class="modal-b">
       <p style="margin:0 0 10px;font-size:13.5px;line-height:1.6" id="solIntro"></p>
       <ul class="sol-lista" id="solLista"></ul>
+      <div class="sol-online" id="solOnline" hidden></div>
 
       <label for="solNota" style="display:block;font-size:12px;font-weight:700;letter-spacing:.05em;
              text-transform:uppercase;color:var(--muted);margin:0 0 7px">Observaciones (opcional)</label>
@@ -565,6 +580,8 @@
       <div class="paso"><span class="num">4</span><span class="txt">Abajo hay un recuadro de <b>Observaciones</b>, opcional. Ahí puede escribir lo que haga falta: «que sea después del 20», «en jornada de la mañana», «se requiere refrigerio», «hay turno de noche esa semana». Ese texto va dentro del correo tal cual.</span></div>
       <div class="paso"><span class="num">5</span><span class="txt">Al enviar, la solicitud le llega a quien programa las capacitaciones, con la tabla de personas, cédulas, cargos y el estado de cada una. <b>A usted le queda copia</b> en su correo, y quien la reciba puede responderle directo.</span></div>
       <div class="nota">Esto solo funciona desde el enlace. En una copia descargada del reporte el botón no aparece, porque no hay desde dónde enviar.</div>
+
+      <div class="nota"><b>Algunas se hacen en línea.</b> Cuando una capacitación es interna y se puede tomar por cuenta propia &#8212; la (Re) Inducción General, por ejemplo &#8212; en la fila aparece un botón verde <b>Hacer ahora &#8599;</b> que lleva directo al curso. Ahí no hay nada que programar: se hace y al cargarla en la matriz desaparece de este reporte. Si de todas formas envía la solicitud, el enlace va dentro del correo.</div>
 
       <h3>12 · CADA CUÁNTO SE ACTUALIZA</h3>
       <p>El enlace es siempre el mismo y los datos se leen al abrir, así que <b>puede guardarlo en favoritos</b> y entrar cuando quiera. No hace falta esperar al correo del martes.</p>
@@ -962,6 +979,23 @@ function abrirSolicitud(){
       ${esc(r.curso)} <span style="color:var(--muted)">&mdash; ${est}</span></li>`;
   }).join("");
 
+  // Las que se hacen en línea no necesitan que nadie las programe
+  const online = items.filter(r => r.enlace);
+  const caja = $("#solOnline");
+  if(online.length){
+    const url = online[0].enlace;
+    caja.innerHTML = online.length === items.length
+      ? `<b>Ojo:</b> ${online.length===1?"esta capacitación se hace":"estas capacitaciones se hacen"} en línea.
+         No hace falta esperar a que la programen &mdash;
+         <a href="${esc(url)}" target="_blank" rel="noopener">se puede hacer ahora mismo</a>.`
+      : `<b>Ojo:</b> ${online.length} de las ${items.length} se hacen en línea y no necesitan programarse &mdash;
+         <a href="${esc(url)}" target="_blank" rel="noopener">se pueden hacer ahora mismo</a>.
+         Puede enviar la solicitud igual: el enlace va dentro del correo.`;
+    caja.hidden = false;
+  } else {
+    caja.hidden = true;
+  }
+
   $("#solAviso").hidden = true;
   $("#solEnviar").disabled = false;
   $("#solEnviar").textContent = "Enviar solicitud";
@@ -1204,6 +1238,10 @@ function renderList(rows){
       ? `<button class="btn-sol${marcada?" on":""}" data-k="${esc(k)}" type="button">${
            marcada ? "\u2713 Seleccionada" : "+ Solicitar"}</button>`
       : "";
+    // Si el curso se hace en línea, el enlace va antes: es la vía más corta
+    const enlace = r.enlace
+      ? `<a class="btn-enlace" href="${esc(r.enlace)}" target="_blank" rel="noopener">Hacer ahora \u2197</a>`
+      : "";
     return sep + `<article class="row ${u.cls}${marcada?" sel":""}">
       <div class="days"><div class="d tnum">${dtxt}</div><div class="dl">${dlab}</div></div>
       <div class="who">
@@ -1214,6 +1252,7 @@ function renderList(rows){
       <div class="right">
         <div class="fecha tnum">${fmtFecha(r.fecha)}</div>
         <span class="pill ${u.cls}">${u.lb}</span>
+        ${enlace}
         ${boton}
       </div>
     </article>`;
