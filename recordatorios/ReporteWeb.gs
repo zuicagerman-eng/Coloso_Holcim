@@ -686,6 +686,24 @@ function excelDePlanta(planta, registros) {
 // ════════════════════════════════════════════════════════════════════
 
 /**
+ * Vacía la caché para que el siguiente que abra un enlace vea la matriz tal
+ * como está ahora mismo.
+ *
+ * Hace falta solo cuando se acaba de corregir la matriz y se quiere comprobar
+ * el cambio de inmediato: sin esto hay que esperar a que la caché expire, unos
+ * diez minutos.
+ */
+function limpiarCache() {
+  const cache = CacheService.getScriptCache();
+  const claves = Object.keys(CORREOS_PLANTA).map(function (planta) {
+    return "rep_v1_" + Utilities.base64EncodeWebSafe(planta);
+  });
+  claves.push("logo_v1");
+  cache.removeAll(claves);
+  Logger.log("Caché vacía. El próximo que abra un enlace leerá la matriz de nuevo.");
+}
+
+/**
  * Genera el reporte completo como archivo HTML y lo guarda en el Drive.
  *
  * A diferencia del enlace, este archivo lleva los datos dentro: es una foto del
