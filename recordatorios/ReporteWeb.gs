@@ -81,6 +81,24 @@ const NOMBRES_ESPECIALES = {
   "w.otalora":   "Otálora"
 };
 
+/**
+ * A dónde llegan las solicitudes de capacitación que se piden desde el reporte.
+ * Mientras diga CAMBIAR no se envía nada y el botón avisa.
+ */
+const CORREO_SOLICITUDES = "CAMBIAR@holcim.com";
+
+/**
+ * Qué capacitaciones se pueden solicitar desde el reporte.
+ *
+ * "alto_riesgo" son alturas, izajes, espacios confinados y conducción
+ * defensiva. Añada "normativa" si también quiere las legales (LOTO, SGSST,
+ * permisos, brigada, trabajo en caliente), o "interna" para todas.
+ */
+const GRUPOS_CON_SOLICITUD = ["alto_riesgo"];
+
+/** Tope de personas por solicitud, para que un envío no se desborde. */
+const MAX_POR_SOLICITUD = 60;
+
 /** Geometría de la matriz. Coincide con lo que ya usa el correo actual. */
 const CFG = {
   HOJA_MATRIZ:         "Matriz de Capacitaciones H&S",
@@ -388,6 +406,7 @@ function doGet(e) {
   plantilla.logo          = logoIncrustado();
   plantilla.logoAncho     = LOGO_ANCHO_PX;
   plantilla.saludoJson    = JSON.stringify({ nombres: saludoDePlanta(planta), planta: planta });
+  plantilla.gruposSolicitud = JSON.stringify(GRUPOS_CON_SOLICITUD);
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -491,6 +510,98 @@ function saludoDePlanta(planta) {
   if (!nombres.length) return "";
   if (nombres.length === 1) return nombres[0];
   return nombres.slice(0, -1).join(", ") + " y " + nombres[nombres.length - 1];
+}
+
+/** Texto seguro para meter en el HTML del correo. */
+function escapar(texto) {
+  return String(texto == null ? "" : texto)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Envía una solicitud de capacitación. La llama la página con google.script.run.
+ *
+ * Lo que llega viene del navegador, así que no se toma por bueno: la planta
+ * tiene que ser una de las configuradas, las personas se limitan en número y
+ * los textos se recortan y se escapan antes de armar el correo.
+ *
+ * @param {{planta:string, personas:Array, nota:string}} datos
+ * @return {string} mensaje para mostrar en pantalla
+ */
+function enviarSolicitud(datos) {
+  if (CORREO_SOLICITUDES.indexOf("CAMBIAR") === 0) {
+    throw new Error("Todavía no está configurado a quién se le envían las solicitudes. " +
+                    "Avise a Seguridad y Salud.");
+  }
+
+  datos = datos || {};
+  const planta = indicePlantas()[normalizar(datos.planta)];
+  if (!planta) throw new Error("No reconozco la planta de la solicitud.");
+
+  let personas = Array.isArray(datos.personas) ? datos.personas : [];
+  if (!personas.length) throw new Error("No hay ninguna capacitación seleccionada.");
+  if (personas.length > MAX_POR_SOLICITUD) {
+    throw new Error("Son demasiadas de una vez (máximo " + MAX_POR_SOLICITUD + "). " +
+                    "Divídalas en varias solicitudes.");
+  }
+
+  const recorta = function (v, max) { return String(v == null ? "" : v).trim().slice(0, max); };
+  const nota = recorta(datos.nota, 1200);
+
+  // Quién lo pide. Dentro del mismo dominio Google sí lo entrega.
+  let solicitante = "";
+  try { solicitante = Session.getActiveUser().getEmail() || ""; } catch (err) { solicitante = ""; }
+
+  const filas = personas.map(function (p) {
+    return "<tr>" +
+      "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.nombre, 120)) + "</td>" +
+      "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.id, 30))     + "</td>" +
+      "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.pos, 120))   + "</td>" +
+      "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.curso, 200)) + "</td>" +
+      "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef;white-space:nowrap'>" +
+        escapar(recorta(p.estado, 40)) + "</td></tr>";
+  }).join("");
+
+  const cuerpo =
+    "<div style=\"font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:14px;color:#0f1e2b;line-height:1.6\">" +
+    "<p>Cordial saludo.</p>" +
+    "<p>Desde el reporte de vencimientos de <b>" + escapar(planta) + "</b> se solicita programar " +
+    "las siguientes capacitaciones:</p>" +
+    "<table style=\"border-collapse:collapse;font-size:13px;margin:14px 0;width:100%\">" +
+    "<thead><tr style=\"background:#1d4370;color:#fff\">" +
+    "<th style='padding:8px 10px;text-align:left'>Nombre</th>" +
+    "<th style='padding:8px 10px;text-align:left'>Cédula</th>" +
+    "<th style='padding:8px 10px;text-align:left'>Cargo</th>" +
+    "<th style='padding:8px 10px;text-align:left'>Capacitación</th>" +
+    "<th style='padding:8px 10px;text-align:left'>Estado</th>" +
+    "</tr></thead><tbody>" + filas + "</tbody></table>" +
+    (nota
+      ? "<p><b>Observaciones de quien solicita:</b></p>" +
+        "<p style=\"background:#eef3f8;border-left:3px solid #1d4370;padding:11px 14px;margin:0 0 14px;" +
+        "white-space:pre-wrap\">" + escapar(nota) + "</p>"
+      : "") +
+    "<p style=\"color:#5d7186;font-size:12.5px\">Solicitud enviada" +
+    (solicitante ? " por <b>" + escapar(solicitante) + "</b>" : "") + " el " +
+    Utilities.formatDate(new Date(), CFG.ZONA, "d 'de' MMMM 'de' yyyy 'a las' HH:mm") +
+    " desde el reporte de capacitaciones.</p></div>";
+
+  const correo = {
+    to:       CORREO_SOLICITUDES,
+    subject:  "Solicitud de capacitación · " + planta + " · " + personas.length +
+              (personas.length === 1 ? " persona" : " personas"),
+    htmlBody: cuerpo
+  };
+  if (solicitante) {
+    correo.replyTo = solicitante;      // para que se le pueda contestar directo
+    correo.cc      = solicitante;      // y le quede copia de lo que pidió
+  }
+
+  MailApp.sendEmail(correo);
+
+  return personas.length === 1
+    ? "Solicitud enviada. Le queda copia en su correo."
+    : "Solicitud enviada con " + personas.length + " personas. Le queda copia en su correo.";
 }
 
 /** Página de aviso, con la misma tipografía sobria del reporte. */
@@ -729,6 +840,7 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.logo          = logoIncrustado();
   plantilla.logoAncho     = LOGO_ANCHO_PX;
   plantilla.saludoJson    = JSON.stringify({ nombres: "", planta: "" });   // sin saludo: son todas
+  plantilla.gruposSolicitud = JSON.stringify([]);   // el archivo suelto no puede enviar
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();
