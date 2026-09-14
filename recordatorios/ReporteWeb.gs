@@ -52,6 +52,20 @@ const CORREOS_PLANTA = {
  */
 const ID_LOGO = "";
 
+/**
+ * Cuánto del ancho del logotipo se muestra, en píxeles.
+ *
+ * Sirve para subir el logotipo COMPLETO y que el reporte enseñe solo el
+ * símbolo: la palabra HOLCIM queda recortada, y al lado va la versión en texto
+ * blanco, que sobre el encabezado oscuro sí se lee.
+ *
+ *   26  el símbolo solo, que es casi cuadrado (súbalo completo)
+ *    0  el logotipo entero, sin recortar (si ya subió solo el símbolo)
+ *
+ * Si queda cortado de más o de menos, mueva este número y vuelva a mirar.
+ */
+const LOGO_ANCHO_PX = 26;
+
 /** Geometría de la matriz. Coincide con lo que ya usa el correo actual. */
 const CFG = {
   HOJA_MATRIZ:         "Matriz de Capacitaciones H&S",
@@ -357,6 +371,7 @@ function doGet(e) {
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.logo          = logoIncrustado();
+  plantilla.logoAncho     = LOGO_ANCHO_PX;
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -640,6 +655,7 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.logo          = logoIncrustado();
+  plantilla.logoAncho     = LOGO_ANCHO_PX;
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();
