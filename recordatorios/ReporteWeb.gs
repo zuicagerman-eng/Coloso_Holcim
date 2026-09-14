@@ -38,6 +38,20 @@ const CORREOS_PLANTA = {
   "HC-TQC":             "yeison.monroy.ext@holcim.com, lizeth.novoa@holcim.com, german.zuica@holcim.com"
 };
 
+/**
+ * Logotipo. Suba el archivo a su Drive y pegue aquí su ID: es el trozo de la
+ * URL entre /d/ y /view.
+ *
+ *   https://drive.google.com/file/d/AQUI_VA_EL_ID/view
+ *
+ * Debe ser SOLO EL SÍMBOLO (el cuadrado con la H), no el logotipo completo:
+ * al lado va la palabra HOLCIM en texto blanco, que sobre el encabezado oscuro
+ * se lee y la versión azul del logotipo no.
+ *
+ * Mientras esté vacío se usa el dibujo que ya trae el HTML.
+ */
+const ID_LOGO = "";
+
 /** Geometría de la matriz. Coincide con lo que ya usa el correo actual. */
 const CFG = {
   HOJA_MATRIZ:         "Matriz de Capacitaciones H&S",
@@ -342,6 +356,7 @@ function doGet(e) {
   plantilla.datosJson     = JSON.stringify(registros);
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
+  plantilla.logo          = logoIncrustado();
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -374,6 +389,39 @@ function registrosDePlanta(planta) {
     try { cache.put(clave, texto, 600); } catch (err) { /* si no cabe, seguimos sin caché */ }
   }
   return mios;
+}
+
+/**
+ * El logotipo convertido a texto, para que viaje dentro del HTML.
+ *
+ * Va incrustado y no como enlace a una imagen: así se ve también en el archivo
+ * descargado, sin conexión y al imprimir. Si el archivo no se puede leer, se
+ * devuelve vacío y el reporte usa el dibujo que ya trae.
+ */
+function logoIncrustado() {
+  if (!ID_LOGO) return "";
+
+  const cache = CacheService.getScriptCache();
+  const guardado = cache.get("logo_v1");
+  if (guardado) return guardado;
+
+  try {
+    const blob = DriveApp.getFileById(ID_LOGO).getBlob();
+    const uri  = "data:" + blob.getContentType() + ";base64," +
+                 Utilities.base64Encode(blob.getBytes());
+
+    if (uri.length > 400000) {
+      Logger.log("El logo pesa " + Math.round(uri.length / 1024) +
+                 " KB. Conviene uno más liviano: basta con 120 px de alto.");
+    }
+    if (uri.length < 90000) {          // el límite por entrada de caché son 100 KB
+      try { cache.put("logo_v1", uri, 21600); } catch (err) { /* sigue sin caché */ }
+    }
+    return uri;
+  } catch (err) {
+    Logger.log("No se pudo leer el logo (" + ID_LOGO + "): " + err.message);
+    return "";
+  }
 }
 
 /** Página de aviso, con la misma tipografía sobria del reporte. */
@@ -591,6 +639,7 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.datosJson     = JSON.stringify(registros);
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
+  plantilla.logo          = logoIncrustado();
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();
