@@ -1313,7 +1313,7 @@ function probarCorreo() {
     .filter(function (r) { return r.planta === planta; });
 
   const enlace = url + "?planta=" + encodeURIComponent(planta);
-  const fecha  = Utilities.formatDate(new Date(), CFG.ZONA, "d 'de' MMMM 'de' yyyy");
+  const fecha  = fechaEnEspanol(new Date(), false);
   const armado = armarCorreoDePlanta(planta, registros, enlace, fecha);
 
   const yo = Session.getEffectiveUser().getEmail();
