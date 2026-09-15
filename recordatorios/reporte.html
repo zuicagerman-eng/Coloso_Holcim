@@ -820,6 +820,21 @@ const GRUPOS_SOL = <?!= typeof gruposSolicitud !== "undefined" ? gruposSolicitud
 /* El estándar es del curso, no de la persona: viaja como tabla de 62 entradas
    en vez de repetirse en cada registro, así el filtro no pesa en el enlace. */
 const EST_DE_CURSO = <?!= typeof estandaresJson !== "undefined" ? estandaresJson : "{}" ?>;
+/* Cursos que se hacen en línea. Viene la tabla, no el enlace ya resuelto en
+   cada registro: así cambiar una URL se ve en cuanto se publica, sin esperar a
+   que venza la caché de los registros. */
+const ENLACES = <?!= typeof enlacesJson !== "undefined" ? enlacesJson : "{}" ?>;
+const normCurso = s => String(s==null?"":s).replace(/\u00a0/g," ").replace(/\s+/g," ").trim().toUpperCase();
+const ENLACE_DE_CURSO = Object.keys(ENLACES).reduce((m,k)=>(m[normCurso(k)]=ENLACES[k],m),{});
+/* Mismo criterio que el servidor: quien nunca la hizo cuenta como vencida hace mucho. */
+function enlaceDe(d){
+  const cfg = ENLACE_DE_CURSO[normCurso(d.curso)];
+  if(!cfg || !cfg.url) return "";
+  const vencidaHace = d.urg==="pendiente" ? 99999 : -d.dias;
+  if(cfg.desdeDias != null && vencidaHace < cfg.desdeDias) return "";
+  if(cfg.hastaDias != null && vencidaHace > cfg.hastaDias) return "";
+  return cfg.url;
+}
 const estDe = d => EST_DE_CURSO[d.curso] || "";   // qué grupos se pueden solicitar
 const seleccion = new Map();                  // llave -> registro
 const CORTE = new Date("<?= typeof corteIso !== "undefined" ? corteIso : "" ?>T00:00:00");   // el día en que se abre, no una fecha fija
@@ -1099,10 +1114,10 @@ function abrirSolicitud(){
   }).join("");
 
   // Las que se hacen en línea no necesitan que nadie las programe
-  const online = items.filter(r => r.enlace);
+  const online = items.filter(r => enlaceDe(r));
   const caja = $("#solOnline");
   if(online.length){
-    const url = online[0].enlace;
+    const url = enlaceDe(online[0]);
     caja.innerHTML = online.length === items.length
       ? `<b>Ojo:</b> ${online.length===1?"esta capacitación se hace":"estas capacitaciones se hacen"} en línea.
          No hace falta esperar a que la programen &mdash;
@@ -1450,8 +1465,9 @@ function renderList(rows){
            marcada ? "\u2713 Seleccionada" : "+ Solicitar"}</button>`
       : "";
     // Si el curso se hace en línea, el enlace va antes: es la vía más corta
-    const enlace = r.enlace
-      ? `<a class="btn-enlace" href="${esc(r.enlace)}" target="_blank" rel="noopener">Hacer ahora \u2197</a>`
+    const urlCurso = enlaceDe(r);
+    const enlace = urlCurso
+      ? `<a class="btn-enlace" href="${esc(urlCurso)}" target="_blank" rel="noopener">Hacer ahora \u2197</a>`
       : "";
     return sep + `<article class="row ${u.cls}${marcada?" sel":""}">
       <div class="days"><div class="d tnum">${dtxt}</div><div class="dl">${dlab}</div></div>

@@ -85,7 +85,7 @@ const NOMBRES_ESPECIALES = {
  * A dónde llegan las solicitudes de capacitación que se piden desde el reporte.
  * Mientras diga CAMBIAR no se envía nada y el botón avisa.
  */
-const CORREO_SOLICITUDES = "CAMBIAR@holcim.com";
+const CORREO_SOLICITUDES = "german.zuica@holcim.com";
 
 /**
  * Qué capacitaciones se pueden solicitar desde el reporte.
@@ -116,7 +116,7 @@ const GRUPOS_CON_SOLICITUD = ["externa"];
  */
 const CURSOS_CON_ENLACE = {
   "(Re) Inducción General H&S": {
-    url:   "",                  // <-- PENDIENTE: el enlace del curso
+    url:   "https://zuicagerman-eng.github.io/Pagina-html-recapacitaciones-Holcim/index.html",
     texto: "Hacer ahora"
     // desdeDias: 180,          // descomentar para ofrecerlo solo pasados 6 meses
     // hastaDias: 180           // o al revés: solo dentro de los 6 primeros meses
@@ -564,11 +564,11 @@ function construirRegistros() {
         categoria = [CATEGORIA_POR_DEFECTO, grupoDeCategoria(CATEGORIA_POR_DEFECTO)];
       }
 
-      // Días que lleva vencida; quien nunca la hizo cuenta como vencida hace mucho
-      const diasVencida = (urg === "pendiente") ? DIAS_PENDIENTE : -dias;
-
+      // El enlace del curso NO se guarda aquí. Iba dentro del registro, y los
+      // registros se guardan en caché: al cambiar la URL había que esperar a
+      // que la caché venciera para verla. Ahora la tabla de enlaces viaja
+      // aparte y el tablero la resuelve al pintar, que además pesa menos.
       registros.push({
-        enlace: enlaceDeCurso(curso, diasVencida),
         planta: planta,
         nombre: String(nombre).trim(),
         id:     String(cedula == null ? "" : cedula).trim(),
@@ -628,6 +628,7 @@ function doGet(e) {
   plantilla.gruposSolicitud = JSON.stringify(GRUPOS_CON_SOLICITUD);
   plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
   plantilla.resumenJson     = JSON.stringify(resumenDePlantas());
+  plantilla.enlacesJson     = JSON.stringify(CURSOS_CON_ENLACE);
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -1554,6 +1555,7 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.gruposSolicitud = JSON.stringify([]);   // el archivo suelto no puede enviar
   plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
   plantilla.resumenJson     = JSON.stringify({});   // el archivo suelto ya las trae todas
+  plantilla.enlacesJson     = JSON.stringify(CURSOS_CON_ENLACE);
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();

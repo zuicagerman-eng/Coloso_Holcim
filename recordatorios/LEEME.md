@@ -157,6 +157,15 @@ marca cuando de verdad se quiere repetir un envío el mismo día.
 La marca es por día y por planta, así que el activador del martes no repite lo
 que se haya mandado a mano esa misma mañana.
 
+**Los enlaces de los cursos en línea no se guardan en caché.** Iban dentro de
+cada registro, y los registros sí se guardan: al cambiar una URL había que
+publicar *y además* esperar a que venciera la caché para verla. Ahora
+`CURSOS_CON_ENLACE` viaja al tablero como tabla y el enlace se resuelve al
+pintar cada fila. Cambiar una URL solo exige publicar una versión nueva.
+
+`enviarSolicitud()` sigue resolviéndolo en el servidor y no lo toma del
+navegador: lo que va en un correo no se decide desde el cliente.
+
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
 
