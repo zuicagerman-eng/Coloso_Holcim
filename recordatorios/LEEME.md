@@ -146,6 +146,17 @@ con `MMMM` toma el idioma del proyecto de Apps Script, que está en inglés, y e
 el correo salía «con corte al 15 de September de 2026». Para eso está
 `fechaEnEspanol()`.
 
+**El envío semanal no manda dos veces lo mismo.** Apps Script corta cualquier
+ejecución a los seis minutos, y dieciséis correos con Excel adjunto pueden
+acercarse. Si eso pasara, unas plantas habrían recibido y otras no, sin registro
+de cuáles. Por eso cada planta se apunta en cuanto sale, el envío se detiene
+solo a los `MINUTOS_MAXIMOS` y volver a ejecutarlo sigue por donde quedó.
+`verEnviosDeHoy()` dice cómo va sin tocar nada, y `olvidarEnviosDeHoy()` borra la
+marca cuando de verdad se quiere repetir un envío el mismo día.
+
+La marca es por día y por planta, así que el activador del martes no repite lo
+que se haya mandado a mano esa misma mañana.
+
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
 

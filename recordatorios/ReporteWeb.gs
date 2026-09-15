@@ -157,6 +157,16 @@ const CORREO_TABLA = {
  */
 const CACHE_MINUTOS = 15;
 
+/**
+ * Minutos que se permite el envío semanal antes de parar por su cuenta.
+ *
+ * Apps Script corta a los seis. Si corta él, algunas plantas ya recibieron y
+ * otras no, y no queda registro de cuáles: al volver a ejecutar se repetirían
+ * las primeras. Por eso el envío se apunta planta por planta y se detiene solo
+ * antes de llegar al límite; volver a ejecutarlo sigue por donde quedó.
+ */
+const MINUTOS_MAXIMOS = 5;
+
 /** Tope de personas por solicitud, para que un envío no se desborde. */
 const MAX_POR_SOLICITUD = 60;
 
@@ -1144,6 +1154,8 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
  * No hace nada mientras ENVIAR_CORREOS sea false.
  */
 function enviarEnlacesSemanales() {
+  const arranque = new Date().getTime();
+
   const url = ScriptApp.getService().getUrl();
   if (!url) throw new Error("No hay aplicación web publicada. Publíquela antes (ver LEEME.md).");
 
@@ -1171,28 +1183,110 @@ function enviarEnlacesSemanales() {
     CacheService.getScriptCache().put("res_v1", JSON.stringify(resumen), CACHE_MINUTOS * 60);
   } catch (err) {}
 
+  // Lo que ya salió hoy, para no mandarlo dos veces. Ver la nota de arriba.
+  const props   = PropertiesService.getScriptProperties();
+  const clave   = claveDeEnviosDeHoy();
+  const yaSalio = leerEnviadas(props, clave);
+
+  const linea = [], pendientes = [], repetidas = [];
+
   Object.keys(CORREOS_PLANTA).forEach(function (planta) {
     const registros = porPlanta[planta] || [];
     const enlace    = url + "?planta=" + encodeURIComponent(planta);
 
-    const armado = armarCorreoDePlanta(planta, registros, enlace, fecha);
-
-    const adjuntos = [excelDePlanta(planta, registros)];
-
     if (!ENVIAR_CORREOS) {
-      Logger.log("[PRUEBA] " + planta + "  " + registros.length + " registros\n          " + enlace);
+      // En prueba no se arma el Excel: son dieciséis hojas temporales en Drive
+      // para tirarlas acto seguido. El adjunto se comprueba con probarCorreo().
+      linea.push("[PRUEBA] " + planta + "  " + registros.length + " registros -> " +
+                 CORREOS_PLANTA[planta] + "\n          " + enlace);
       return;
     }
+
+    if (yaSalio.indexOf(planta) !== -1) { repetidas.push(planta); return; }
+
+    // Apps Script corta la ejecución a los seis minutos. Antes de empezar una
+    // planta se mira si hay tiempo para terminarla: más vale dejarla para la
+    // siguiente ejecución que cortarse a mitad y no saber por dónde se iba.
+    if (new Date().getTime() - arranque > MINUTOS_MAXIMOS * 60000) {
+      pendientes.push(planta);
+      return;
+    }
+
+    const armado = armarCorreoDePlanta(planta, registros, enlace, fecha);
 
     MailApp.sendEmail({
       to:          CORREOS_PLANTA[planta],
       subject:     armado.asunto,
       htmlBody:    armado.cuerpo,
-      attachments: adjuntos
+      attachments: [excelDePlanta(planta, registros)]
     });
+
+    // Se apunta enseguida, no al final: si la ejecución muere en la planta
+    // siguiente, esta ya quedó registrada como enviada.
+    yaSalio.push(planta);
+    props.setProperty(clave, JSON.stringify(yaSalio));
+
+    linea.push("enviado  " + planta + "  " + registros.length + " registros -> " + CORREOS_PLANTA[planta]);
   });
 
-  Logger.log(ENVIAR_CORREOS ? "Correos enviados." : "Prueba terminada: no se envió nada.");
+  if (repetidas.length) {
+    linea.push("");
+    linea.push("OMITIDAS porque ya salieron hoy: " + repetidas.join(", "));
+    linea.push("  Si de verdad quiere repetirlas, ejecute olvidarEnviosDeHoy() y vuelva a correr esto.");
+  }
+  if (pendientes.length) {
+    linea.push("");
+    linea.push("SE ACABÓ EL TIEMPO con " + pendientes.length + " plantas sin enviar: " + pendientes.join(", "));
+    linea.push("  Vuelva a ejecutar enviarEnlacesSemanales(): sigue por donde quedó,");
+    linea.push("  las ya enviadas no se repiten.");
+  }
+
+  linea.push("");
+  linea.push(ENVIAR_CORREOS
+    ? "Terminado en " + Math.round((new Date().getTime() - arranque) / 1000) + " s."
+    : "Prueba terminada: NO se envió nada. ENVIAR_CORREOS está en false.");
+
+  Logger.log(linea.join("\n"));
+}
+
+/** La marca del día, en la zona de la planta y no en la del servidor. */
+function claveDeEnviosDeHoy() {
+  return "enviadas_" + Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
+}
+
+function leerEnviadas(props, clave) {
+  try {
+    const v = JSON.parse(props.getProperty(clave) || "[]");
+    return Array.isArray(v) ? v : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+/**
+ * Borra la marca de lo enviado hoy.
+ *
+ * Solo hace falta para mandar a propósito un segundo correo el mismo día. Sin
+ * esto, volver a ejecutar enviarEnlacesSemanales() omite las plantas que ya
+ * salieron, que es justo lo que se quiere cuando una ejecución se cortó a la
+ * mitad y hay que retomarla.
+ */
+function olvidarEnviosDeHoy() {
+  const props = PropertiesService.getScriptProperties();
+  const clave = claveDeEnviosDeHoy();
+  const antes = leerEnviadas(props, clave);
+  props.deleteProperty(clave);
+  Logger.log(antes.length
+    ? "Marca borrada. Estas " + antes.length + " volverán a recibir si ejecuta el envío:\n  " + antes.join(", ")
+    : "Hoy no había ninguna marcada como enviada.");
+}
+
+/** Qué plantas ya recibieron hoy, sin tocar nada. */
+function verEnviosDeHoy() {
+  const enviadas = leerEnviadas(PropertiesService.getScriptProperties(), claveDeEnviosDeHoy());
+  const faltan   = Object.keys(CORREOS_PLANTA).filter(function (p) { return enviadas.indexOf(p) === -1; });
+  Logger.log("ENVIADAS HOY (" + enviadas.length + "): " + (enviadas.join(", ") || "ninguna") +
+             "\n\nSIN ENVIAR  (" + faltan.length + "): " + (faltan.join(", ") || "ninguna"));
 }
 
 /**
