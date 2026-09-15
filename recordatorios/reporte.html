@@ -150,7 +150,7 @@
   .barra-sol button:hover{background:#3ecdf7}
   .barra-sol .quitar{background:transparent;color:#9db4cb;padding:10px 6px;font-weight:600}
   .barra-sol .quitar:hover{background:transparent;color:#fff}
-  @media (max-width:560px){.barra-sol{left:14px;right:14px;bottom:14px;justify-content:space-between}}
+  @media (max-width:560px){.barra-sol{left:14px;right:14px;bottom:14px;justify-content:space-between;flex-wrap:wrap}}
   @media print{.barra-sol,.btn-sol{display:none!important}}
 
   .sol-lista{
@@ -169,6 +169,18 @@
     background:var(--card);color:var(--text)
   }
   .sol-nota:focus{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
+  .sol-rot{
+    display:block;font-size:12px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 7px
+  }
+  .sol-rot span{text-transform:none;letter-spacing:0;font-weight:400}
+  .sol-fecha{
+    font-family:inherit;font-size:13.5px;padding:10px 13px;border-radius:10px;
+    border:1px solid var(--line);background:var(--card);color:var(--text);min-width:190px
+  }
+  .sol-fecha:focus{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
+  .sol-fecha-fila{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:0 0 16px}
+  .sol-fecha-txt{font-size:12.5px;color:var(--muted);line-height:1.5}
   .sol-aviso{font-size:12.5px;line-height:1.55;margin:12px 0 0;padding:10px 13px;border-radius:9px}
   .sol-aviso.ok{background:var(--u-baja-s);color:var(--u-baja)}
   .sol-aviso.mal{background:var(--u-vencida-s);color:var(--u-vencida)}
@@ -458,6 +470,7 @@
 <!-- ===== Ventana de ayuda ===== -->
 <div class="barra-sol" id="barraSol" hidden>
   <span class="cuenta" id="solCuenta">0 seleccionadas<small>listas para solicitar</small></span>
+  <button class="quitar" id="solVer" type="button">Ver solo estas</button>
   <button class="quitar" id="solQuitar" type="button">Quitar</button>
   <button id="solAbrir" type="button">Enviar solicitud</button>
 </div>
@@ -474,8 +487,13 @@
       <ul class="sol-lista" id="solLista"></ul>
       <div class="sol-online" id="solOnline" hidden></div>
 
-      <label for="solNota" style="display:block;font-size:12px;font-weight:700;letter-spacing:.05em;
-             text-transform:uppercase;color:var(--muted);margin:0 0 7px">Observaciones (opcional)</label>
+      <label class="sol-rot" for="solFecha">Fecha tentativa <span>(opcional)</span></label>
+      <div class="sol-fecha-fila">
+        <input class="sol-fecha" type="date" id="solFecha">
+        <span class="sol-fecha-txt" id="solFechaTxt">Sin fecha propuesta: la programa quien recibe la solicitud.</span>
+      </div>
+
+      <label class="sol-rot" for="solNota">Observaciones <span>(opcional)</span></label>
       <textarea class="sol-nota" id="solNota" maxlength="1200"
         placeholder="Por ejemplo: que sea después del 15, en jornada de la mañana, o que se incluya refrigerio."></textarea>
 
@@ -548,6 +566,7 @@
         <li><b>Todas / Externas / Internas</b> — por quién la dicta. Las <b>externas</b> las da un proveedor y hay que programarlas con él: alturas, izajes, espacios confinados, conducción defensiva y brigada, con todos sus niveles. Las <b>internas</b> son las de formación propia.</li>
         <li><b>El buscador</b> — encuentra por nombre, cédula, cargo o curso. Con la tecla <b>/</b> salta directo a él.</li>
         <li><b>Todos los estándares</b> — el estándar agrupa varias capacitaciones (por ejemplo, todo lo de alturas va bajo el mismo). Filtrar por él deja ver de una vez todo lo que cuelga de ese estándar, y el desplegable de al lado se reduce a sus cursos.</li>
+        <li><b>Todos los meses</b> — el mes en que vence. Es el que usa para armar una jornada: filtre octubre y tiene delante todo lo que hay que cubrir ese mes. Quien nunca ha hecho el curso no tiene fecha, así que al filtrar por mes no aparece.</li>
         <li><b>Todos los cursos</b> — deja ver un solo curso. Útil para programar una jornada: filtra el curso y ya tiene la lista de convocados.</li>
         <li><b>Ordenar</b> — por fecha, por prioridad, por nombre o por planta.</li>
       </ul>
@@ -575,10 +594,11 @@
       <h3>11 · SOLICITAR UNA CAPACITACIÓN</h3>
       <p>En las capacitaciones <b>externas</b> &#8212; alturas, izajes, espacios confinados, conducción defensiva y brigada &#8212; aparece un botón <b>+ Solicitar</b> al lado derecho de la fila. Sirve para pedir que se programe, sin salir de aquí ni escribir un correo a mano.</p>
       <div class="paso"><span class="num">1</span><span class="txt">Pulse <b>+ Solicitar</b> en cada persona que quiera incluir. La fila queda marcada y el botón cambia a <b>&#10003; Seleccionada</b>. Si se equivoca, vuelva a pulsarlo y se quita.</span></div>
-      <div class="paso"><span class="num">2</span><span class="txt">Abajo a la derecha aparece una barra con la cuenta de lo que lleva seleccionado. Puede juntar varias personas y varios cursos distintos en una sola solicitud.</span></div>
+      <div class="paso"><span class="num">2</span><span class="txt">Abajo a la derecha aparece una barra con la cuenta de lo que lleva seleccionado. Puede juntar varias personas y varios cursos distintos en una sola solicitud. El botón <b>Ver solo estas</b> deja en pantalla únicamente lo que marcó, para repasarlo antes de enviar; <b>Ver todas</b> devuelve la lista completa.</span></div>
       <div class="paso"><span class="num">3</span><span class="txt">Pulse <b>Enviar solicitud</b>. Se abre una ventana con el resumen de a quién y qué se va a pedir, ya redactado.</span></div>
-      <div class="paso"><span class="num">4</span><span class="txt">Abajo hay un recuadro de <b>Observaciones</b>, opcional. Ahí puede escribir lo que haga falta: «que sea después del 20», «en jornada de la mañana», «se requiere refrigerio», «hay turno de noche esa semana». Ese texto va dentro del correo tal cual.</span></div>
-      <div class="paso"><span class="num">5</span><span class="txt">Al enviar, la solicitud le llega a quien programa las capacitaciones, con la tabla de personas, cédulas, cargos y el estado de cada una. <b>A usted le queda copia</b> en su correo, y quien la reciba puede responderle directo.</span></div>
+      <div class="paso"><span class="num">4</span><span class="txt">Hay una <b>Fecha tentativa</b>, opcional. Se elige en un calendario, así que no hay que preocuparse por el formato, y no admite días pasados. Debajo del campo se repite la fecha en palabras («jueves 8 de octubre de 2026») para que no quede duda. Es una <b>propuesta</b>: quien recibe la solicitud confirma. Si la deja vacía, no pasa nada; la programan ellos.</span></div>
+      <div class="paso"><span class="num">5</span><span class="txt">Abajo hay un recuadro de <b>Observaciones</b>, opcional. Ahí puede escribir lo que haga falta: «que sea después del 20», «en jornada de la mañana», «se requiere refrigerio», «hay turno de noche esa semana». Ese texto va dentro del correo tal cual.</span></div>
+      <div class="paso"><span class="num">6</span><span class="txt">Al enviar, la solicitud le llega a quien programa las capacitaciones, con la tabla de personas, cédulas, cargos y el estado de cada una, más la fecha propuesta si la puso. <b>A usted le queda copia</b> en su correo, y quien la reciba puede responderle directo.</span></div>
       <div class="nota">Esto solo funciona desde el enlace. En una copia descargada del reporte el botón no aparece, porque no hay desde dónde enviar.</div>
 
       <div class="nota"><b>Algunas se hacen en línea.</b> Cuando una capacitación es interna y se puede tomar por cuenta propia &#8212; la (Re) Inducción General, por ejemplo &#8212; en la fila aparece un botón verde <b>Hacer ahora &#8599;</b> que lleva directo al curso. Ahí no hay nada que programar: se hace y al cargarla en la matriz desaparece de este reporte. Si de todas formas envía la solicitud, el enlace va dentro del correo.</div>
@@ -590,7 +610,7 @@
       <h3>13 · QUÉ HACER CON ESTO</h3>
       <div class="paso"><span class="num">1</span><span class="txt">Mire <b>Acción inmediata</b>. Eso es lo de esta semana.</span></div>
       <div class="paso"><span class="num">2</span><span class="txt">Pase a <b>Resumen y gráficas</b> y vea qué curso concentra más gente. Una jornada grupal resuelve muchos de un golpe.</span></div>
-      <div class="paso"><span class="num">3</span><span class="txt">Filtre ese curso y use <b>+ Solicitar</b> en cada persona: con un envío queda pedida la jornada entera. O descargue el Excel, si prefiere manejarlo aparte.</span></div>
+      <div class="paso"><span class="num">3</span><span class="txt">Filtre ese curso &mdash;y el mes, si quiere cerrar solo lo de octubre&mdash; y use <b>+ Solicitar</b> en cada persona: con un envío queda pedida la jornada entera, con la fecha que proponga. O descargue el Excel, si prefiere manejarlo aparte.</span></div>
       <div class="paso"><span class="num">4</span><span class="txt">Cuando se dicte, que quede cargada en la matriz. Al recargar, esas personas desaparecen solas de aquí.</span></div>
       <div class="nota">Si un dato no le cuadra &#8212; una persona que ya no trabaja, un curso que no le aplica, una fecha rara &#8212; no se corrige aquí: se corrige en la matriz, y el reporte lo refleja al instante.</div>
 
@@ -710,6 +730,7 @@
     </div>
     <select class="mini" id="estSel" aria-label="Filtrar por estándar" hidden><option value="">Todos los estándares</option></select>
     <select class="mini" id="cursoSel" aria-label="Filtrar por curso"><option value="">Todos los cursos</option></select>
+    <select class="mini" id="mesSel" aria-label="Filtrar por mes de vencimiento" hidden><option value="">Todos los meses</option></select>
     <select class="mini" id="sortSel" aria-label="Ordenar">
       <option value="fecha">Ordenar: más próximas</option>
       <option value="prioridad">Ordenar: prioridad (ley primero)</option>
@@ -805,7 +826,7 @@ const URG = {
 const URG_ORDER = ["vencida","critica","alta","media","baja","pendiente"];
 const PAGE = 60;                              // filas por tanda (render progresivo)
 
-const state = {planta:"<?= typeof plantaInicial !== "undefined" ? plantaInicial : "__ALL__" ?>", grupo:"todas", estandar:"", curso:"", q:"", urg:"", sort:"fecha", tab:"lista"};
+const state = {planta:"<?= typeof plantaInicial !== "undefined" ? plantaInicial : "__ALL__" ?>", grupo:"todas", estandar:"", curso:"", mes:"", soloSel:false, q:"", urg:"", sort:"fecha", tab:"lista"};
 let shown = PAGE, shownPpl = 30;
 
 const $  = s => document.querySelector(s);
@@ -846,6 +867,7 @@ function stateToHash(){
   if(state.urg)                p.set("u", state.urg);
   if(state.estandar)           p.set("e", state.estandar);
   if(state.curso)              p.set("c", state.curso);
+  if(state.mes)                p.set("m", state.mes);
   if(state.q)                  p.set("q", state.q);
   if(state.sort!=="fecha")     p.set("s", state.sort);
   if(state.tab!=="lista")      p.set("t", state.tab);
@@ -861,6 +883,7 @@ function hashToState(){
   if(p.has("u")) state.urg    = p.get("u");
   if(p.has("e")) state.estandar = p.get("e");
   if(p.has("c")) state.curso  = p.get("c");
+  if(p.has("m")) state.mes    = p.get("m");
   if(p.has("q")) state.q      = p.get("q");
   if(p.has("s")) state.sort   = p.get("s");
   if(p.has("t")) state.tab    = p.get("t");
@@ -879,6 +902,11 @@ const byGrupo  = d => {
 };
 const byEstandar = d => !state.estandar || estDe(d)===state.estandar;
 const byCurso = d => !state.curso || d.curso===state.curso;
+/* El mes sale de la fecha de vencimiento. Quien nunca ha hecho el curso no
+   tiene fecha, así que al filtrar por mes se queda fuera: no vence en ninguno. */
+const mesDe   = d => d.fecha ? d.fecha.slice(0,7) : "";
+const byMes   = d => !state.mes || mesDe(d)===state.mes;
+const bySel   = d => !state.soloSel || seleccion.has(llaveDe(d));
 const byQ     = d => !state.q || (d.nombre+" "+d.pos+" "+d.curso+" "+d.id+" "+d.planta).toLowerCase().includes(state.q);
 const byUrg   = d => {
   if(!state.urg) return true;
@@ -887,7 +915,7 @@ const byUrg   = d => {
   return d.urg===state.urg;
 };
 /* Base sin el filtro de urgencia: alimenta los contadores de los chips */
-function base(){ return DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byEstandar(d)&&byCurso(d)&&byQ(d)); }
+function base(){ return DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byEstandar(d)&&byCurso(d)&&byMes(d)&&bySel(d)&&byQ(d)); }
 function filtered(){ return base().filter(byUrg); }
 
 const grpRank = {externa:0, interna:1};
@@ -937,9 +965,10 @@ function openModal(){
 function closeModal(){ $("#overlay").hidden = true; $("#reopen").focus(); }
 function applyModal(planta, grupo){
   state.planta = planta; state.grupo = grupo;
-  state.estandar = ""; state.curso = ""; state.q = ""; state.urg = ""; shown = PAGE;
+  state.estandar = ""; state.curso = ""; state.mes = ""; state.soloSel = false;
+  state.q = ""; state.urg = ""; shown = PAGE;
   $("#plantSel").value = planta; $("#q").value = "";
-  syncGrpSeg(); refreshEstandares(); refreshCursos(); savePref(); closeModal(); render();
+  syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); closeModal(); render();
 }
 $("#enter").onclick  = () => applyModal(modalPlanta || "__ALL__", modalGrupo);
 $("#reopen").onclick = openModal;
@@ -951,6 +980,8 @@ const llaveDe = r => `${r.planta}|${r.id}|${r.curso}`;
 
 function pintarBarraSol(){
   const n = seleccion.size;
+  if(!n) state.soloSel = false;        // sin nada marcado, "ver las seleccionadas" no lleva a ningún lado
+  $("#solVer").textContent = state.soloSel ? "Ver todas" : "Ver solo estas";
   $("#barraSol").hidden = n === 0;
   if(n) $("#solCuenta").innerHTML =
     `${n} ${n===1?"seleccionada":"seleccionadas"}<small>${n===1?"lista":"listas"} para solicitar</small>`;
@@ -1002,6 +1033,12 @@ function abrirSolicitud(){
     caja.hidden = true;
   }
 
+  // La fecha arranca vacía y no admite ayer: lo que se propone es a futuro.
+  const f = $("#solFecha");
+  f.value = "";
+  f.min = isoLocal(new Date(Date.now() + 86400000));
+  pintarFechaSol();
+
   $("#solAviso").hidden = true;
   $("#solEnviar").disabled = false;
   $("#solEnviar").textContent = "Enviar solicitud";
@@ -1010,6 +1047,40 @@ function abrirSolicitud(){
 }
 
 function cerrarSolicitud(){ $("#solicitud").hidden = true; }
+
+/* AAAA-MM-DD de una fecha, en la hora del navegador. toISOString() no sirve:
+   convierte a UTC y en Colombia devuelve el día anterior. */
+const isoLocal = d => [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"),
+                       String(d.getDate()).padStart(2,"0")].join("-");
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto",
+               "septiembre","octubre","noviembre","diciembre"];
+const DIAS_SEM = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+/* El campo devuelve AAAA-MM-DD; se arma la fecha con las partes, no con
+   new Date(texto), que interpreta UTC y corre el día. */
+function fechaDeIso(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||""));
+  if(!m) return null;
+  const d = new Date(+m[1], +m[2]-1, +m[3]);
+  return (d.getFullYear()===+m[1] && d.getMonth()===+m[2]-1 && d.getDate()===+m[3]) ? d : null;
+}
+const enPalabras = d => `${DIAS_SEM[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
+
+/* Repite la fecha en palabras: el campo la muestra según el idioma del equipo
+   y así no queda duda de si 08/10 es octubre o agosto. */
+function pintarFechaSol(){
+  const d = fechaDeIso($("#solFecha").value);
+  const t = $("#solFechaTxt");
+  if(!d){
+    t.textContent = "Sin fecha propuesta: la programa quien recibe la solicitud.";
+    t.style.color = "";
+  } else if(d <= new Date(new Date().setHours(0,0,0,0))){
+    t.textContent = "Esa fecha ya pasó. Elija una posterior a hoy o déjela vacía.";
+    t.style.color = "var(--u-vencida)";
+  } else {
+    t.textContent = "Se propone el " + enPalabras(d) + ". Es una propuesta, no una confirmación.";
+    t.style.color = "";
+  }
+}
 
 function avisoSol(texto, bien){
   const a = $("#solAviso");
@@ -1047,6 +1118,7 @@ function enviarSolicitud(){
     })
     .enviarSolicitud({
       planta:   items[0].planta,
+      fecha:    $("#solFecha").value,
       nota:     $("#solNota").value,
       personas: items.map(r => ({
         nombre: r.nombre, id: r.id, pos: r.pos, curso: r.curso,
@@ -1063,7 +1135,12 @@ $("#rows").addEventListener("click", e => {
 });
 $("#solAbrir").addEventListener("click", abrirSolicitud);
 $("#solQuitar").addEventListener("click", limpiarSol);
+$("#solVer").addEventListener("click", () => {
+  state.soloSel = !state.soloSel; shown = PAGE; pintarBarraSol(); render();
+});
 $("#solX").addEventListener("click", cerrarSolicitud);
+$("#solFecha").addEventListener("change", pintarFechaSol);
+$("#solFecha").addEventListener("input",  pintarFechaSol);
 $("#solEnviar").addEventListener("click", enviarSolicitud);
 $("#solicitud").addEventListener("click", e => { if(e.target.id==="solicitud") cerrarSolicitud(); });
 
@@ -1114,14 +1191,15 @@ function buildControls(){
   const ps = $("#plantSel");
   ps.innerHTML = `<option value="__ALL__">Todas las plantas (${DATA.length})</option>`
     + plantasList.map(p=>`<option value="${esc(p)}">${esc(p)} (${PLANTA_N[p]})</option>`).join("");
-  ps.onchange = () => { state.planta = ps.value; state.curso=""; shown=PAGE; refreshEstandares(); refreshCursos(); savePref(); render(); };
+  ps.onchange = () => { state.planta = ps.value; state.curso=""; shown=PAGE; refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render(); };
 
   $("#grpSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
-    state.grupo = b.dataset.g; state.curso=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); savePref(); render();
+    state.grupo = b.dataset.g; state.curso=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render();
   });
   $("#q").oninput = debounce(e => { state.q = e.target.value.toLowerCase().trim(); shown=PAGE; render(); }, 160);
-  $("#estSel").onchange   = e => { state.estandar = e.target.value; state.curso=""; shown=PAGE; refreshCursos(); render(); };
-  $("#cursoSel").onchange = e => { state.curso = e.target.value; shown=PAGE; render(); };
+  $("#estSel").onchange   = e => { state.estandar = e.target.value; state.curso=""; shown=PAGE; refreshCursos(); refreshMeses(); render(); };
+  $("#cursoSel").onchange = e => { state.curso = e.target.value; shown=PAGE; refreshMeses(); render(); };
+  $("#mesSel").onchange   = e => { state.mes   = e.target.value; shown=PAGE; render(); };
   $("#sortSel").onchange  = e => { state.sort  = e.target.value; render(); };
   $("#csv").onclick   = exportCSV;
   $("#print").onclick = () => window.print();
@@ -1129,7 +1207,7 @@ function buildControls(){
     try{ await navigator.clipboard.writeText(location.href); flash($("#share"), "✓ Copiado"); }
     catch(e){ flash($("#share"), location.href.slice(0,28)+"…"); }
   };
-  $("#reset").onclick = () => { state.estandar=""; state.curso=""; state.q=""; state.urg=""; state.grupo="todas"; $("#q").value=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); render(); };
+  $("#reset").onclick = () => { state.estandar=""; state.curso=""; state.mes=""; state.soloSel=false; state.q=""; state.urg=""; state.grupo="todas"; $("#q").value=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses(); render(); };
   $("#more").onclick    = () => { shown += PAGE*2; render(); };
   $("#morePpl").onclick = () => { shownPpl += 40; render(); };
 
@@ -1163,6 +1241,28 @@ function refreshEstandares(){
     + ests.map(e=>`<option value="${esc(e)}">${esc(e.length>44 ? e.slice(0,44)+"…" : e)}</option>`).join("");
   if(ests.includes(state.estandar)) sel.value = state.estandar; else state.estandar = "";
 }
+/* Los meses que de verdad aparecen en lo que se está viendo, en orden de
+   calendario. Sirve para armar una jornada: "todo lo que vence en octubre". */
+function refreshMeses(){
+  const sel = $("#mesSel");
+  const cuenta = {};
+  DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byEstandar(d)&&byCurso(d)).forEach(d=>{
+    const m = mesDe(d);
+    if(m) cuenta[m] = (cuenta[m]||0) + 1;
+  });
+  const meses = Object.keys(cuenta).sort();
+  sel.hidden = meses.length < 2;
+  if(sel.hidden) state.mes = "";
+  sel.innerHTML = `<option value="">Todos los meses (${meses.length})</option>`
+    + meses.map(m=>`<option value="${m}">${esc(nombreMes(m))} (${cuenta[m]})</option>`).join("");
+  if(meses.includes(state.mes)) sel.value = state.mes; else state.mes = "";
+}
+const MESES_LB = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto",
+                  "septiembre","octubre","noviembre","diciembre"];
+function nombreMes(m){
+  const p = m.split("-");
+  return MESES_LB[+p[1]-1] + " " + p[0];
+}
 function refreshCursos(){
   const cursos = [...new Set(DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byEstandar(d)).map(d=>d.curso))].sort((a,b)=>a.localeCompare(b));
   const sel = $("#cursoSel"), cur = state.curso;
@@ -1178,7 +1278,7 @@ function render(){
   renderKpis(rows);
   $("#nLista").textContent   = rows.length;
   $("#nPersona").textContent = new Set(rows.map(r=>r.id)).size;
-  $("#reset").hidden = !(state.estandar || state.curso || state.q || state.urg || state.grupo!=="todas");
+  $("#reset").hidden = !(state.estandar || state.curso || state.mes || state.soloSel || state.q || state.urg || state.grupo!=="todas");
   if(state.tab==="lista")        renderList(rows);
   else if(state.tab==="persona") renderPeople(rows);
   else                           renderDash(rows);
@@ -1440,6 +1540,8 @@ function renderFoot(rows){
   if(state.urg)   f.push(`Urgencia: <b>${esc(state.urg==="urgente"?"Acción inmediata":state.urg==="d30"?"≤ 30 días":URG[state.urg].lb)}</b>`);
   if(state.estandar) f.push(`Estándar: <b>${esc(state.estandar)}</b>`);
   if(state.curso) f.push(`Curso: <b>${esc(state.curso)}</b>`);
+  if(state.mes)   f.push(`Vence en: <b>${esc(nombreMes(state.mes))}</b>`);
+  if(state.soloSel) f.push(`<b>Solo las seleccionadas</b>`);
   if(state.q)     f.push(`Búsqueda: <b>${esc(state.q)}</b>`);
   $("#printHead").innerHTML =
     `<h2 style="margin:0 0 4px;font-size:16px">Vencimientos de capacitaciones · H&amp;S Holcim Colombia</h2>
@@ -1458,9 +1560,10 @@ function syncUI(){
   $("#plantSel").value = state.planta;
   $("#q").value = state.q;
   $("#sortSel").value = state.sort;
-  syncGrpSeg(); refreshEstandares(); refreshCursos();
+  syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses();
   $("#estSel").value = state.estandar;
   $("#cursoSel").value = state.curso;
+  $("#mesSel").value = state.mes;
   modalPlanta = state.planta;
   shown = PAGE; shownPpl = 30;
   setTab(["lista","persona","dash"].includes(state.tab) ? state.tab : "lista");

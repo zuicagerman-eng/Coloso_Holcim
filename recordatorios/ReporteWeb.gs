@@ -810,6 +810,34 @@ function escapar(texto) {
  * @param {{planta:string, personas:Array, nota:string}} datos
  * @return {string} mensaje para mostrar en pantalla
  */
+/**
+ * La fecha tentativa, en palabras, o "" si no viene o no sirve.
+ *
+ * Llega del navegador como AAAA-MM-DD. No se usa new Date(texto): eso lo lee
+ * como UTC y en Colombia devuelve el día anterior. Se arma con las partes y se
+ * comprueba que la fecha exista de verdad (un 31 de febrero se descarta) y que
+ * no sea pasada. Si algo no cuadra se ignora en silencio: es un campo opcional
+ * y no tiene sentido tumbar la solicitud entera por él.
+ */
+function fechaTentativa(valor) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor == null ? "" : valor).trim());
+  if (!m) return "";
+
+  const anio = +m[1], mes = +m[2], dia = +m[3];
+  const d = new Date(anio, mes - 1, dia);
+  if (d.getFullYear() !== anio || d.getMonth() !== mes - 1 || d.getDate() !== dia) return "";
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  if (d < hoy) return "";
+  if (anio > hoy.getFullYear() + 3) return "";   // un año disparatado no es una propuesta
+
+  const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+                 "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  const DIAS  = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  return DIAS[d.getDay()] + " " + dia + " de " + MESES[mes - 1] + " de " + anio;
+}
+
 function enviarSolicitud(datos) {
   if (CORREO_SOLICITUDES.indexOf("CAMBIAR") === 0) {
     throw new Error("Todavía no está configurado a quién se le envían las solicitudes. " +
@@ -828,7 +856,8 @@ function enviarSolicitud(datos) {
   }
 
   const recorta = function (v, max) { return String(v == null ? "" : v).trim().slice(0, max); };
-  const nota = recorta(datos.nota, 1200);
+  const nota  = recorta(datos.nota, 1200);
+  const fecha = fechaTentativa(datos.fecha);   // "" si no la pusieron
 
   // Quién lo pide. Dentro del mismo dominio Google sí lo entrega.
   let solicitante = "";
@@ -863,6 +892,12 @@ function enviarSolicitud(datos) {
     "<th style='padding:8px 10px;text-align:left'>Estado</th>" +
     "<th style='padding:8px 10px;text-align:left'></th>" +
     "</tr></thead><tbody>" + filas + "</tbody></table>" +
+    (fecha
+      ? "<p style=\"background:#e8f3ea;border-left:3px solid #2f7d4f;padding:11px 14px;margin:0 0 14px\">" +
+        "<b>Fecha tentativa propuesta:</b> " + escapar(fecha) +
+        "<br><span style=\"color:#5d7186;font-size:12.5px\">Es una propuesta de quien solicita, " +
+        "no una fecha confirmada.</span></p>"
+      : "") +
     (nota
       ? "<p><b>Observaciones de quien solicita:</b></p>" +
         "<p style=\"background:#eef3f8;border-left:3px solid #1d4370;padding:11px 14px;margin:0 0 14px;" +
@@ -876,7 +911,8 @@ function enviarSolicitud(datos) {
   const correo = {
     to:       CORREO_SOLICITUDES,
     subject:  "Solicitud de capacitación · " + planta + " · " + personas.length +
-              (personas.length === 1 ? " persona" : " personas"),
+              (personas.length === 1 ? " persona" : " personas") +
+              (fecha ? " · propuesta: " + fecha : ""),
     htmlBody: cuerpo
   };
   if (solicitante) {

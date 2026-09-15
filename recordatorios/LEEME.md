@@ -110,6 +110,18 @@ buscar.
 Si no encuentra ninguno, el desplegable no aparece y el tablero funciona igual
 que antes.
 
+**El filtro por mes** sale de la fecha de vencimiento (`AAAA-MM`). Quien nunca ha
+hecho el curso no tiene fecha, así que al filtrar por mes queda fuera: no vence
+en ninguno. Con menos de dos meses distintos el desplegable se esconde.
+
+**La fecha tentativa de la solicitud es opcional.** El campo es un calendario
+del navegador, así que no depende del formato que tenga el equipo, y no admite
+días anteriores a mañana. Debajo se repite en palabras para que no se confunda
+08/10 con 10/08. `fechaTentativa()` la vuelve a validar en el servidor —que
+exista, que no sea pasada, que el año sea razonable— y si no cuadra la ignora en
+silencio en vez de tumbar la solicitud. Cuando viene, sale destacada en el correo
+y en el asunto.
+
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
 
