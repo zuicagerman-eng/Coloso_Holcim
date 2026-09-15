@@ -90,11 +90,10 @@ const CORREO_SOLICITUDES = "CAMBIAR@holcim.com";
 /**
  * Qué capacitaciones se pueden solicitar desde el reporte.
  *
- * "alto_riesgo" son alturas, izajes, espacios confinados y conducción
- * defensiva. Añada "normativa" si también quiere las legales (LOTO, SGSST,
- * permisos, brigada, trabajo en caliente), o "interna" para todas.
+ * "externa" son las que dicta un proveedor y hay que programar con él.
+ * Añada "interna" si también quiere poder solicitar las de formación propia.
  */
-const GRUPOS_CON_SOLICITUD = ["alto_riesgo"];
+const GRUPOS_CON_SOLICITUD = ["externa"];
 
 /**
  * Capacitaciones que la persona puede hacer por su cuenta, en línea.
@@ -143,11 +142,11 @@ function enlaceDeCurso(curso, diasVencida) {
  * Qué entra en la tabla del correo semanal.
  *
  * El correo no repite el reporte: destaca lo que exige acción y deja el resto
- * a un clic. Por eso la tabla se limita a las capacitaciones de riesgo y de
- * ley, en la franja de tiempo donde todavía se puede hacer algo.
+ * a un clic. Por eso la tabla se limita a las externas, que son las que hay que
+ * programar con un proveedor, en la franja de tiempo donde aún se puede hacer.
  */
 const CORREO_TABLA = {
-  grupos:        ["alto_riesgo", "normativa"],  // el resto se menciona, no se lista
+  grupos:        ["externa"],   // las internas se mencionan, no se listan
   vencidasDesde: 30,   // vencidas de los últimos 30 días (más atrás ya no es novedad)
   proximosHasta: 60,   // y lo que vence en los próximos 60
   maxFilas:      80    // si son más, se indica cuántas quedan por ver en el reporte
@@ -198,47 +197,70 @@ const CURSOS_OMITIR = [
 ];
 
 /**
- * Categoría y grupo de cada curso.
+ * Categorías que dicta un proveedor externo y hay que programar con él.
+ *
+ * Todo lo demás cuenta como interno. Va por categoría y no por curso, así que
+ * al añadir un nivel nuevo de alturas o de izajes queda clasificado solo.
+ */
+const CATEGORIAS_EXTERNAS = [
+  "Alturas",
+  "Izajes",
+  "Espacios confinados",
+  "Conducción defensiva",
+  "Brigada de emergencia"
+];
+
+/** "externa" o "interna", a partir de la categoría del curso. */
+function grupoDeCategoria(categoria) {
+  const buscada = normalizar(categoria);
+  for (let i = 0; i < CATEGORIAS_EXTERNAS.length; i++) {
+    if (normalizar(CATEGORIAS_EXTERNAS[i]) === buscada) return "externa";
+  }
+  return "interna";
+}
+
+/**
+ * Categoría de cada curso.
  * Tomado del HTML original para conservar exactamente su clasificación.
  * Un curso que no esté aquí cae en "Interna / formación" y se reporta en probar().
  */
 const CATEGORIA_CURSO = {
-  "(Re) Inducción General H&S":                                                              ["Interna / formación",       "interna"],
-  "Aislamiento y Bloqueo de Energía para todos":                                             ["Energías peligrosas (LOTO)", "normativa"],
-  "Bienestar y Limpieza":                                                                    ["Interna / formación",       "interna"],
-  "Curso 50 horas o actualización 20 horas SGSST":                                           ["SGSST",                     "normativa"],
-  "Emisor de Permiso":                                                                       ["Permisos de trabajo",       "normativa"],
-  "Manejo Defensivo NSC Edicion 5":                                                          ["Conducción defensiva",      "alto_riesgo"],
-  "Manejo de cargas e Higiene Postural":                                                     ["Interna / formación",       "interna"],
-  "Operador de equipos para elevación de personas (manlift)":                                ["Izajes",                    "alto_riesgo"],
-  "Prevencion y control de los riesgos derivados del uso de la silice cristalina respirable": ["Interna / formación",      "interna"],
-  "Prevención de lesiones o DME - Reporte temprano de síntomas":                             ["Interna / formación",       "interna"],
-  "Programa de evaluación y control de vibraciones":                                         ["Interna / formación",       "interna"],
-  "Reentrenamiento Brigadista Clase I Resolución 0256":                                      ["Brigada de emergencia",     "normativa"],
-  "Reentrenamiento Trabajo en alturas":                                                      ["Alturas",                   "alto_riesgo"],
-  "Sistema globalmente armonizado":                                                          ["Interna / formación",       "interna"],
-  "Supervisor de izaje":                                                                     ["Izajes",                    "alto_riesgo"],
-  "Titular de candado":                                                                      ["Energías peligrosas (LOTO)", "normativa"],
-  "Trabajador autorizado de trabajo en caliente":                                            ["Trabajo en caliente",       "normativa"],
-  "Trabajo seguro con computador":                                                           ["Interna / formación",       "interna"],
+  "(Re) Inducción General H&S":                                                              "Interna / formación",
+  "Aislamiento y Bloqueo de Energía para todos":                                             "Energías peligrosas (LOTO)",
+  "Bienestar y Limpieza":                                                                    "Interna / formación",
+  "Curso 50 horas o actualización 20 horas SGSST":                                           "SGSST",
+  "Emisor de Permiso":                                                                       "Permisos de trabajo",
+  "Manejo Defensivo NSC Edicion 5":                                                          "Conducción defensiva",
+  "Manejo de cargas e Higiene Postural":                                                     "Interna / formación",
+  "Operador de equipos para elevación de personas (manlift)":                                "Izajes",
+  "Prevencion y control de los riesgos derivados del uso de la silice cristalina respirable": "Interna / formación",
+  "Prevención de lesiones o DME - Reporte temprano de síntomas":                             "Interna / formación",
+  "Programa de evaluación y control de vibraciones":                                         "Interna / formación",
+  "Reentrenamiento Brigadista Clase I Resolución 0256":                                      "Brigada de emergencia",
+  "Reentrenamiento Trabajo en alturas":                                                      "Alturas",
+  "Sistema globalmente armonizado":                                                          "Interna / formación",
+  "Supervisor de izaje":                                                                     "Izajes",
+  "Titular de candado":                                                                      "Energías peligrosas (LOTO)",
+  "Trabajador autorizado de trabajo en caliente":                                            "Trabajo en caliente",
+  "Trabajo seguro con computador":                                                           "Interna / formación",
 
   // ─── Cursos que no aparecían en el HTML original ────────────────────────
   // La clasificación de estos la propuse yo siguiendo el mismo criterio.
   // Revíselos y corrija los que no correspondan.
-  "Emisor de Permiso de Trabajo en Caliente":                                                ["Trabajo en caliente",       "normativa"],
-  "Centinela de Fuego para trabajos en caliente":                                            ["Trabajo en caliente",       "normativa"],
-  "Entrenamiento Brigadista Clase I Resolución 0256":                                        ["Brigada de emergencia",     "normativa"],
-  "Uso DEA / Soporte Vital Básico":                                                          ["Brigada de emergencia",     "normativa"],
-  "Reglas basicas y habitos seguros de conduccion en vias internas":                         ["Conducción defensiva",      "alto_riesgo"],
-  "Montaje y Desmontaje de Andamios":                                                        ["Alturas",                   "alto_riesgo"],
-  "Trabajador autorizado / Ayudante de seguridad Trabajo en alturas":                        ["Alturas",                   "alto_riesgo"],
-  "Trabajo cerca al agua":                                                                   ["Alturas",                   "alto_riesgo"],
-  "Trabajador Entrante en espacios confinados":                                              ["Espacios confinados",       "alto_riesgo"],
-  "Vigía de Seguridad para Trabajos en Espacios Confinados":                                 ["Espacios confinados",       "alto_riesgo"],
-  "Supervisor / Emisor de permisos de espacios confinados (debe contar previamente con curso de entrante y vigía de EC)": ["Espacios confinados", "alto_riesgo"]
+  "Emisor de Permiso de Trabajo en Caliente":                                                "Trabajo en caliente",
+  "Centinela de Fuego para trabajos en caliente":                                            "Trabajo en caliente",
+  "Entrenamiento Brigadista Clase I Resolución 0256":                                        "Brigada de emergencia",
+  "Uso DEA / Soporte Vital Básico":                                                          "Brigada de emergencia",
+  "Reglas basicas y habitos seguros de conduccion en vias internas":                         "Conducción defensiva",
+  "Montaje y Desmontaje de Andamios":                                                        "Alturas",
+  "Trabajador autorizado / Ayudante de seguridad Trabajo en alturas":                        "Alturas",
+  "Trabajo cerca al agua":                                                                   "Alturas",
+  "Trabajador Entrante en espacios confinados":                                              "Espacios confinados",
+  "Vigía de Seguridad para Trabajos en Espacios Confinados":                                 "Espacios confinados",
+  "Supervisor / Emisor de permisos de espacios confinados (debe contar previamente con curso de entrante y vigía de EC)": "Espacios confinados"
 };
 
-const CATEGORIA_POR_DEFECTO = ["Interna / formación", "interna"];
+const CATEGORIA_POR_DEFECTO = "Interna / formación";
 
 
 // ════════════════════════════════════════════════════════════════════
@@ -271,13 +293,17 @@ function urgenciaPorDias(dias) {
 }
 
 function categoriaDe(curso) {
-  if (Object.prototype.hasOwnProperty.call(CATEGORIA_CURSO, curso)) return CATEGORIA_CURSO[curso];
-  // Segundo intento, ignorando mayúsculas y espacios
-  const buscado = normalizar(curso);
-  for (const clave in CATEGORIA_CURSO) {
-    if (normalizar(clave) === buscado) return CATEGORIA_CURSO[clave];
+  let cat = null;
+  if (Object.prototype.hasOwnProperty.call(CATEGORIA_CURSO, curso)) {
+    cat = CATEGORIA_CURSO[curso];
+  } else {
+    const buscado = normalizar(curso);          // segundo intento, sin mayúsculas ni espacios
+    for (const clave in CATEGORIA_CURSO) {
+      if (normalizar(clave) === buscado) { cat = CATEGORIA_CURSO[clave]; break; }
+    }
   }
-  return null;
+  if (cat == null) return null;
+  return [cat, grupoDeCategoria(cat)];
 }
 
 /** Índice de plantas válidas, ya normalizadas, para resolver el nombre que llega. */
@@ -411,7 +437,7 @@ function construirRegistros() {
       let categoria = categoriaDe(curso);
       if (!categoria) {
         avisos.cursosSinCategoria[curso] = (avisos.cursosSinCategoria[curso] || 0) + 1;
-        categoria = CATEGORIA_POR_DEFECTO;
+        categoria = [CATEGORIA_POR_DEFECTO, grupoDeCategoria(CATEGORIA_POR_DEFECTO)];
       }
 
       // Días que lleva vencida; quien nunca la hizo cuenta como vencida hace mucho
@@ -856,17 +882,17 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
     }
 
   const puntos = tabla.listadas
-    ? "<p>Los puntos relevantes de esta semana son las capacitaciones de <b>alto riesgo y legales</b> " +
+    ? "<p>Los puntos relevantes de esta semana son las capacitaciones <b>externas</b> " +
       "vencidas en el último mes o por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días:</p>" +
       tabla.html
-    : "<p>Esta semana <b>no hay capacitaciones de alto riesgo ni legales</b> vencidas en el último mes " +
+    : "<p>Esta semana <b>no hay capacitaciones externas</b> vencidas en el último mes " +
       "ni por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días.</p>";
 
     // Las de más atraso no se listan, pero no se callan
   const viejas = tabla.antiguas
     ? "<p style=\"background:#fbe9e7;border-left:3px solid #8f1d16;padding:11px 14px;" +
       "border-radius:0 8px 8px 0;margin:0 0 14px\">Hay además <b style=\"color:#8f1d16\">" +
-      tabla.antiguas + "</b> de alto riesgo o legales con <b>más de " + CORREO_TABLA.vencidasDesde +
+      tabla.antiguas + "</b> externas con <b>más de " + CORREO_TABLA.vencidasDesde +
       " días vencidas</b>. No se listan aquí para no alargar el correo: se consultan en el reporte.</p>"
     : "";
 

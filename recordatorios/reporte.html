@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Tablero interno H&S Holcim Colombia: seguimiento de vencimientos de capacitaciones legales, de alto riesgo e internas por planta.">
+<meta name="description" content="Tablero interno H&S Holcim Colombia: seguimiento de vencimientos de capacitaciones externas e internas por planta.">
 <meta name="color-scheme" content="light dark">
 <title>Vencimientos de Capacitaciones · H&S Holcim</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -445,10 +445,9 @@
       <div class="plant-grid" id="plantGrid"></div>
       <p class="step-l">PASO 2 · ¿QUÉ CAPACITACIONES QUIERES VER?</p>
       <div class="view-opts" id="viewOpts">
-        <button class="vopt" type="button" data-g="todas" aria-pressed="true"><span class="vt">Todas</span><span class="vd">Legales e internas juntas</span></button>
-        <button class="vopt" type="button" data-g="alto_riesgo" aria-pressed="false"><span class="vt">Alto riesgo</span><span class="vd">Alturas, confinados, conducción, izajes</span></button>
-        <button class="vopt" type="button" data-g="legales" aria-pressed="false"><span class="vt">Legales</span><span class="vd">Alto riesgo + normativas (brigada, LOTO…)</span></button>
-        <button class="vopt" type="button" data-g="interna" aria-pressed="false"><span class="vt">Internas</span><span class="vd">Formación y programas internos</span></button>
+        <button class="vopt" type="button" data-g="todas" aria-pressed="true"><span class="vt">Todas</span><span class="vd">Externas e internas juntas</span></button>
+        <button class="vopt" type="button" data-g="externa" aria-pressed="false"><span class="vt">Externas</span><span class="vd">Alturas, izajes, confinados, conducción, brigada</span></button>
+        <button class="vopt" type="button" data-g="interna" aria-pressed="false"><span class="vt">Internas</span><span class="vd">Formación y programas propios</span></button>
       </div>
       <button class="modal-cta" id="enter">Ver capacitaciones</button>
       <p class="modal-hint">¿Primera vez? Pulsa <b>Ayuda</b> arriba a la derecha en cualquier momento.</p>
@@ -546,7 +545,7 @@
 
       <h3>7 · LOS FILTROS</h3>
       <ul>
-        <li><b>Todas / Alto riesgo / Legales / Internas</b> — por tipo de capacitación. «Alto riesgo» son alturas, izajes, espacios confinados y conducción; «Legales» las exigidas por norma; «Internas» las de formación propia.</li>
+        <li><b>Todas / Externas / Internas</b> — por quién la dicta. Las <b>externas</b> las da un proveedor y hay que programarlas con él: alturas, izajes, espacios confinados, conducción defensiva y brigada, con todos sus niveles. Las <b>internas</b> son las de formación propia.</li>
         <li><b>El buscador</b> — encuentra por nombre, cédula, cargo o curso. Con la tecla <b>/</b> salta directo a él.</li>
         <li><b>Todos los cursos</b> — deja ver un solo curso. Útil para programar una jornada: filtra el curso y ya tiene la lista de convocados.</li>
         <li><b>Ordenar</b> — por fecha, por prioridad, por nombre o por planta.</li>
@@ -573,7 +572,7 @@
       </ul>
 
       <h3>11 · SOLICITAR UNA CAPACITACIÓN</h3>
-      <p>En las capacitaciones de <b>alturas, izajes, espacios confinados y conducción defensiva</b> aparece un botón <b>+ Solicitar</b> al lado derecho de la fila. Sirve para pedir que se programe, sin salir de aquí ni escribir un correo a mano.</p>
+      <p>En las capacitaciones <b>externas</b> &#8212; alturas, izajes, espacios confinados, conducción defensiva y brigada &#8212; aparece un botón <b>+ Solicitar</b> al lado derecho de la fila. Sirve para pedir que se programe, sin salir de aquí ni escribir un correo a mano.</p>
       <div class="paso"><span class="num">1</span><span class="txt">Pulse <b>+ Solicitar</b> en cada persona que quiera incluir. La fila queda marcada y el botón cambia a <b>&#10003; Seleccionada</b>. Si se equivoca, vuelva a pulsarlo y se quita.</span></div>
       <div class="paso"><span class="num">2</span><span class="txt">Abajo a la derecha aparece una barra con la cuenta de lo que lleva seleccionado. Puede juntar varias personas y varios cursos distintos en una sola solicitud.</span></div>
       <div class="paso"><span class="num">3</span><span class="txt">Pulse <b>Enviar solicitud</b>. Se abre una ventana con el resumen de a quién y qué se va a pedir, ya redactado.</span></div>
@@ -700,8 +699,7 @@
   <div class="toolbar">
     <div class="seg" id="grpSeg" role="group" aria-label="Tipo de capacitación">
       <button type="button" data-g="todas" class="on">Todas</button>
-      <button type="button" data-g="alto_riesgo">Alto riesgo</button>
-      <button type="button" data-g="legales">Legales</button>
+      <button type="button" data-g="externa">Externas</button>
       <button type="button" data-g="interna">Internas</button>
     </div>
     <div class="search">
@@ -788,7 +786,7 @@ const GRUPOS_SOL = <?!= typeof gruposSolicitud !== "undefined" ? gruposSolicitud
 const seleccion = new Map();                  // llave -> registro
 const CORTE = new Date("<?= typeof corteIso !== "undefined" ? corteIso : "" ?>T00:00:00");   // el día en que se abre, no una fecha fija
 const CORTE_TXT = "<?= typeof corteTxt !== "undefined" ? corteTxt : "" ?>";
-const GRUPO_LABEL = {alto_riesgo:"Alto riesgo", normativa:"Normativa/Legal", interna:"Interna"};
+const GRUPO_LABEL = {externa:"Externa", interna:"Interna"};
 const URG = {
   vencida:{lb:"Vencida",  cls:"u-vencida", short:"Vencidas"},
   critica:{lb:"≤ 7 días", cls:"u-critica", short:"≤ 7 días"},
@@ -866,10 +864,9 @@ function loadPref(){ try{ return JSON.parse(localStorage.getItem("hs_pref")||"nu
 /* ---------- Filtros ---------- */
 const byPlanta = d => state.planta==="__ALL__" || d.planta===state.planta;
 const byGrupo  = d => {
-  if(state.grupo==="todas")       return true;
-  if(state.grupo==="alto_riesgo") return d.grupo==="alto_riesgo";
-  if(state.grupo==="legales")     return d.grupo==="alto_riesgo" || d.grupo==="normativa";
-  if(state.grupo==="interna")     return d.grupo==="interna";
+  if(state.grupo==="todas")   return true;
+  if(state.grupo==="externa") return d.grupo==="externa";
+  if(state.grupo==="interna") return d.grupo==="interna";
   return true;
 };
 const byCurso = d => !state.curso || d.curso===state.curso;
@@ -884,7 +881,7 @@ const byUrg   = d => {
 function base(){ return DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byCurso(d)&&byQ(d)); }
 function filtered(){ return base().filter(byUrg); }
 
-const grpRank = {alto_riesgo:0, normativa:1, interna:2};
+const grpRank = {externa:0, interna:1};
 function sortRows(a,b){
   if(state.sort==="prioridad") return (grpRank[a.grupo]-grpRank[b.grupo]) || (a.dias-b.dias) || a.nombre.localeCompare(b.nombre);
   if(state.sort==="planta")    return a.planta.localeCompare(b.planta) || (a.dias-b.dias);
@@ -1209,7 +1206,7 @@ function renderKpis(rows){
 }
 
 /* ---------- Vista lista ---------- */
-function badgeClass(g){ return g==="alto_riesgo" ? "b-alto" : g==="normativa" ? "b-norm" : "b-int"; }
+function badgeClass(g){ return g==="externa" ? "b-alto" : "b-int"; }
 function renderList(rows){
   rows = [...rows].sort(sortRows);
   $("#listTitle").textContent = state.planta==="__ALL__"
@@ -1415,7 +1412,7 @@ if(window.claude && typeof window.claude.use === "function"){
 function renderFoot(rows){
   const f = [];
   f.push(`Planta: <b>${state.planta==="__ALL__" ? "todas" : esc(state.planta)}</b>`);
-  f.push(`Vista: <b>${esc({todas:"Todas",alto_riesgo:"Alto riesgo",legales:"Legales",interna:"Internas"}[state.grupo])}</b>`);
+  f.push(`Vista: <b>${esc({todas:"Todas",externa:"Externas",interna:"Internas"}[state.grupo])}</b>`);
   if(state.urg)   f.push(`Urgencia: <b>${esc(state.urg==="urgente"?"Acción inmediata":state.urg==="d30"?"≤ 30 días":URG[state.urg].lb)}</b>`);
   if(state.curso) f.push(`Curso: <b>${esc(state.curso)}</b>`);
   if(state.q)     f.push(`Búsqueda: <b>${esc(state.q)}</b>`);
