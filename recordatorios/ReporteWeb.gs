@@ -168,6 +168,7 @@ const CFG = {
   HOJA_MATRIZ:         "Matriz de Capacitaciones H&S",
   FILA_CURSOS:         6,    // fila con el nombre de cada curso
   FILA_TITULOS:        7,    // fila con Aplicabilidad · Fecha de vencimiento · Soporte
+  FILA_ESTANDAR:       0,    // fila del estándar que agrupa cursos; 0 = buscarla sola
   PRIMERA_FILA_DATOS:  8,
   PRIMERA_COL_CURSO:   10,   // columna J
   CURSOS_ESPERADOS:    62,   // solo para avisar si el número cambia
@@ -326,7 +327,8 @@ function indicePlantas() {
  * Contar posiciones fijas parecía funcionar, pero dos de los 62 cursos no caían
  * donde les tocaba y sus fechas se leían del bloque vecino.
  *
- * Devuelve [{curso, fecha, ancho}, ...] solo con los bloques que tienen fecha.
+ * Devuelve [{curso, inicio, fecha, ancho}, ...] solo con los bloques que tienen
+ * fecha. «inicio» hace falta para leer el estándar, que va combinado arriba.
  */
 function detectarBloques(nombres, titulos) {
   const inicios = [];
@@ -346,9 +348,118 @@ function detectarBloques(nombres, titulos) {
     // Un tramo sin columna de fecha no es un curso (suele ser un rótulo suelto)
     if (iFecha === -1) continue;
 
-    bloques.push({ curso: limpiarCurso(nombres[ini]), fecha: iFecha, ancho: fin - ini });
+    bloques.push({ curso: limpiarCurso(nombres[ini]), inicio: ini, fecha: iFecha, ancho: fin - ini });
   }
   return bloques;
+}
+
+/**
+ * Arrastra una fila de encabezado hacia la derecha y la reparte por bloque.
+ *
+ * El estándar va combinado: cubre varios cursos y el texto solo está en la
+ * primera columna del tramo, así que las demás llegan vacías. Se copia el
+ * último valor visto hasta que aparece otro, igual que se lee en pantalla.
+ */
+function valoresPorBloque(fila, bloques) {
+  const arrastre = [];
+  let ultimo = "";
+  for (let i = 0; i < fila.length; i++) {
+    const v = String(fila[i] == null ? "" : fila[i]).replace(/\s+/g, " ").trim();
+    if (v) ultimo = v;
+    arrastre[i] = ultimo;
+  }
+  return bloques.map(function (b) { return arrastre[b.inicio] || ""; });
+}
+
+/**
+ * El estándar de cada curso, leído de las filas de encabezado.
+ *
+ * Qué fila es se puede fijar en CFG.FILA_ESTANDAR. Con 0 se busca sola, para
+ * que mover una fila en la matriz no obligue a tocar el código: de las filas
+ * por encima del nombre del curso se descarta la que rotula toda la matriz de
+ * una vez (no agrupa nada), la que trae un valor distinto por curso (esa es el
+ * nombre del curso otra vez) y la de puros números (la vigencia en meses); de
+ * las que quedan gana la que más códigos de estándar trae (HSE-001, SGI 12…).
+ *
+ * probar() escribe en el registro qué fila salió elegida y con qué estándares,
+ * que es la forma de comprobar que acertó.
+ *
+ * Devuelve { fila, valores } con valores[i] = estándar del bloque i.
+ */
+function leerEstandares(encabezados, bloques) {
+  const vacio = { fila: 0, valores: [] };
+  if (!bloques.length) return vacio;
+
+  if (CFG.FILA_ESTANDAR >= 1 && CFG.FILA_ESTANDAR <= encabezados.length) {
+    return { fila: CFG.FILA_ESTANDAR,
+             valores: valoresPorBloque(encabezados[CFG.FILA_ESTANDAR - 1], bloques) };
+  }
+
+  const candidatas = [];
+  for (let r = 0; r < encabezados.length; r++) {
+    const fila = r + 1;
+    if (fila === CFG.FILA_CURSOS || fila === CFG.FILA_TITULOS) continue;
+
+    const valores   = valoresPorBloque(encabezados[r], bloques);
+    const distintos = {};
+    let conValor = 0, codigos = 0, numeros = 0;
+
+    valores.forEach(function (v) {
+      if (!v) return;
+      conValor++;
+      distintos[v] = true;
+      if (/^[A-ZÁÉÍÓÚÑ]{2,6}[\s._-]*\d{1,3}\b/.test(v)) codigos++;
+      if (/^[\d.,\s]+$/.test(v)) numeros++;
+    });
+
+    const nDistintos = Object.keys(distintos).length;
+    if (nDistintos < 2 || nDistintos >= bloques.length) continue;
+    if (numeros > conValor / 2) continue;
+
+    candidatas.push({ fila: fila, valores: valores, conValor: conValor, codigos: codigos });
+  }
+
+  candidatas.sort(function (a, b) {
+    return (b.codigos - a.codigos) || (b.conValor - a.conValor) || (a.fila - b.fila);
+  });
+  return candidatas.length ? candidatas[0] : vacio;
+}
+
+/**
+ * { nombre del curso: estándar } para el tablero.
+ *
+ * El estándar depende del curso, no de la persona, así que viaja como una
+ * tabla de 62 entradas en vez de repetirse en cada registro: el filtro nuevo
+ * no le suma peso al enlace. Solo lee las filas de encabezado, que es una
+ * lectura mínima al lado de la matriz entera, y aun así se guarda en caché.
+ */
+function mapaEstandares() {
+  const cache = CacheService.getScriptCache();
+  const guardado = cache.get("est_v1");
+  if (guardado) {
+    try { return JSON.parse(guardado); } catch (err) { /* ilegible: se relee */ }
+  }
+
+  const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CFG.HOJA_MATRIZ);
+  if (!hoja) return {};
+
+  const ancho = hoja.getLastColumn() - CFG.PRIMERA_COL_CURSO + 1;
+  const enc   = hoja.getRange(1, CFG.PRIMERA_COL_CURSO, CFG.FILA_TITULOS, ancho).getValues();
+  const mapa  = mapaDeEstandares(enc, detectarBloques(enc[CFG.FILA_CURSOS - 1],
+                                                      enc[CFG.FILA_TITULOS - 1])).mapa;
+
+  try { cache.put("est_v1", JSON.stringify(mapa), CACHE_MINUTOS * 60); } catch (err) {}
+  return mapa;
+}
+
+/** { fila, mapa } a partir de los encabezados ya leídos. */
+function mapaDeEstandares(encabezados, bloques) {
+  const est  = leerEstandares(encabezados, bloques);
+  const mapa = {};
+  bloques.forEach(function (b, i) {
+    if (est.valores[i]) mapa[b.curso] = est.valores[i];
+  });
+  return { fila: est.fila, mapa: mapa };
 }
 
 /**
@@ -369,12 +480,16 @@ function construirRegistros() {
   const filas       = ultimaFila - CFG.PRIMERA_FILA_DATOS + 1;
   const anchoCursos = hoja.getLastColumn() - CFG.PRIMERA_COL_CURSO + 1;
 
-  const nombresCurso = hoja.getRange(CFG.FILA_CURSOS,  CFG.PRIMERA_COL_CURSO, 1, anchoCursos).getValues()[0];
-  const titulosCurso = hoja.getRange(CFG.FILA_TITULOS, CFG.PRIMERA_COL_CURSO, 1, anchoCursos).getValues()[0];
+  // Los encabezados se traen de una sola vez: el estándar está entre ellos y
+  // una lectura de siete filas cuesta menos que tres lecturas sueltas.
+  const encabezados  = hoja.getRange(1, CFG.PRIMERA_COL_CURSO, CFG.FILA_TITULOS, anchoCursos).getValues();
+  const nombresCurso = encabezados[CFG.FILA_CURSOS  - 1];
+  const titulosCurso = encabezados[CFG.FILA_TITULOS - 1];
   const personas     = hoja.getRange(CFG.PRIMERA_FILA_DATOS, 1, filas, 7).getValues();
   const vencimientos = hoja.getRange(CFG.PRIMERA_FILA_DATOS, CFG.PRIMERA_COL_CURSO, filas, anchoCursos).getValues();
 
-  const bloques = detectarBloques(nombresCurso, titulosCurso);
+  const bloques   = detectarBloques(nombresCurso, titulosCurso);
+  const estandares = mapaDeEstandares(encabezados, bloques);
 
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -387,7 +502,9 @@ function construirRegistros() {
     plantasSinCorreo:  {},
     cursosSinCategoria: {},
     cursosDetectados:  bloques.length,
-    anchosDeBloque:    {}
+    anchosDeBloque:    {},
+    filaEstandar:      estandares.fila,
+    estandares:        estandares.mapa
   };
   bloques.forEach(function (b) {
     avisos.anchosDeBloque[b.ancho] = (avisos.anchosDeBloque[b.ancho] || 0) + 1;
@@ -502,6 +619,7 @@ function doGet(e) {
   plantilla.logoAncho     = LOGO_ANCHO_PX;
   plantilla.saludoJson    = JSON.stringify({ nombres: saludoDePlanta(planta), planta: planta });
   plantilla.gruposSolicitud = JSON.stringify(GRUPOS_CON_SOLICITUD);
+  plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -598,6 +716,7 @@ function registrosDePlanta(planta) {
 function calentarCache() {
   const inicio = new Date().getTime();
   limpiarCache();
+  mapaEstandares();                       // la tabla de estándares, de paso
   const n = registrosDePlanta(Object.keys(CORREOS_PLANTA)[0]).length;
   Logger.log("Caché lista en " + Math.round((new Date().getTime() - inicio) / 1000) +
              " s. La primera planta trae " + n + " registros.");
@@ -847,6 +966,28 @@ function probar() {
   const anchos = Object.keys(a.anchosDeBloque).sort();
   linea.push("  columnas por curso: " +
     anchos.map(function (w) { return w + " -> " + a.anchosDeBloque[w] + " cursos"; }).join(" · "));
+
+  // El estándar sale de una fila de encabezado que el script busca solo. Aquí
+  // se ve cuál eligió: si no es la que toca, se fija en CFG.FILA_ESTANDAR.
+  linea.push("");
+  linea.push("ESTÁNDARES  (fila " + (a.filaEstandar || "?") +
+             (CFG.FILA_ESTANDAR ? ", fijada en CFG.FILA_ESTANDAR" : ", detectada sola") + ")");
+  const porEstandar = {};
+  Object.keys(a.estandares).forEach(function (curso) {
+    const e = a.estandares[curso];
+    (porEstandar[e] = porEstandar[e] || []).push(curso);
+  });
+  const nombresEst = Object.keys(porEstandar).sort();
+  if (!nombresEst.length) {
+    linea.push("  NINGUNO. El tablero no mostrará el filtro por estándar.");
+    linea.push("  Fije CFG.FILA_ESTANDAR con el número de fila donde está.");
+  } else {
+    nombresEst.forEach(function (e) {
+      linea.push("  " + e + "  (" + porEstandar[e].length + " cursos)");
+    });
+    const sinEstandar = a.cursosDetectados - Object.keys(a.estandares).length;
+    if (sinEstandar > 0) linea.push("  " + sinEstandar + " cursos se quedaron sin estándar");
+  }
 
   linea.push("");
   const url = ScriptApp.getService().getUrl();
@@ -1135,13 +1276,14 @@ function excelDePlanta(planta, registros) {
     const hoja = libro.getActiveSheet();
     hoja.setName("Reporte");
 
-    const titulos = ["Capacitación", "Categoría", "Cédula", "Nombre", "Cargo", "Vencimiento", "Días", "Urgencia"];
+    const estandares = mapaEstandares();
+    const titulos = ["Estándar", "Capacitación", "Categoría", "Cédula", "Nombre", "Cargo", "Vencimiento", "Días", "Urgencia"];
     hoja.getRange(1, 1, 1, titulos.length).setValues([titulos])
         .setFontWeight("bold").setBackground("#D9D9D9");
 
     if (registros.length) {
       const filas = registros.map(function (r) {
-        return [r.curso, r.cat, r.id, r.nombre, r.pos, r.fecha, r.dias, r.urg];
+        return [estandares[r.curso] || "", r.curso, r.cat, r.id, r.nombre, r.pos, r.fecha, r.dias, r.urg];
       });
       hoja.getRange(2, 1, filas.length, titulos.length).setValues(filas);
     }
@@ -1180,7 +1322,7 @@ function limpiarCache() {
     claves.push(base + "_n");
     for (let i = 0; i < CACHE_MAX_TROZOS; i++) claves.push(base + "_" + i);
   });
-  claves.push("logo_v1");
+  claves.push("logo_v1", "est_v1");
   CacheService.getScriptCache().removeAll(claves);
   Logger.log("Caché vacía. El próximo que abra un enlace leerá la matriz de nuevo.");
 }
@@ -1212,6 +1354,7 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.logoAncho     = LOGO_ANCHO_PX;
   plantilla.saludoJson    = JSON.stringify({ nombres: "", planta: "" });   // sin saludo: son todas
   plantilla.gruposSolicitud = JSON.stringify([]);   // el archivo suelto no puede enviar
+  plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();

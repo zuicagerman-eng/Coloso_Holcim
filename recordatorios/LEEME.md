@@ -19,6 +19,9 @@ llega al navegador no contiene información de las demás.
 | `ReporteWeb.gs` | Lee la matriz, arma los datos y publica la aplicación web |
 | `reporte.html` | El tablero, tal cual se diseñó, con los datos inyectados al abrirlo |
 
+El estándar de cada curso viaja aparte, como una tabla de 62 entradas, y no
+repetido en cada registro: por eso el filtro nuevo no le suma peso al enlace.
+
 ## Puesta en marcha
 
 Se trabaja en el proyecto de Apps Script del archivo D6 (**Extensiones → Apps Script**).
@@ -92,6 +95,20 @@ reglas de CSS que enumeran cada urgencia).
 Apps Script corren dentro de un marco con restricciones y las descargas que
 genera la propia página suelen quedar bloqueadas. Imprimir sí funciona, y el
 Excel adjunto al correo cubre esa necesidad.
+
+**El filtro por estándar se busca solo.** En la barra, antes del desplegable de
+cursos, hay uno de **estándares**: el estándar agrupa varias capacitaciones (todo
+lo de alturas cuelga del mismo), y al elegirlo el desplegable de cursos se reduce
+a los suyos. El estándar vive en una fila de encabezado de la matriz, combinada
+sobre varias columnas. Qué fila es no está fijado: el script mira las filas por
+encima del nombre del curso y descarta la que rotula la matriz entera, la que
+trae un valor distinto por curso y la de puros números, y se queda con la que
+más códigos de estándar trae. `probar()` escribe qué fila eligió y con qué
+estándares. Si se equivoca, se fija el número en `CFG.FILA_ESTANDAR` y deja de
+buscar.
+
+Si no encuentra ninguno, el desplegable no aparece y el tablero funciona igual
+que antes.
 
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.

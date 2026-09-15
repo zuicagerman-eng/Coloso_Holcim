@@ -547,6 +547,7 @@
       <ul>
         <li><b>Todas / Externas / Internas</b> — por quién la dicta. Las <b>externas</b> las da un proveedor y hay que programarlas con él: alturas, izajes, espacios confinados, conducción defensiva y brigada, con todos sus niveles. Las <b>internas</b> son las de formación propia.</li>
         <li><b>El buscador</b> — encuentra por nombre, cédula, cargo o curso. Con la tecla <b>/</b> salta directo a él.</li>
+        <li><b>Todos los estándares</b> — el estándar agrupa varias capacitaciones (por ejemplo, todo lo de alturas va bajo el mismo). Filtrar por él deja ver de una vez todo lo que cuelga de ese estándar, y el desplegable de al lado se reduce a sus cursos.</li>
         <li><b>Todos los cursos</b> — deja ver un solo curso. Útil para programar una jornada: filtra el curso y ya tiene la lista de convocados.</li>
         <li><b>Ordenar</b> — por fecha, por prioridad, por nombre o por planta.</li>
       </ul>
@@ -707,6 +708,7 @@
       <input id="q" type="search" placeholder="Buscar persona, cédula, cargo o curso…" aria-label="Buscar">
       <kbd>/</kbd>
     </div>
+    <select class="mini" id="estSel" aria-label="Filtrar por estándar" hidden><option value="">Todos los estándares</option></select>
     <select class="mini" id="cursoSel" aria-label="Filtrar por curso"><option value="">Todos los cursos</option></select>
     <select class="mini" id="sortSel" aria-label="Ordenar">
       <option value="fecha">Ordenar: más próximas</option>
@@ -782,7 +784,11 @@ Datos leidos de la matriz al abrir el enlace.
 const DATA = <?!= datosJson ?>;
 
 const SALUDO = <?!= typeof saludoJson !== "undefined" ? saludoJson : "{}" ?>;
-const GRUPOS_SOL = <?!= typeof gruposSolicitud !== "undefined" ? gruposSolicitud : "[]" ?>;   // qué grupos se pueden solicitar
+const GRUPOS_SOL = <?!= typeof gruposSolicitud !== "undefined" ? gruposSolicitud : "[]" ?>;
+/* El estándar es del curso, no de la persona: viaja como tabla de 62 entradas
+   en vez de repetirse en cada registro, así el filtro no pesa en el enlace. */
+const EST_DE_CURSO = <?!= typeof estandaresJson !== "undefined" ? estandaresJson : "{}" ?>;
+const estDe = d => EST_DE_CURSO[d.curso] || "";   // qué grupos se pueden solicitar
 const seleccion = new Map();                  // llave -> registro
 const CORTE = new Date("<?= typeof corteIso !== "undefined" ? corteIso : "" ?>T00:00:00");   // el día en que se abre, no una fecha fija
 const CORTE_TXT = "<?= typeof corteTxt !== "undefined" ? corteTxt : "" ?>";
@@ -799,7 +805,7 @@ const URG = {
 const URG_ORDER = ["vencida","critica","alta","media","baja","pendiente"];
 const PAGE = 60;                              // filas por tanda (render progresivo)
 
-const state = {planta:"<?= typeof plantaInicial !== "undefined" ? plantaInicial : "__ALL__" ?>", grupo:"todas", curso:"", q:"", urg:"", sort:"fecha", tab:"lista"};
+const state = {planta:"<?= typeof plantaInicial !== "undefined" ? plantaInicial : "__ALL__" ?>", grupo:"todas", estandar:"", curso:"", q:"", urg:"", sort:"fecha", tab:"lista"};
 let shown = PAGE, shownPpl = 30;
 
 const $  = s => document.querySelector(s);
@@ -838,6 +844,7 @@ function stateToHash(){
   if(state.planta!=="__ALL__") p.set("p", state.planta);
   if(state.grupo!=="todas")    p.set("g", state.grupo);
   if(state.urg)                p.set("u", state.urg);
+  if(state.estandar)           p.set("e", state.estandar);
   if(state.curso)              p.set("c", state.curso);
   if(state.q)                  p.set("q", state.q);
   if(state.sort!=="fecha")     p.set("s", state.sort);
@@ -852,6 +859,7 @@ function hashToState(){
   if(p.has("p")) state.planta = p.get("p");
   if(p.has("g")) state.grupo  = p.get("g");
   if(p.has("u")) state.urg    = p.get("u");
+  if(p.has("e")) state.estandar = p.get("e");
   if(p.has("c")) state.curso  = p.get("c");
   if(p.has("q")) state.q      = p.get("q");
   if(p.has("s")) state.sort   = p.get("s");
@@ -869,6 +877,7 @@ const byGrupo  = d => {
   if(state.grupo==="interna") return d.grupo==="interna";
   return true;
 };
+const byEstandar = d => !state.estandar || estDe(d)===state.estandar;
 const byCurso = d => !state.curso || d.curso===state.curso;
 const byQ     = d => !state.q || (d.nombre+" "+d.pos+" "+d.curso+" "+d.id+" "+d.planta).toLowerCase().includes(state.q);
 const byUrg   = d => {
@@ -878,7 +887,7 @@ const byUrg   = d => {
   return d.urg===state.urg;
 };
 /* Base sin el filtro de urgencia: alimenta los contadores de los chips */
-function base(){ return DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byCurso(d)&&byQ(d)); }
+function base(){ return DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byEstandar(d)&&byCurso(d)&&byQ(d)); }
 function filtered(){ return base().filter(byUrg); }
 
 const grpRank = {externa:0, interna:1};
@@ -928,9 +937,9 @@ function openModal(){
 function closeModal(){ $("#overlay").hidden = true; $("#reopen").focus(); }
 function applyModal(planta, grupo){
   state.planta = planta; state.grupo = grupo;
-  state.curso = ""; state.q = ""; state.urg = ""; shown = PAGE;
+  state.estandar = ""; state.curso = ""; state.q = ""; state.urg = ""; shown = PAGE;
   $("#plantSel").value = planta; $("#q").value = "";
-  syncGrpSeg(); refreshCursos(); savePref(); closeModal(); render();
+  syncGrpSeg(); refreshEstandares(); refreshCursos(); savePref(); closeModal(); render();
 }
 $("#enter").onclick  = () => applyModal(modalPlanta || "__ALL__", modalGrupo);
 $("#reopen").onclick = openModal;
@@ -1105,12 +1114,13 @@ function buildControls(){
   const ps = $("#plantSel");
   ps.innerHTML = `<option value="__ALL__">Todas las plantas (${DATA.length})</option>`
     + plantasList.map(p=>`<option value="${esc(p)}">${esc(p)} (${PLANTA_N[p]})</option>`).join("");
-  ps.onchange = () => { state.planta = ps.value; state.curso=""; shown=PAGE; refreshCursos(); savePref(); render(); };
+  ps.onchange = () => { state.planta = ps.value; state.curso=""; shown=PAGE; refreshEstandares(); refreshCursos(); savePref(); render(); };
 
   $("#grpSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
-    state.grupo = b.dataset.g; state.curso=""; shown=PAGE; syncGrpSeg(); refreshCursos(); savePref(); render();
+    state.grupo = b.dataset.g; state.curso=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); savePref(); render();
   });
   $("#q").oninput = debounce(e => { state.q = e.target.value.toLowerCase().trim(); shown=PAGE; render(); }, 160);
+  $("#estSel").onchange   = e => { state.estandar = e.target.value; state.curso=""; shown=PAGE; refreshCursos(); render(); };
   $("#cursoSel").onchange = e => { state.curso = e.target.value; shown=PAGE; render(); };
   $("#sortSel").onchange  = e => { state.sort  = e.target.value; render(); };
   $("#csv").onclick   = exportCSV;
@@ -1119,7 +1129,7 @@ function buildControls(){
     try{ await navigator.clipboard.writeText(location.href); flash($("#share"), "✓ Copiado"); }
     catch(e){ flash($("#share"), location.href.slice(0,28)+"…"); }
   };
-  $("#reset").onclick = () => { state.curso=""; state.q=""; state.urg=""; state.grupo="todas"; $("#q").value=""; shown=PAGE; syncGrpSeg(); refreshCursos(); render(); };
+  $("#reset").onclick = () => { state.estandar=""; state.curso=""; state.q=""; state.urg=""; state.grupo="todas"; $("#q").value=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); render(); };
   $("#more").onclick    = () => { shown += PAGE*2; render(); };
   $("#morePpl").onclick = () => { shownPpl += 40; render(); };
 
@@ -1139,8 +1149,22 @@ function syncGrpSeg(){
   $("#viewOpts").querySelectorAll(".vopt").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.g===state.grupo)));
   modalGrupo = state.grupo;
 }
+/* El estándar agrupa varios cursos, así que va primero y deja el desplegable de
+   cursos con solo los suyos. Si la matriz no trae estándares, se oculta. */
+function refreshEstandares(){
+  const sel = $("#estSel");
+  const ests = [...new Set(DATA.filter(d=>byPlanta(d)&&byGrupo(d)).map(estDe).filter(Boolean))]
+                 .sort((a,b)=>a.localeCompare(b));
+  // Con menos de dos no hay nada que separar: se esconde y se deja de filtrar,
+  // para que no quede un filtro puesto en un control que ya no se ve.
+  sel.hidden = ests.length < 2;
+  if(sel.hidden) state.estandar = "";
+  sel.innerHTML = `<option value="">Todos los estándares (${ests.length})</option>`
+    + ests.map(e=>`<option value="${esc(e)}">${esc(e.length>44 ? e.slice(0,44)+"…" : e)}</option>`).join("");
+  if(ests.includes(state.estandar)) sel.value = state.estandar; else state.estandar = "";
+}
 function refreshCursos(){
-  const cursos = [...new Set(DATA.filter(d=>byPlanta(d)&&byGrupo(d)).map(d=>d.curso))].sort((a,b)=>a.localeCompare(b));
+  const cursos = [...new Set(DATA.filter(d=>byPlanta(d)&&byGrupo(d)&&byEstandar(d)).map(d=>d.curso))].sort((a,b)=>a.localeCompare(b));
   const sel = $("#cursoSel"), cur = state.curso;
   sel.innerHTML = `<option value="">Todos los cursos (${cursos.length})</option>`
     + cursos.map(c=>`<option value="${esc(c)}">${esc(c.length>52 ? c.slice(0,52)+"…" : c)}</option>`).join("");
@@ -1154,7 +1178,7 @@ function render(){
   renderKpis(rows);
   $("#nLista").textContent   = rows.length;
   $("#nPersona").textContent = new Set(rows.map(r=>r.id)).size;
-  $("#reset").hidden = !(state.curso || state.q || state.urg || state.grupo!=="todas");
+  $("#reset").hidden = !(state.estandar || state.curso || state.q || state.urg || state.grupo!=="todas");
   if(state.tab==="lista")        renderList(rows);
   else if(state.tab==="persona") renderPeople(rows);
   else                           renderDash(rows);
@@ -1373,14 +1397,14 @@ function bars(sel, arr, trunc){
 function exportCSV(){
   const rows = [...filtered()].sort(sortRows);
   if(!rows.length){ flash($("#csv"), "Sin datos"); return; }
-  const head = ["Planta","Nombre","Cedula","Cargo","Curso","Categoria","Grupo","Fecha_vencimiento","Dias_restantes","Estado"];
+  const head = ["Planta","Nombre","Cedula","Cargo","Estandar","Curso","Categoria","Grupo","Fecha_vencimiento","Dias_restantes","Estado"];
   const lines = [head.join(";")].concat(rows.map(r=>[
-    r.planta, r.nombre, r.id, r.pos, r.curso, r.cat, GRUPO_LABEL[r.grupo],
+    r.planta, r.nombre, r.id, r.pos, estDe(r), r.curso, r.cat, GRUPO_LABEL[r.grupo],
     r.fecha || "", r.urg==="pendiente" ? "" : r.dias, URG[r.urg].lb
   ].map(x=>`"${String(x).replace(/"/g,'""')}"`).join(";")));
   const blob = new Blob(["﻿"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
   const tag  = state.planta==="__ALL__" ? "todas" : state.planta.replace(/[^\w]+/g,"_");
-  guardar(blob, `vencimientos_${tag}_${state.grupo}_2026-09-03.csv`, rows.length);
+  guardar(blob, `vencimientos_${tag}_${state.grupo}_${[CORTE.getFullYear(),String(CORTE.getMonth()+1).padStart(2,"0"),String(CORTE.getDate()).padStart(2,"0")].join("-")}.csv`, rows.length);
 }
 
 /* Guarda el archivo: descarga directa al abrirlo en el computador, y a través
@@ -1414,6 +1438,7 @@ function renderFoot(rows){
   f.push(`Planta: <b>${state.planta==="__ALL__" ? "todas" : esc(state.planta)}</b>`);
   f.push(`Vista: <b>${esc({todas:"Todas",externa:"Externas",interna:"Internas"}[state.grupo])}</b>`);
   if(state.urg)   f.push(`Urgencia: <b>${esc(state.urg==="urgente"?"Acción inmediata":state.urg==="d30"?"≤ 30 días":URG[state.urg].lb)}</b>`);
+  if(state.estandar) f.push(`Estándar: <b>${esc(state.estandar)}</b>`);
   if(state.curso) f.push(`Curso: <b>${esc(state.curso)}</b>`);
   if(state.q)     f.push(`Búsqueda: <b>${esc(state.q)}</b>`);
   $("#printHead").innerHTML =
@@ -1433,7 +1458,8 @@ function syncUI(){
   $("#plantSel").value = state.planta;
   $("#q").value = state.q;
   $("#sortSel").value = state.sort;
-  syncGrpSeg(); refreshCursos();
+  syncGrpSeg(); refreshEstandares(); refreshCursos();
+  $("#estSel").value = state.estandar;
   $("#cursoSel").value = state.curso;
   modalPlanta = state.planta;
   shown = PAGE; shownPpl = 30;
