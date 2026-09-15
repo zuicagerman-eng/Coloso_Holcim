@@ -16,7 +16,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 /** Mientras esté en false, enviarEnlacesSemanales() no manda ningún correo. */
-const ENVIAR_CORREOS = false;
+const ENVIAR_CORREOS = true;
 
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
 const CORREOS_PLANTA = {
