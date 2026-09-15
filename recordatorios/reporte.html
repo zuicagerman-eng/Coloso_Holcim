@@ -184,6 +184,12 @@
   .sol-aviso{font-size:12.5px;line-height:1.55;margin:12px 0 0;padding:10px 13px;border-radius:9px}
   .sol-aviso.ok{background:var(--u-baja-s);color:var(--u-baja)}
   .sol-aviso.mal{background:var(--u-vencida-s);color:var(--u-vencida)}
+  .aviso-carga{
+    font-size:12.5px;padding:7px 12px;border-radius:8px;align-self:center;
+    background:var(--u-baja-s);color:var(--u-baja);font-weight:600
+  }
+  .aviso-carga.mal{background:var(--u-vencida-s);color:var(--u-vencida)}
+  .aviso-carga[hidden]{display:none}
 
   .paso{display:flex;gap:13px;align-items:flex-start;margin:0 0 16px}
   .paso .num{
@@ -519,7 +525,7 @@
       <div class="nota">El enlace es solo de su planta. No puede ver las de otras, y en las otras no ven la suya.</div>
 
       <h3>2 · LA BARRA DE ARRIBA</h3>
-      <div class="paso"><span class="num">1</span><span class="txt"><b>Planta</b> — el nombre de su planta y, entre paréntesis, cuántos registros tiene en total.</span></div>
+      <div class="paso"><span class="num">1</span><span class="txt"><b>Planta</b> — su enlace abre siempre en su planta, con el número de registros entre paréntesis. En la lista están <b>todas las demás</b>: si elige otra, se carga en ese momento (tarda unos segundos la primera vez, después es instantáneo). Y <b>Todas las plantas</b> las junta, aunque cargarlas todas sí toma su tiempo.</span></div>
       <div class="paso"><span class="num">2</span><span class="txt"><b>Modo oscuro / claro</b> — cambia los colores de la pantalla. Queda guardado para la próxima vez.</span></div>
       <div class="paso"><span class="num">3</span><span class="txt"><b>¿Primera vez?</b> — este botón. Abre esta guía.</span></div>
       <div class="paso"><span class="num">4</span><span class="txt"><b>Ayuda</b> — un resumen más corto, para cuando solo quiera recordar un detalle.</span></div>
@@ -741,6 +747,7 @@
     <button class="btn" id="print" title="Imprimir la lista o guardarla como PDF">⎙ Imprimir / PDF</button>
     <button class="btn" id="share" title="Copia el enlace con los filtros que tienes puestos">⧉ Copiar enlace</button>
     <button class="btn btn-primary" id="reset" hidden>✕ Quitar filtros</button>
+    <span class="aviso-carga" id="avisoCarga" role="status" aria-live="polite" hidden></span>
   </div>
 
   <!-- Chips de urgencia -->
@@ -802,7 +809,11 @@
    Vencimientos de capacitaciones · H&S Holcim Colombia
 Datos leidos de la matriz al abrir el enlace.
    ============================================================================ */
-const DATA = <?!= datosJson ?>;
+/* Empieza con la planta del enlace y crece si alguien pide otra. */
+const DATA = <?!= typeof datosJson !== "undefined" ? datosJson : "[]" ?>;
+/* {planta: {n, urg}} de TODAS las plantas: unos bytes que permiten ofrecerlas
+   en el selector sin cargarlas. Vacío en el HTML descargado, que ya las trae. */
+const RESUMEN = <?!= typeof resumenJson !== "undefined" ? resumenJson : "{}" ?>;
 
 const SALUDO = <?!= typeof saludoJson !== "undefined" ? saludoJson : "{}" ?>;
 const GRUPOS_SOL = <?!= typeof gruposSolicitud !== "undefined" ? gruposSolicitud : "[]" ?>;
@@ -838,9 +849,70 @@ const fmtCorto = iso => { const [,m,d] = iso.split("-"); return `${+d} ${MES[+m-
 const parseISO = iso => { const [y,m,d] = iso.split("-").map(Number); return new Date(y,m-1,d); };
 
 /* Conteo por planta (una sola pasada) y orden por volumen */
-const PLANTA_N = DATA.reduce((m,d)=>(m[d.planta]=(m[d.planta]||0)+1,m),{});
-const PLANTA_URG = DATA.reduce((m,d)=>{ if(d.dias<=7) m[d.planta]=(m[d.planta]||0)+1; return m; },{});
+const hayResumen = Object.keys(RESUMEN).length > 0;
+const PLANTA_N   = hayResumen ? Object.keys(RESUMEN).reduce((m,p)=>(m[p]=RESUMEN[p].n,m),{})
+                              : DATA.reduce((m,d)=>(m[d.planta]=(m[d.planta]||0)+1,m),{});
+const PLANTA_URG = hayResumen ? Object.keys(RESUMEN).reduce((m,p)=>(m[p]=RESUMEN[p].urg,m),{})
+                              : DATA.reduce((m,d)=>{ if(d.dias<=7) m[d.planta]=(m[d.planta]||0)+1; return m; },{});
 const plantasList = Object.keys(PLANTA_N).sort((a,b)=>PLANTA_N[b]-PLANTA_N[a] || a.localeCompare(b));
+const TOTAL_N = Object.keys(PLANTA_N).reduce((t,p)=>t+PLANTA_N[p], 0);
+
+/* ---------- Las demás plantas, solo si se piden ----------
+   El enlace trae la planta de cada quien, que es lo que lo hace abrir rápido.
+   Al elegir otra en el selector se pide al servidor y se suma a lo que ya hay;
+   una vez traída, moverse entre ellas es instantáneo. */
+const cargadas = new Set(DATA.map(d => d.planta));
+let pidiendo = false;
+let plantaPrevia = "__ALL__";   // a la que volver si una carga falla
+
+const hayServidor = () => typeof google !== "undefined" && google.script && google.script.run;
+
+function pedirPlanta(p){
+  return new Promise((ok, mal) => {
+    google.script.run
+      .withSuccessHandler(rs => { (rs||[]).forEach(r => DATA.push(r)); cargadas.add(p); ok(); })
+      .withFailureHandler(mal)
+      .registrosDeOtraPlanta(p);
+  });
+}
+
+function aviso(txt, mal){
+  const a = $("#avisoCarga");
+  if(!txt){ a.hidden = true; return; }
+  a.textContent = txt;
+  a.className = "aviso-carga" + (mal ? " mal" : "");
+  a.hidden = false;
+}
+
+/* Trae lo que falte para poder mostrar «destino». Devuelve false si no pudo. */
+async function asegurarPlantas(destino){
+  const quiero = destino === "__ALL__" ? plantasList : [destino];
+  const faltan = quiero.filter(p => !cargadas.has(p));
+  if(!faltan.length) return true;
+
+  if(!hayServidor()){
+    aviso("Esta copia descargada solo trae los datos que ya tiene. Para las demás plantas hay que abrir el enlace del reporte.", true);
+    return false;
+  }
+
+  pidiendo = true;
+  $("#plantSel").disabled = true;
+  try{
+    for(let i=0; i<faltan.length; i++){
+      aviso(faltan.length===1 ? `Cargando ${faltan[0]}…`
+                              : `Cargando plantas… ${i+1} de ${faltan.length}`);
+      await pedirPlanta(faltan[i]);
+    }
+    aviso("");
+    return true;
+  }catch(err){
+    aviso("No se pudo cargar: " + ((err && err.message) ? err.message : err), true);
+    return false;
+  }finally{
+    pidiendo = false;
+    $("#plantSel").disabled = false;
+  }
+}
 
 /* ---------- Tema claro / oscuro ---------- */
 function applyTheme(t){
@@ -967,10 +1039,20 @@ function applyModal(planta, grupo){
   state.planta = planta; state.grupo = grupo;
   state.estandar = ""; state.curso = ""; state.mes = ""; state.soloSel = false;
   state.q = ""; state.urg = ""; shown = PAGE;
+  plantaPrevia = planta;
   $("#plantSel").value = planta; $("#q").value = "";
   syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); closeModal(); render();
 }
-$("#enter").onclick  = () => applyModal(modalPlanta || "__ALL__", modalGrupo);
+$("#enter").onclick = async () => {
+  const destino = modalPlanta || "__ALL__";
+  const btn = $("#enter"), txt = btn.textContent;
+  btn.disabled = true;
+  if(destino !== "__ALL__" && !cargadas.has(destino)) btn.textContent = "Cargando " + destino + "…";
+  else if(destino === "__ALL__" && plantasList.some(p=>!cargadas.has(p))) btn.textContent = "Cargando las plantas…";
+  const listo = await asegurarPlantas(destino);
+  btn.disabled = false; btn.textContent = txt;
+  if(listo) applyModal(destino, modalGrupo);
+};
 $("#reopen").onclick = openModal;
 $("#overlay").addEventListener("click", e => { if(e.target.id==="overlay") closeModal(); });
 
@@ -1191,7 +1273,15 @@ function buildControls(){
   const ps = $("#plantSel");
   ps.innerHTML = `<option value="__ALL__">Todas las plantas (${DATA.length})</option>`
     + plantasList.map(p=>`<option value="${esc(p)}">${esc(p)} (${PLANTA_N[p]})</option>`).join("");
-  ps.onchange = () => { state.planta = ps.value; state.curso=""; shown=PAGE; refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render(); };
+  plantaPrevia = state.planta;
+  ps.onchange = async () => {
+    const destino = ps.value;
+    if(pidiendo){ ps.value = state.planta; return; }
+    if(!await asegurarPlantas(destino)){ ps.value = plantaPrevia; return; }
+    plantaPrevia = state.planta = destino;
+    state.estandar=""; state.curso=""; state.mes=""; shown=PAGE;
+    refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render();
+  };
 
   $("#grpSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
     state.grupo = b.dataset.g; state.curso=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render();
@@ -1547,8 +1637,9 @@ function renderFoot(rows){
     `<h2 style="margin:0 0 4px;font-size:16px">Vencimientos de capacitaciones · H&amp;S Holcim Colombia</h2>
      <div style="font-size:11.5px;color:#5d7186">${f.join(" · ")} · ${rows.length} registros · Corte ${CORTE_TXT}</div>`;
   $("#foot").innerHTML =
-    `<span class="no-print">Datos de la matriz al <b>${CORTE_TXT}</b> · ${DATA.length} registros totales ·
-     ${new Set(DATA.map(d=>d.id)).size} personas · ${plantasList.length} plantas.<br>
+    `<span class="no-print">Datos de la matriz al <b>${CORTE_TXT}</b> · ${DATA.length} registros cargados
+     de ${TOTAL_N} en ${plantasList.length} plantas · ${new Set(DATA.map(d=>d.id)).size} personas a la vista.<br>
+     Las demás plantas se cargan al elegirlas en el selector de arriba.<br>
      Los días restantes se calculan desde hoy. ¿Dudas sobre cómo usarlo? El botón <b>Ayuda</b> está arriba a la derecha.<br>
      Herramienta interna de Salud y Seguridad — contiene datos personales, no distribuir fuera de la organización.</span>`;
 }
@@ -1558,6 +1649,7 @@ function renderFoot(rows){
 function syncUI(){
   if(state.planta!=="__ALL__" && !plantasList.includes(state.planta)) state.planta = "__ALL__";
   $("#plantSel").value = state.planta;
+  plantaPrevia = state.planta;
   $("#q").value = state.q;
   $("#sortSel").value = state.sort;
   syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses();
@@ -1570,13 +1662,21 @@ function syncUI(){
 }
 $("#corteTxt").textContent = CORTE_TXT;
 buildModal(); buildControls();
-(function init(){
+(async function init(){
+  // El enlace trae su planta y esa manda: de Mondoñedo para Mondoñedo, aunque
+  // el navegador recuerde que la última vez se miró otra. La preferencia
+  // guardada solo decide cuando el enlace no dice nada (el archivo descargado).
+  const enlaceTraePlanta = state.planta !== "__ALL__";
   const fromHash = hashToState();
   const pref = loadPref();
-  if(!fromHash && pref && pref.planta){ state.planta = pref.planta; state.grupo = pref.grupo || "todas"; }
+  if(!fromHash && pref){
+    if(!enlaceTraePlanta && pref.planta) state.planta = pref.planta;
+    if(pref.grupo) state.grupo = pref.grupo;
+  }
+  if(state.planta !== "__ALL__" && !cargadas.has(state.planta)) await asegurarPlantas(state.planta);
   syncUI();
-  // Con una sola planta el selector no tiene sentido: el enlace ya viene con la suya.
-  const unaPlanta = new Set(DATA.map(d => d.planta)).size <= 1;
+  // Con una sola planta disponible el selector no tiene sentido.
+  const unaPlanta = plantasList.length <= 1;
   if(SALUDO && SALUDO.planta) openSaludo();
   else if(!fromHash && !pref && !unaPlanta) openModal();
 })();

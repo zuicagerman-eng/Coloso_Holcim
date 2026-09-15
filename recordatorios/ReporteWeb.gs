@@ -146,10 +146,7 @@ function enlaceDeCurso(curso, diasVencida) {
  * programar con un proveedor, en la franja de tiempo donde aún se puede hacer.
  */
 const CORREO_TABLA = {
-  grupos:        ["externa"],   // las internas se mencionan, no se listan
-  vencidasDesde: 30,   // vencidas de los últimos 30 días (más atrás ya no es novedad)
-  proximosHasta: 60,   // y lo que vence en los próximos 60
-  maxFilas:      80    // si son más, se indica cuántas quedan por ver en el reporte
+  grupoArriba: "externa"   // el bloque que encabeza la tabla: lo que hay que programar
 };
 
 /**
@@ -620,6 +617,7 @@ function doGet(e) {
   plantilla.saludoJson    = JSON.stringify({ nombres: saludoDePlanta(planta), planta: planta });
   plantilla.gruposSolicitud = JSON.stringify(GRUPOS_CON_SOLICITUD);
   plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
+  plantilla.resumenJson     = JSON.stringify(resumenDePlantas());
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -692,7 +690,17 @@ function registrosDePlanta(planta) {
   if (guardado) {
     try { return JSON.parse(guardado); } catch (err) { /* ilegible: se recalcula */ }
   }
+  return recalcularTodo().porPlanta[planta] || [];
+}
 
+/**
+ * Lee la matriz una vez y deja las dieciséis plantas en caché.
+ *
+ * De paso arma el resumen —cuántos vencimientos y cuántos urgentes tiene cada
+ * planta—, que es lo que necesita el selector para mostrar las demás plantas
+ * sin tener que cargarlas.
+ */
+function recalcularTodo() {
   const todos = construirRegistros().registros;
 
   const porPlanta = {};
@@ -700,11 +708,45 @@ function registrosDePlanta(planta) {
     (porPlanta[r.planta] = porPlanta[r.planta] || []).push(r);
   });
 
+  const resumen = {};
   Object.keys(CORREOS_PLANTA).forEach(function (p) {
-    cacheGuardar(claveDeCache(p), JSON.stringify(porPlanta[p] || []));
+    const suyos = porPlanta[p] || [];
+    cacheGuardar(claveDeCache(p), JSON.stringify(suyos));
+    resumen[p] = {
+      n:   suyos.length,
+      urg: suyos.filter(function (r) { return r.urg !== "pendiente" && r.dias <= 7; }).length
+    };
   });
 
-  return porPlanta[planta] || [];
+  try {
+    CacheService.getScriptCache().put("res_v1", JSON.stringify(resumen), CACHE_MINUTOS * 60);
+  } catch (err) { /* el resumen es una comodidad, no vale fallar por él */ }
+
+  return { porPlanta: porPlanta, resumen: resumen };
+}
+
+/** Cuántos vencimientos tiene cada planta, para el selector. Pesa unos bytes. */
+function resumenDePlantas() {
+  const guardado = CacheService.getScriptCache().get("res_v1");
+  if (guardado) {
+    try { return JSON.parse(guardado); } catch (err) { /* ilegible: se recalcula */ }
+  }
+  return recalcularTodo().resumen;
+}
+
+/**
+ * Los registros de otra planta, cuando alguien la pide con el selector.
+ *
+ * El enlace llega con su planta ya dentro, que es lo que hace que abra rápido.
+ * Las demás no viajan hasta que se piden: quien solo mira la suya no paga el
+ * peso de las otras quince.
+ */
+function registrosDeOtraPlanta(pedida) {
+  const planta = indicePlantas()[normalizar(pedida)];
+  if (!planta) {
+    throw new Error("No reconozco la planta «" + String(pedida == null ? "" : pedida).slice(0, 40) + "».");
+  }
+  return registrosDePlanta(planta);
 }
 
 /**
@@ -819,6 +861,21 @@ function escapar(texto) {
  * no sea pasada. Si algo no cuadra se ignora en silencio: es un campo opcional
  * y no tiene sentido tumbar la solicitud entera por él.
  */
+const MESES_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+                  "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const DIAS_ES  = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+/**
+ * "15 de septiembre de 2026".
+ *
+ * No se usa Utilities.formatDate con MMMM: eso toma el idioma del proyecto de
+ * Apps Script, que está en inglés, y en el correo salía "15 de September".
+ */
+function fechaEnEspanol(d, conDiaSemana) {
+  const txt = d.getDate() + " de " + MESES_ES[d.getMonth()] + " de " + d.getFullYear();
+  return conDiaSemana ? DIAS_ES[d.getDay()] + " " + txt : txt;
+}
+
 function fechaTentativa(valor) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor == null ? "" : valor).trim());
   if (!m) return "";
@@ -832,10 +889,7 @@ function fechaTentativa(valor) {
   if (d < hoy) return "";
   if (anio > hoy.getFullYear() + 3) return "";   // un año disparatado no es una propuesta
 
-  const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
-                 "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-  const DIAS  = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-  return DIAS[d.getDay()] + " " + dia + " de " + MESES[mes - 1] + " de " + anio;
+  return fechaEnEspanol(d, true);
 }
 
 function enviarSolicitud(datos) {
@@ -905,7 +959,8 @@ function enviarSolicitud(datos) {
       : "") +
     "<p style=\"color:#5d7186;font-size:12.5px\">Solicitud enviada" +
     (solicitante ? " por <b>" + escapar(solicitante) + "</b>" : "") + " el " +
-    Utilities.formatDate(new Date(), CFG.ZONA, "d 'de' MMMM 'de' yyyy 'a las' HH:mm") +
+    fechaEnEspanol(new Date(), false) + " a las " +
+    Utilities.formatDate(new Date(), CFG.ZONA, "HH:mm") +
     " desde el reporte de capacitaciones.</p></div>";
 
   const correo = {
@@ -1049,34 +1104,15 @@ function probar() {
 function armarCorreoDePlanta(planta, registros, enlace, fecha) {
   const tabla = tablaDelCorreo(registros);
 
-    // Lo que no va en la tabla se menciona, para que se sepa que está y dónde verlo
-  const aparte = [];
-    if (tabla.internas) {
-    aparte.push("<b>" + tabla.internas + "</b> de formación interna");
-    }
-    if (tabla.pendientes) {
-    aparte.push("<b>" + tabla.pendientes + "</b> que nunca se han realizado");
-    }
-
-  const puntos = tabla.listadas
-    ? "<p>Los puntos relevantes de esta semana son las capacitaciones <b>externas</b> " +
-      "vencidas en el último mes o por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días:</p>" +
-      tabla.html
-    : "<p>Esta semana <b>no hay capacitaciones externas</b> vencidas en el último mes " +
-      "ni por vencer en los próximos " + CORREO_TABLA.proximosHasta + " días.</p>";
-
-    // Las de más atraso no se listan, pero no se callan
-  const viejas = tabla.antiguas
-    ? "<p style=\"background:#fbe9e7;border-left:3px solid #8f1d16;padding:11px 14px;" +
-      "border-radius:0 8px 8px 0;margin:0 0 14px\">Hay además <b style=\"color:#8f1d16\">" +
-      tabla.antiguas + "</b> externas con <b>más de " + CORREO_TABLA.vencidasDesde +
-      " días vencidas</b>. No se listan aquí para no alargar el correo: se consultan en el reporte.</p>"
-    : "";
-
-  const cola = aparte.length
-    ? "<p>Aparte de lo anterior, la planta tiene " + aparte.join(" y ") +
-      ". Todo eso se consulta en el reporte.</p>"
-    : "";
+  const puntos = tabla.filas.length
+    ? "<p>Estas son las personas de la planta a las que les falta cada capacitación:</p>" +
+      tabla.html +
+      "<p style=\"font-size:12.5px;color:#5d7186;margin:-6px 0 18px\">" +
+      "Se cuentan <b>personas</b>, no capacitaciones. En total son <b>" + tabla.personas +
+      "</b> personas distintas; una misma persona puede contar en varias filas si le falta " +
+      "más de una capacitación.</p>"
+    : "<p>Esta semana la planta <b>no tiene capacitaciones vencidas, por vencer ni sin realizar</b>. " +
+      "Nada que programar.</p>";
 
   const cuerpo =
     "<div style=\"font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:14px;color:#0f1e2b;line-height:1.6\">" +
@@ -1084,18 +1120,16 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
     "<p>De parte de <b>Capacitaciones H&amp;S</b> enviamos el informe semanal de las capacitaciones de la " +
     "planta <b>" + escapar(planta) + "</b>, con corte al " + fecha + ".</p>" +
     puntos +
-    viejas +
-    cola +
-    "<p style=\"margin:22px 0 10px\">Para más información sobre las capacitaciones internas, " +
-    "o para solicitar las que estén pendientes, entre al siguiente enlace:</p>" +
+    "<p style=\"margin:22px 0 10px\">Para ver quién es quién, solicitar la programación de las externas " +
+    "o hacer en línea las que se pueden, entre al siguiente enlace:</p>" +
     "<p style=\"margin:0 0 22px\">" +
     "<a href=\"" + enlace + "\" style=\"background:#1d4370;color:#fff;text-decoration:none;" +
     "padding:12px 22px;border-radius:8px;display:inline-block;font-weight:700\">Ver el reporte de " +
     escapar(planta) + "</a></p>" +
-    "<p style=\"color:#5d7186;font-size:12.5px\">El enlace muestra siempre los datos del momento en que se abre " +
-    "y solo funciona con su cuenta de Holcim. Se adjunta el Excel para quien necesite trabajar los datos.</p>" +
+    "<p style=\"color:#5d7186;font-size:12.5px\">El enlace abre en " + escapar(planta) + ", y desde el " +
+    "selector de planta se pueden consultar las demás. Muestra siempre los datos del momento en que se " +
+    "abre y solo funciona con su cuenta de Holcim. Se adjunta el Excel para quien necesite trabajar los datos.</p>" +
     "</div>";
-
 
   return {
     asunto: "Informe semanal de capacitaciones · " + planta,
@@ -1114,7 +1148,7 @@ function enviarEnlacesSemanales() {
   if (!url) throw new Error("No hay aplicación web publicada. Publíquela antes (ver LEEME.md).");
 
   const todos = construirRegistros().registros;
-  const fecha = Utilities.formatDate(new Date(), CFG.ZONA, "d 'de' MMMM 'de' yyyy");
+  const fecha = fechaEnEspanol(new Date(), false);
 
   const porPlanta = {};
   todos.forEach(function (r) {
@@ -1124,9 +1158,18 @@ function enviarEnlacesSemanales() {
   // La matriz ya está leída: se deja la caché lista antes de mandar los correos.
   // Es el momento en que más falta hace, porque en cuanto salgan van a entrar
   // todos a la vez y nadie debería ser quien pague la primera lectura.
+  const resumen = {};
   Object.keys(CORREOS_PLANTA).forEach(function (planta) {
-    cacheGuardar(claveDeCache(planta), JSON.stringify(porPlanta[planta] || []));
+    const suyos = porPlanta[planta] || [];
+    cacheGuardar(claveDeCache(planta), JSON.stringify(suyos));
+    resumen[planta] = {
+      n:   suyos.length,
+      urg: suyos.filter(function (r) { return r.urg !== "pendiente" && r.dias <= 7; }).length
+    };
   });
+  try {
+    CacheService.getScriptCache().put("res_v1", JSON.stringify(resumen), CACHE_MINUTOS * 60);
+  } catch (err) {}
 
   Object.keys(CORREOS_PLANTA).forEach(function (planta) {
     const registros = porPlanta[planta] || [];
@@ -1158,70 +1201,95 @@ function enviarEnlacesSemanales() {
  * Devuelve { html, listadas, restantes, internas, pendientes }.
  */
 function tablaDelCorreo(registros) {
-  const enFranja = registros.filter(function (r) {
-    if (r.urg === "pendiente") return false;                       // sin fecha, van aparte
-    if (CORREO_TABLA.grupos.indexOf(r.grupo) === -1) return false;
-    return r.dias >= -CORREO_TABLA.vencidasDesde &&
-           r.dias <=  CORREO_TABLA.proximosHasta;
-  }).sort(function (a, b) { return a.dias - b.dias; });            // lo más vencido primero
+  // Una persona puede tener varias capacitaciones de lo mismo. Lo que se cuenta
+  // son PERSONAS: "de alturas faltan 12" se entiende; "hay 19 vencimientos de
+  // alturas" no dice a cuánta gente hay que mover.
+  const porCat = {};
+  const todas  = {};
 
-  const muestra   = enFranja.slice(0, CORREO_TABLA.maxFilas);
-  const restantes = enFranja.length - muestra.length;
+  registros.forEach(function (r) {
+    const c = porCat[r.cat] || (porCat[r.cat] = {
+      cat: r.cat, grupo: r.grupo, vencidas: {}, proximas: {}, sinHacer: {}, personas: {}
+    });
+    const casilla = (r.urg === "pendiente") ? c.sinHacer : (r.dias < 0 ? c.vencidas : c.proximas);
+    casilla[r.id]   = true;
+    c.personas[r.id] = true;
+    todas[r.id]      = true;
+  });
 
-  const internas   = registros.filter(function (r) {
-    return r.urg !== "pendiente" && CORREO_TABLA.grupos.indexOf(r.grupo) === -1;
-  }).length;
-  const pendientes = registros.filter(function (r) { return r.urg === "pendiente"; }).length;
+  const cuenta = function (o) { return Object.keys(o).length; };
 
-  // Las de riesgo o de ley con más atraso del que abarca la tabla. No se listan
-  // para no alargar el correo, pero se dice cuántas son y dónde verlas.
-  const antiguas = registros.filter(function (r) {
-    return r.urg !== "pendiente" &&
-           CORREO_TABLA.grupos.indexOf(r.grupo) !== -1 &&
-           r.dias < -CORREO_TABLA.vencidasDesde;
-  }).length;
+  const filas = Object.keys(porCat).map(function (k) {
+    const c = porCat[k];
+    return { cat: c.cat, grupo: c.grupo,
+             vencidas: cuenta(c.vencidas), proximas: cuenta(c.proximas),
+             sinHacer: cuenta(c.sinHacer), personas: cuenta(c.personas) };
+  });
 
-  const cuentas = { listadas: muestra.length, restantes: restantes, antiguas: antiguas,
-                    internas: internas, pendientes: pendientes };
+  // Primero el grupo que hay que programar con proveedor, y dentro de cada
+  // grupo lo más vencido arriba: el orden del correo es el orden de la agenda.
+  filas.sort(function (a, b) {
+    const ga = a.grupo === CORREO_TABLA.grupoArriba ? 0 : 1;
+    const gb = b.grupo === CORREO_TABLA.grupoArriba ? 0 : 1;
+    return (ga - gb) || (b.vencidas - a.vencidas) || (b.personas - a.personas) ||
+           a.cat.localeCompare(b.cat);
+  });
 
-  if (!muestra.length) {
-    cuentas.html = "";
-    return cuentas;
-  }
+  return { filas: filas, personas: cuenta(todas), registros: registros.length,
+           html: htmlDeTabla(filas) };
+}
 
-  const filas = muestra.map(function (r) {
-    const vencida = r.dias < 0;
-    const estado  = vencida      ? "Vencida hace " + Math.abs(r.dias) + " días"
-                  : r.dias === 0 ? "Vence hoy"
-                  : "Vence en " + r.dias + " días";
-    const color   = vencida ? "#8f1d16" : r.dias <= 7 ? "#d92f28" : r.dias <= 15 ? "#e07a0c" : "#5d7186";
-    const celda   = "padding:8px 10px;border-bottom:1px solid #e2e8ef;font-size:12.5px";
+/** La tabla del correo a partir de las filas ya contadas. */
+function htmlDeTabla(filas) {
+  if (!filas.length) return "";
 
-    return "<tr>" +
-      "<td style='" + celda + "'>" + escapar(r.nombre) + "<br>" +
-        "<span style='color:#5d7186;font-size:11.5px'>CC " + escapar(r.id) + " &middot; " + escapar(r.pos) + "</span></td>" +
-      "<td style='" + celda + "'>" + escapar(r.curso) + "<br>" +
-        "<span style='color:#5d7186;font-size:11.5px'>" + escapar(r.cat) + "</span></td>" +
-      "<td style='" + celda + ";white-space:nowrap'>" + (r.fecha ? escapar(r.fecha) : "&mdash;") + "</td>" +
-      "<td style='" + celda + ";white-space:nowrap;color:" + color + ";font-weight:700'>" + estado + "</td>" +
-      "</tr>";
+  const celda  = "padding:8px 11px;border-bottom:1px solid #e2e8ef;font-size:13px";
+  const numero = celda + ";text-align:center;white-space:nowrap";
+  const total  = { vencidas: 0, proximas: 0, sinHacer: 0 };
+
+  let grupoActual = null;
+  const cuerpo = filas.map(function (f) {
+    total.vencidas += f.vencidas;
+    total.proximas += f.proximas;
+    total.sinHacer += f.sinHacer;
+
+    let separador = "";
+    if (f.grupo !== grupoActual) {
+      grupoActual = f.grupo;
+      separador =
+        "<tr><td colspan='4' style=\"padding:11px 11px 5px;font-size:11.5px;font-weight:700;" +
+        "letter-spacing:.06em;text-transform:uppercase;color:#5d7186;background:#f4f7fa\">" +
+        (grupoActual === "externa"
+          ? "Externas &middot; se programan con el proveedor"
+          : "Internas &middot; varias se hacen en línea desde el reporte") +
+        "</td></tr>";
+    }
+
+    // Un cero no es una alerta: se pinta apagado para que salten los que no lo son
+    const n = function (v, color) {
+      return "<td style='" + numero + (v ? ";color:" + color + ";font-weight:700" : ";color:#b6c2cf") + "'>" +
+             (v || "&middot;") + "</td>";
+    };
+
+    return separador +
+      "<tr><td style='" + celda + "'>" + escapar(f.cat) + "</td>" +
+      n(f.vencidas, "#8f1d16") + n(f.proximas, "#e07a0c") + n(f.sinHacer, "#5d7186") + "</tr>";
   }).join("");
 
-  const html =
-    "<table style=\"border-collapse:collapse;width:100%;margin:16px 0\">" +
-    "<thead><tr style=\"background:#1d4370;color:#fff\">" +
-    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Persona</th>" +
-    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Capacitación</th>" +
-    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Vence</th>" +
-    "<th style='padding:9px 10px;text-align:left;font-size:12px'>Estado</th>" +
-    "</tr></thead><tbody>" + filas + "</tbody></table>" +
-    (restantes
-      ? "<p style=\"font-size:12.5px;color:#5d7186;margin:-6px 0 14px\">Y " + restantes +
-        " más en el reporte.</p>"
-      : "");
+  const pie =
+    "<tr style=\"background:#eef3f8\">" +
+    "<td style='" + celda + ";border-bottom:0;font-weight:700'>Total</td>" +
+    "<td style='" + numero + ";border-bottom:0;font-weight:700'>" + (total.vencidas || "&middot;") + "</td>" +
+    "<td style='" + numero + ";border-bottom:0;font-weight:700'>" + (total.proximas || "&middot;") + "</td>" +
+    "<td style='" + numero + ";border-bottom:0;font-weight:700'>" + (total.sinHacer || "&middot;") + "</td></tr>";
 
-  cuentas.html = html;
-  return cuentas;
+  return "<table style=\"border-collapse:collapse;width:100%;margin:16px 0\">" +
+    "<thead><tr style=\"background:#1d4370;color:#fff\">" +
+    "<th style='padding:9px 11px;text-align:left;font-size:12px'>Capacitación</th>" +
+    "<th style='padding:9px 11px;font-size:12px;white-space:nowrap'>Vencidas</th>" +
+    "<th style='padding:9px 11px;font-size:12px;white-space:nowrap'>Vencen en " + CFG.VENTANA_DIAS + " días</th>" +
+    "<th style='padding:9px 11px;font-size:12px;white-space:nowrap'>Sin realizar</th>" +
+    "</tr></thead><tbody>" + cuerpo + pie + "</tbody></table>";
 }
 
 /** Planta que se usa al probar el correo. */
@@ -1313,13 +1381,13 @@ function excelDePlanta(planta, registros) {
     hoja.setName("Reporte");
 
     const estandares = mapaEstandares();
-    const titulos = ["Estándar", "Capacitación", "Categoría", "Cédula", "Nombre", "Cargo", "Vencimiento", "Días", "Urgencia"];
+    const titulos = ["Estándar", "Capacitación", "Categoría", "Cédula", "Nombre", "Cargo", "Vencimiento", "Días"];
     hoja.getRange(1, 1, 1, titulos.length).setValues([titulos])
         .setFontWeight("bold").setBackground("#D9D9D9");
 
     if (registros.length) {
       const filas = registros.map(function (r) {
-        return [estandares[r.curso] || "", r.curso, r.cat, r.id, r.nombre, r.pos, r.fecha, r.dias, r.urg];
+        return [estandares[r.curso] || "", r.curso, r.cat, r.id, r.nombre, r.pos, r.fecha, r.dias];
       });
       hoja.getRange(2, 1, filas.length, titulos.length).setValues(filas);
     }
@@ -1358,7 +1426,7 @@ function limpiarCache() {
     claves.push(base + "_n");
     for (let i = 0; i < CACHE_MAX_TROZOS; i++) claves.push(base + "_" + i);
   });
-  claves.push("logo_v1", "est_v1");
+  claves.push("logo_v1", "est_v1", "res_v1");
   CacheService.getScriptCache().removeAll(claves);
   Logger.log("Caché vacía. El próximo que abra un enlace leerá la matriz de nuevo.");
 }
@@ -1391,6 +1459,7 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.saludoJson    = JSON.stringify({ nombres: "", planta: "" });   // sin saludo: son todas
   plantilla.gruposSolicitud = JSON.stringify([]);   // el archivo suelto no puede enviar
   plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
+  plantilla.resumenJson     = JSON.stringify({});   // el archivo suelto ya las trae todas
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();

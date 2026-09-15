@@ -8,9 +8,16 @@ Matriz de Capacitaciones H&S  ──►  aplicación web  ──►  enlace por 
    (solo lectura)                   ?planta=HC-BELLO      abre en el navegador
 ```
 
-Solo pueden abrirlo cuentas de `holcim.com`, y cada enlace lleva **únicamente**
-los datos de su planta: el filtrado ocurre en el servidor, así que el HTML que
-llega al navegador no contiene información de las demás.
+Solo pueden abrirlo cuentas de `holcim.com`. Cada enlace **abre en su planta**,
+que es lo único que viaja al cargar; las demás se piden al servidor solo si
+alguien las elige en el selector.
+
+Eso es un cambio deliberado respecto al diseño inicial: antes una planta no
+podía ver a las otras porque sus datos no llegaban nunca al navegador. Ahora sí
+puede, a petición. Se decidió así porque quien abre es siempre una cuenta
+corporativa y los coordinadores necesitan comparar entre plantas. Para volver al
+comportamiento anterior basta con que `registrosDeOtraPlanta()` compruebe que la
+planta pedida es la del enlace.
 
 ## Archivos
 
@@ -121,6 +128,23 @@ días anteriores a mañana. Debajo se repite en palabras para que no se confunda
 exista, que no sea pasada, que el año sea razonable— y si no cuadra la ignora en
 silencio en vez de tumbar la solicitud. Cuando viene, sale destacada en el correo
 y en el asunto.
+
+**El correo del martes va totalizado.** Una fila por tipo de capacitación con
+cuántas **personas** están vencidas, por vencer o sin realizar, no el listado
+persona por persona: eso vive en el enlace, que es donde se puede filtrar,
+buscar y solicitar. Se cuentan personas distintas, así que alguien a quien le
+falten dos cursos de alturas cuenta una vez en esa fila —y otra vez en las
+demás filas donde tenga algo, por eso el total de abajo se dice aparte.
+
+Las vencidas ya no se recortan a los últimos treinta días. Ese recorte existía
+para que la tabla no se hiciera enorme; con la tabla totalizada ya no hace
+falta, y mantenerlo escondía justo los peores casos: alguien vencido hace
+doscientos días no aparecía por ningún lado.
+
+**Las fechas del correo se escriben a mano en español.** `Utilities.formatDate`
+con `MMMM` toma el idioma del proyecto de Apps Script, que está en inglés, y en
+el correo salía «con corte al 15 de September de 2026». Para eso está
+`fechaEnEspanol()`.
 
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
