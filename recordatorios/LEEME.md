@@ -189,10 +189,16 @@ llama cada grupo se cambia en una línea del HTML. `lb` es el nombre largo —la
 pastilla de cada fila, el pie—, `short` el corto, para las fichas y los
 rótulos de sección donde hay menos espacio.
 
-Las tres primeras tarjetas ya no se solapan: «Acción inmediata» son las
-vencidas y «Vencen en 15 días» lo que todavía no venció. Antes la primera
-mezclaba vencidas con las de ≤7 y la tercera volvía a contar a las dos, así que
-los números no se podían sumar y no era evidente por qué.
+Las cuatro tarjetas ya no se solapan y van de lo que está roto a lo que no:
+acción inmediata (vencidas) · vencen en 15 días · sin realizar · registros en
+vista. Antes la primera mezclaba vencidas con las de ≤7 y la tercera volvía a
+contar a las dos, así que los números no se podían sumar y no era evidente por
+qué. Ahora las tres primeras más lo que vence entre 16 y 60 días dan el total
+de la cuarta, que va de última porque no es una alarma sino el pie de las otras.
+
+«Personas involucradas» salió: su promedio de cursos por persona no llevaba a
+ninguna acción, y la pestaña «Por persona» ya da ese número mejor. En su lugar
+entró «Sin realizar», que suele ser el montón más grande y no tenía tarjeta.
 
 **Los filtros viejos `urgente` y `d30` siguen respondiendo** aunque ninguna
 tarjeta los use: los enlaces que la gente compartió los llevan en el `#` y

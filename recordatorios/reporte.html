@@ -328,9 +328,9 @@
   .kpi .s{font-size:11px;color:var(--muted);font-weight:500;margin-top:3px;opacity:.85}
   .kpi .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
   .kpi.k-total .bar{background:var(--grad)} .kpi.k-total .n{color:var(--brand)}
-  .kpi.k-now .bar{background:var(--u-critica)} .kpi.k-now .n{color:var(--u-critica)}
+  .kpi.k-now .bar{background:var(--u-vencida)} .kpi.k-now .n{color:var(--u-vencida)}
   .kpi.k-30 .bar{background:var(--u-alta)} .kpi.k-30 .n{color:var(--u-alta)}
-  .kpi.k-ppl .bar{background:var(--h-cyan)} .kpi.k-ppl .n{color:var(--text)}
+  .kpi.k-pend .bar{background:var(--u-pendiente)} .kpi.k-pend .n{color:var(--u-pendiente)}
 
   /* ---------- Lista ---------- */
   .listhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap}
@@ -620,11 +620,12 @@
       </ul>
 
       <h3>5 · LOS CUATRO RECUADROS GRANDES</h3>
+      <p>Van de lo que ya está roto a lo que todavía no. Cada uno filtra la lista al pulsarlo, y ninguno repite lo que cuenta otro.</p>
       <ul>
-        <li><b>Registros en vista</b> — cuántas filas está viendo ahora mismo, con los filtros puestos.</li>
-        <li><b>Acción inmediata</b> — las que <b>ya vencieron</b>, y hace cuánto la más antigua. Si solo va a mirar un número, mire este.</li>
-        <li><b>Vencen en 15 días</b> — lo que todavía está a tiempo pero hay que mover esta quincena. No repite lo de la tarjeta anterior: son cosas distintas y por eso se pueden sumar.</li>
-        <li><b>Personas involucradas</b> — cuántos trabajadores distintos, y cuántos cursos le toca a cada uno en promedio.</li>
+        <li><b>Acción inmediata</b> — las que <b>ya vencieron</b>, hace cuánto la más antigua y a cuánta gente afectan. Si solo va a mirar un número, mire este.</li>
+        <li><b>Vencen en 15 días</b> — lo que todavía está a tiempo pero hay que mover esta quincena.</li>
+        <li><b>Sin realizar</b> — las que <b>nunca se han hecho</b>. Suelen ser el montón más grande y el que más se pasa por alto.</li>
+        <li><b>Registros en vista</b> — el total de lo que está viendo con los filtros puestos. Va de último porque no es una alarma: es la suma de las tres anteriores más lo que vence entre 16 y 60 días.</li>
       </ul>
       <p>Los recuadros también filtran: al pulsarlos, la lista se reduce a eso.</p>
 
@@ -1591,30 +1592,34 @@ function renderChips(b){
 function renderKpis(rows){
   const vencidas = rows.filter(r=>r.dias<0);
   const d15  = rows.filter(r=>r.dias>=0 && r.dias<=15).length;
-  const ppl  = new Set(rows.map(r=>r.id)).size;
+  const pend = rows.filter(r=>r.urg==="pendiente").length;
   const peor = vencidas.reduce((m,r)=>Math.max(m, -r.dias), 0);
+  const pct  = rows.length ? Math.round(pend / rows.length * 100) : 0;
+  const gente = n => n === 1 ? "1 persona" : n + " personas";
   $("#kpis").innerHTML = `
-    <button class="kpi k-total" data-act="all">
-      <span class="bar"></span><div class="n tnum">${rows.length}</div>
-      <div class="l">Registros en vista</div><div class="s">${esc(nombreSeleccion())}</div>
-    </button>
     <button class="kpi k-now" data-act="vencida">
       <span class="bar"></span><div class="n tnum">${vencidas.length}</div>
       <div class="l">Acción inmediata</div><div class="s">${
-        vencidas.length ? `Ya vencidas · la más antigua hace ${peor} días` : "Ninguna vencida"}</div>
+        vencidas.length
+          ? `Ya vencidas · la más antigua hace ${peor} días · ${gente(new Set(vencidas.map(r=>r.id)).size)}`
+          : "Ninguna vencida"}</div>
     </button>
     <button class="kpi k-30" data-act="d15">
       <span class="bar"></span><div class="n tnum">${d15}</div>
       <div class="l">Vencen en 15 días</div><div class="s">${
-        d15 ? "Programar esta quincena" : "Nada vence en quince días"}</div>
+        d15 ? "Todavía a tiempo · programar esta quincena" : "Nada vence en quince días"}</div>
     </button>
-    <button class="kpi k-ppl" data-act="ppl">
-      <span class="bar"></span><div class="n tnum">${ppl}</div>
-      <div class="l">Personas involucradas</div><div class="s">${(rows.length/(ppl||1)).toFixed(1)} cursos por persona</div>
+    <button class="kpi k-pend" data-act="pendiente">
+      <span class="bar"></span><div class="n tnum">${pend}</div>
+      <div class="l">Sin realizar</div><div class="s">${
+        pend ? `Nunca se han hecho · ${pct}% de lo que está viendo` : "Todas se han hecho alguna vez"}</div>
+    </button>
+    <button class="kpi k-total" data-act="all">
+      <span class="bar"></span><div class="n tnum">${rows.length}</div>
+      <div class="l">Registros en vista</div><div class="s">${esc(nombreSeleccion())}</div>
     </button>`;
   $("#kpis").querySelectorAll(".kpi").forEach(k=>k.onclick=()=>{
     const a = k.dataset.act;
-    if(a==="ppl"){ setTab("persona"); return; }
     state.urg = a==="all" ? "" : (state.urg===a ? "" : a); shown=PAGE; render();
   });
 }
