@@ -607,10 +607,46 @@ function mapaDeEstandares(encabezados, bloques) {
   const est  = leerEstandares(encabezados, bloques);
   const mapa = {};
   bloques.forEach(function (b, i) {
-    if (est.valores[i]) mapa[b.curso] = est.valores[i];
+    const limpio = limpiarEstandar(est.valores[i]);
+    if (limpio) mapa[b.curso] = limpio;
   });
   return { fila: est.fila, mapa: mapa };
 }
+
+/**
+ * El nombre del estándar, sin la nota al pie que lo acompaña en la matriz.
+ *
+ * La celda no trae solo el nombre. La de HSE-001 dice:
+ *
+ *   Sistema de Gestión de Salud, Seguridad y Medio Ambiente (SGAS)*
+ *   *Roles como COPASST, Brigadista de Emergencia, Coordinadores de alturas...
+ *
+ * El asterisco marca dónde acaba el nombre y empieza la aclaración. Se corta
+ * ahí. Se limpia una sola vez, aquí, porque de este mapa salen la etiqueta de
+ * cada fila, el filtro de estándares y la tabla del correo: recortarlo en cada
+ * sitio sería recordar tres veces lo mismo.
+ */
+function limpiarEstandar(valor) {
+  let t = String(valor == null ? "" : valor).replace(/\s+/g, " ").trim();
+  if (!t) return "";
+
+  // Hasta el primer asterisco, que es donde empieza la nota
+  const ast = t.indexOf("*");
+  if (ast > 0) t = t.slice(0, ast);
+
+  // Y hasta el primer salto de idea, por si la nota viniera sin asterisco
+  t = t.split(/\s+[-–—]\s+/)[0];
+  t = t.replace(/[\s.,;:·*-]+$/, "").trim();
+
+  if (t.length <= ESTANDAR_MAX) return t;
+  // Cortar en la última palabra completa que quepa, no a mitad de palabra
+  const corte = t.slice(0, ESTANDAR_MAX);
+  const esp = corte.lastIndexOf(" ");
+  return (esp > ESTANDAR_MAX * 0.6 ? corte.slice(0, esp) : corte).replace(/[\s.,;:·-]+$/, "") + "…";
+}
+
+/** Largo máximo del nombre de un estándar. Más allá no cabe en ningún sitio. */
+const ESTANDAR_MAX = 72;
 
 /**
  * Recorre la matriz y devuelve un registro por cada vencimiento dentro de la

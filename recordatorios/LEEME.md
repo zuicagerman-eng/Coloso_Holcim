@@ -230,6 +230,21 @@ comparte el mismo `construirRegistros()`.
 `rep_v3_`: una caché viva de la versión anterior se habría leído como si
 trajera las gestionadas.
 
+**El estándar se limpia una sola vez, al leerlo.** La celda de la matriz no
+trae solo el nombre: la de HSE-001 sigue con un asterisco y una aclaración
+sobre los roles de COPASST y brigada, doscientos y pico caracteres en total.
+`limpiarEstandar()` corta en el asterisco, y de paso en un guión largo o a los
+`ESTANDAR_MAX` caracteres, siempre en palabra completa.
+
+Se limpia en `mapaDeEstandares()` y no en cada sitio donde se pinta, porque de
+ese mapa salen tres cosas: la etiqueta de cada fila, el desplegable de
+estándares y la columna del correo del martes. Recortarlo tres veces sería
+recordar tres veces lo mismo, y olvidarlo en la tercera.
+
+El HTML además le pone tope visual a la etiqueta —se recorta con puntos
+suspensivos y el texto entero queda en el `title`—, por si algún día la matriz
+trae algo que estas reglas no prevean.
+
 **Nada que consulte un servicio de Google puede ir dentro del bucle de la
 matriz.** Son dos mil personas por sesenta y dos cursos: lo que ahí dentro
 cueste un milisegundo cuesta dos minutos en total. `categoriaDe()` empezó a
