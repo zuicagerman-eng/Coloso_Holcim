@@ -210,6 +210,26 @@ llevaba a ninguna acción y que la pestaña «Por persona» ya da mejor, y
 tarjeta los use: los enlaces que la gente compartió los llevan en el `#` y
 romperlos no vale la pena.
 
+**«Movimiento reciente» no es historia, es deducción.** La matriz guarda
+cuándo vence cada cosa, no un registro de cambios: no hay manera de saber qué
+estaba vencido la semana pasada. Lo que sí se deduce es cuándo se hizo cada
+capacitación —vencimiento menos la vigencia en meses de la fila de encabezado—
+y con eso se listan las de los últimos `DIAS_GESTIONADAS` días.
+
+Se recogen **antes** del corte por ventana, dentro del mismo recorrido: lo
+recién hecho vence dentro de años, así que si no se recoge ahí no se recoge en
+ninguna parte. Viajan aparte de los registros, no dentro, porque ninguna de
+ellas está en la lista ni podría estarlo.
+
+`leerVigencias()` busca la fila de números igual que `leerEstandares()` busca
+la del estándar. Si no la encuentra devuelve vacío: se apaga ese panel y nada
+más se entera. Por eso el cambio no puede tumbar el correo del martes, que
+comparte el mismo `construirRegistros()`.
+
+**La caché guarda `{r, g}`**, no una lista suelta, y por eso la clave subió a
+`rep_v3_`: una caché viva de la versión anterior se habría leído como si
+trajera las gestionadas.
+
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
 

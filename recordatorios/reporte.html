@@ -339,6 +339,32 @@
   .kpi.k-mid .bar{background:var(--u-media)} .kpi.k-mid .n{color:var(--u-media)}
   .kpi.k-pend .bar{background:var(--u-pendiente)} .kpi.k-pend .n{color:var(--u-pendiente)}
 
+  /* ---------- Donas y gestionadas ---------- */
+  .donas{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:18px;align-items:center}
+  .dona{display:flex;align-items:center;gap:15px}
+  .dona svg{flex:none;transform:rotate(-90deg)}
+  .dona .centro{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .dona .centro b{display:block;font-size:22px;color:var(--text);font-weight:800;letter-spacing:-.5px}
+  .dona-leyenda{display:flex;flex-direction:column;gap:5px;font-size:11.5px;min-width:0}
+  .dona-leyenda span{display:flex;align-items:center;gap:7px;color:var(--muted);white-space:nowrap}
+  .dona-leyenda i{width:9px;height:9px;border-radius:2.5px;flex:none}
+  .dona-leyenda b{color:var(--text);font-variant-numeric:tabular-nums}
+  .dona-tit{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;
+            letter-spacing:.05em;margin:0 0 11px}
+
+  .gest{display:flex;flex-direction:column;gap:7px;max-height:290px;overflow:auto}
+  .gest .g{
+    display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;
+    background:var(--card-2);border:1px solid var(--line-2);border-left:4px solid var(--u-baja);
+    border-radius:10px;padding:9px 13px
+  }
+  .gest .g .d{font-size:16px;font-weight:800;color:var(--u-baja);line-height:1;text-align:center}
+  .gest .g .d small{display:block;font-size:9.5px;font-weight:600;color:var(--muted);margin-top:3px}
+  .gest .g .nm{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gest .g .cu{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gest .g .fc{font-size:11.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .vacio{font-size:12.5px;color:var(--muted);line-height:1.6;padding:6px 2px}
+
   /* ---------- Lista ---------- */
   .listhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap}
   .listhead h2{font-size:15px;margin:0;font-weight:700}
@@ -611,7 +637,7 @@
       <ul>
         <li><b>Lista</b> — una fila por cada capacitación pendiente, ordenadas por urgencia. Es la vista para trabajar.</li>
         <li><b>Por persona</b> — agrupa por trabajador. Sirve para ver de un vistazo quién acumula varias y programarlas juntas.</li>
-        <li><b>Resumen y gráficas</b> — los totales, el reparto por urgencia y el calendario de las próximas semanas. Para reportar hacia arriba.</li>
+        <li><b>Resumen y gráficas</b> — las tres donas, el <b>movimiento reciente</b>, el calendario de las próximas semanas y los totales por curso, planta y persona. Para reportar hacia arriba.</li>
       </ul>
       <p>El número al lado de cada pestaña es cuántos registros hay con los filtros que tenga puestos.</p>
 
@@ -625,6 +651,11 @@
         <li><b>30&#8211;60 días</b> (verde) — avisadas con tiempo. No requieren acción todavía. Más allá de 60 días no se muestran.</li>
         <li><b>Sin realizar</b> (gris) — la persona <b>nunca ha hecho</b> ese curso. No tienen fecha porque no hay nada que vencer, y por eso van al final. No las pase por alto: suelen ser las más importantes.</li>
       </ul>
+
+      <h3 style="margin-top:26px">MOVIMIENTO RECIENTE (en Resumen y gráficas)</h3>
+      <p>Responde a «¿esto está avanzando?». Muestra las capacitaciones <b>hechas en los últimos 45 días</b>: quién, cuál y hace cuántos días, con un gráfico de las últimas seis semanas para ver el ritmo.</p>
+      <p><b>Ojo con lo que es y lo que no es.</b> La matriz guarda cuándo vence cada cosa, no una historia de cambios: no hay forma de saber qué estaba vencido la semana pasada. Lo que sí se puede deducir es <b>cuándo se hizo</b> cada capacitación, restándole al vencimiento su vigencia en meses. Eso es lo que sale aquí.</p>
+      <p>Por eso <b>ninguna de estas aparece en la lista</b>: al hacerlas, la nueva fecha se fue a uno, dos o tres años vista y salieron de la ventana de 60 días. Son justamente las que ya no le quitan el sueño.</p>
 
       <h3>5 · LOS CUATRO RECUADROS GRANDES</h3>
       <p>Van de lo que ya está roto a lo que todavía no, y entre los cuatro está <b>todo</b>: cada capacitación cae en uno y solo uno, así que los cuatro números suman el total. Al pulsar uno, la lista se queda con ese grupo y el recuadro se marca; los otros tres <b>no cambian</b>, porque siguen contando sobre la planta y los filtros que tenga puestos, no sobre lo que quedó en pantalla.</p>
@@ -741,7 +772,7 @@
       <ul>
         <li><b>Lista:</b> una línea por cada capacitación, de la más urgente a la menos.</li>
         <li><b>Por persona:</b> agrupa los cursos de cada trabajador, para citarlo una sola vez por todos sus cursos. Pulsa el nombre para ver el detalle.</li>
-        <li><b>Resumen y gráficas:</b> los totales por planta, curso y semana. Útil para presentar.</li>
+        <li><b>Resumen y gráficas:</b> las donas, lo que se movió últimamente y los totales por planta, curso y semana. Útil para presentar.</li>
       </ul>
 
       <h3>PARA FILTRAR</h3>
@@ -877,6 +908,14 @@
       </div>
     </div>
     <div class="panel" style="margin-bottom:14px">
+      <h3>De un vistazo <small id="donaSub"></small></h3>
+      <div class="donas" id="donas"></div>
+    </div>
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Movimiento reciente <small id="gestSub"></small></h3>
+      <div id="gestCuerpo"></div>
+    </div>
+    <div class="panel" style="margin-bottom:14px">
       <h3>Agenda semanal <small>capacitaciones que vencen cada semana · planifica con anticipación</small></h3>
       <div class="weeks" id="weeks"></div>
     </div>
@@ -902,6 +941,11 @@ const DATA = <?!= typeof datosJson !== "undefined" ? datosJson : "[]" ?>;
 /* {planta: {n, urg}} de TODAS las plantas: unos bytes que permiten ofrecerlas
    en el selector sin cargarlas. Vacío en el HTML descargado, que ya las trae. */
 const RESUMEN = <?!= typeof resumenJson !== "undefined" ? resumenJson : "{}" ?>;
+/* Capacitaciones hechas hace poco. No están en DATA y no podrían estarlo: al
+   hacerlas, la nueva fecha se va a años vista y salen de la ventana de 60 días.
+   El servidor las deduce restando la vigencia al vencimiento. */
+const GESTIONADAS = <?!= typeof gestionadasJson !== "undefined" ? gestionadasJson : "[]" ?>;
+const DIAS_GEST = <?!= typeof diasGestionadas !== "undefined" ? diasGestionadas : 45 ?>;
 
 const SALUDO = <?!= typeof saludoJson !== "undefined" ? saludoJson : "{}" ?>;
 const GRUPOS_SOL = <?!= typeof gruposSolicitud !== "undefined" ? gruposSolicitud : "[]" ?>;
@@ -988,7 +1032,11 @@ const hayServidor = () => typeof google !== "undefined" && google.script && goog
 function pedirPlanta(p){
   return new Promise((ok, mal) => {
     google.script.run
-      .withSuccessHandler(rs => { (rs||[]).forEach(r => DATA.push(r)); cargadas.add(p); ok(); })
+      .withSuccessHandler(rs => {
+        ((rs && rs.r) || []).forEach(r => DATA.push(r));
+        ((rs && rs.g) || []).forEach(g => GESTIONADAS.push(g));
+        cargadas.add(p); ok();
+      })
       .withFailureHandler(mal)
       .registrosDeOtraPlanta(p);
   });
@@ -1730,7 +1778,110 @@ function renderPeople(rows){
 
 /* ---------- Dashboard ---------- */
 const URG_COLOR = {vencida:"var(--u-vencida)", critica:"var(--u-critica)", alta:"var(--u-alta)", media:"var(--u-media)", baja:"var(--u-baja)", pendiente:"var(--u-pendiente)"};
+/* Una dona. Se dibuja con un solo círculo y stroke-dasharray: sin librerías,
+   sin canvas, y se imprime igual que se ve. */
+function dona(partes, total){
+  const R = 46, C = 2 * Math.PI * R;
+  let acum = 0;
+  const arcos = partes.filter(p=>p.n>0).map(p=>{
+    const largo = p.n / (total||1) * C;
+    const t = `<circle cx="56" cy="56" r="${R}" fill="none" stroke="${p.color}" stroke-width="17"
+      stroke-dasharray="${largo.toFixed(2)} ${(C-largo).toFixed(2)}"
+      stroke-dashoffset="${(-acum).toFixed(2)}"><title>${esc(p.lb)}: ${p.n}</title></circle>`;
+    acum += largo;
+    return t;
+  }).join("");
+  return `<svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="Distribución">
+    <circle cx="56" cy="56" r="${R}" fill="none" stroke="var(--line-2)" stroke-width="17"/>${arcos}</svg>`;
+}
+function bloqueDona(titulo, partes, total, centro){
+  const conDatos = partes.filter(p=>p.n>0);
+  return `<div>
+    <p class="dona-tit">${esc(titulo)}</p>
+    <div class="dona">
+      ${dona(partes, total)}
+      <div class="dona-leyenda">
+        <span class="centro" style="margin-bottom:4px"><b>${total}</b>${esc(centro)}</span>
+        ${conDatos.map(p=>`<span><i style="background:${p.color}"></i>${esc(p.lb)}
+          <b>${p.n}</b> <span style="opacity:.7">${Math.round(p.n/(total||1)*100)}%</span></span>`).join("")}
+      </div>
+    </div></div>`;
+}
+
+function renderDonas(rows){
+  $("#donaSub").textContent = nombreSeleccion() + ` · ${rows.length} registros`;
+  const porUrg = URG_ORDER.map(u=>({lb:URG[u].short, n:rows.filter(r=>r.urg===u).length, color:URG_COLOR[u]}));
+  const ext = rows.filter(r=>r.grupo==="externa").length;
+  const porGrupo = [
+    {lb:"Externas · proveedor", n:ext, color:"var(--u-vencida)"},
+    {lb:"Internas · en casa",   n:rows.length-ext, color:"var(--h-cyan)"}
+  ];
+  const vencidas = rows.filter(r=>r.dias<0).length;
+  const alDia = [
+    {lb:"Vencidas",     n:vencidas,             color:"var(--u-vencida)"},
+    {lb:"Sin realizar", n:rows.filter(r=>r.urg==="pendiente").length, color:"var(--u-pendiente)"},
+    {lb:"Vigentes",     n:rows.filter(r=>r.urg!=="pendiente" && r.dias>=0).length, color:"var(--u-baja)"}
+  ];
+  $("#donas").innerHTML =
+    bloqueDona("Por urgencia", porUrg, rows.length, " registros") +
+    bloqueDona("Quién la dicta", porGrupo, rows.length, " registros") +
+    bloqueDona("Situación", alDia, rows.length, " registros");
+}
+
+/* Lo que se movió. La matriz no guarda historia, así que esto no es una
+   comparación contra la semana pasada: es lo que se hizo hace poco, deducido
+   de cuándo vence menos su vigencia. Lo que responde es "¿esto está avanzando?". */
+function renderGestionadas(){
+  const mias = GESTIONADAS.filter(byPlanta)
+    .filter(g => state.grupo==="todas" || g.grupo===state.grupo)
+    .filter(g => !state.q || (g.nombre+" "+g.curso+" "+g.id).toLowerCase().includes(state.q));
+
+  if(!GESTIONADAS.length){
+    $("#gestSub").textContent = "";
+    $("#gestCuerpo").innerHTML = `<p class="vacio">No se pudo calcular: la matriz no trajo la vigencia
+      de los cursos, que es de donde sale la fecha en que se hizo cada uno.</p>`;
+    return;
+  }
+  $("#gestSub").textContent = `capacitaciones realizadas en los últimos ${DIAS_GEST} días`;
+
+  if(!mias.length){
+    $("#gestCuerpo").innerHTML = `<p class="vacio">Nada en los últimos ${DIAS_GEST} días con los filtros puestos.</p>`;
+    return;
+  }
+
+  // Por semana, para ver el ritmo de un golpe
+  const sem = [0,0,0,0,0,0];
+  mias.forEach(g=>{ const i = Math.floor(g.hace/7); if(i<sem.length) sem[i]++; });
+  const tope = Math.max(...sem, 1);
+  const barras = sem.map((n,i)=>`
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
+      <div style="font-size:11.5px;font-weight:700;color:${n?"var(--u-baja)":"var(--muted)"}">${n||""}</div>
+      <div style="width:100%;height:${Math.max(3, n/tope*54)}px;border-radius:4px 4px 0 0;
+                  background:${n?"var(--u-baja)":"var(--line-2)"}"></div>
+      <div style="font-size:10.5px;color:var(--muted)">${i===0?"esta sem." : "−"+i+" sem."}</div>
+    </div>`).reverse().join("");
+
+  $("#gestCuerpo").innerHTML = `
+    <p class="vacio" style="padding-top:0">
+      <b style="color:var(--u-baja);font-size:15px">${mias.length}</b>
+      ${mias.length===1?"capacitación realizada":"capacitaciones realizadas"} ·
+      ${new Set(mias.map(g=>g.id)).size} personas. Ya no aparecen en la lista: su nueva fecha está a años vista.</p>
+    <div style="display:flex;gap:7px;align-items:flex-end;margin:4px 0 16px">${barras}</div>
+    <div class="gest">${mias.slice(0,40).map(g=>`
+      <div class="g">
+        <div class="d">${g.hace}<small>${g.hace===1?"día":"días"}</small></div>
+        <div style="min-width:0">
+          <div class="nm">${esc(g.nombre)}</div>
+          <div class="cu">${esc(g.curso)}${variasPlantas()?" · "+esc(g.planta):""}</div>
+        </div>
+        <div class="fc">${fmtFecha(g.hecha)}</div>
+      </div>`).join("")}</div>
+    ${mias.length>40?`<p class="vacio">Y ${mias.length-40} más.</p>`:""}`;
+}
+
 function renderDash(rows){
+  renderDonas(rows);
+  renderGestionadas();
   const tot = rows.length || 1;
   $("#distSub").textContent = nombreSeleccion() + ` · ${rows.length} registros`;
   $("#distro").innerHTML = URG_ORDER.map(u=>{

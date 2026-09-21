@@ -184,6 +184,16 @@ const CFG = {
 };
 
 /**
+ * Cuántos días hacia atrás se considera "recién gestionada".
+ *
+ * La matriz no guarda historia: solo dice cuándo vence cada cosa. Pero la fila
+ * de VIGENCIA (MESES) permite deducir cuándo se hizo -vencimiento menos
+ * vigencia- y con eso sí se puede decir qué se movió últimamente, sin tener
+ * que comparar contra ninguna foto anterior.
+ */
+const DIAS_GESTIONADAS = 45;
+
+/**
  * Incluir a quien nunca ha hecho el curso (la celda dice PENDIENTE en vez de
  * traer fecha). Van al final de la lista, en gris, con su propia sección.
  */
@@ -433,6 +443,47 @@ function leerEstandares(encabezados, bloques) {
 }
 
 /**
+ * { nombre del curso: vigencia en meses }.
+ *
+ * Es la fila de encabezado que leerEstandares descarta justamente por ser de
+ * puros números. Se busca igual que el estándar -la que más números razonables
+ * trae- para que mover una fila en la matriz no obligue a tocar el código. Si
+ * no aparece, se devuelve vacío y lo único que se pierde es el panel de
+ * gestionadas; nada más depende de esto.
+ */
+function leerVigencias(encabezados, bloques) {
+  if (!bloques.length) return {};
+
+  const aMeses = function (v) {
+    const t = String(v == null ? "" : v).trim().replace(",", ".");
+    if (!t || !/^\d+(\.\d+)?$/.test(t)) return 0;
+    const n = parseFloat(t);
+    // Una vigencia va de un mes a diez años; fuera de ahí es otra cosa
+    return (n >= 1 && n <= 120) ? n : 0;
+  };
+
+  let mejor = null;
+  for (let r = 0; r < encabezados.length; r++) {
+    const fila = r + 1;
+    if (fila === CFG.FILA_CURSOS || fila === CFG.FILA_TITULOS) continue;
+
+    const valores = valoresPorBloque(encabezados[r], bloques);
+    let buenos = 0;
+    valores.forEach(function (v) { if (aMeses(v)) buenos++; });
+    if (!mejor || buenos > mejor.buenos) mejor = { valores: valores, buenos: buenos };
+  }
+
+  if (!mejor || mejor.buenos < bloques.length / 2) return {};
+
+  const mapa = {};
+  bloques.forEach(function (b, i) {
+    const n = aMeses(mejor.valores[i]);
+    if (n) mapa[b.curso] = n;
+  });
+  return mapa;
+}
+
+/**
  * { nombre del curso: estándar } para el tablero.
  *
  * El estándar depende del curso, no de la persona, así que viaja como una
@@ -495,8 +546,9 @@ function construirRegistros() {
   const personas     = hoja.getRange(CFG.PRIMERA_FILA_DATOS, 1, filas, 7).getValues();
   const vencimientos = hoja.getRange(CFG.PRIMERA_FILA_DATOS, CFG.PRIMERA_COL_CURSO, filas, anchoCursos).getValues();
 
-  const bloques   = detectarBloques(nombresCurso, titulosCurso);
+  const bloques    = detectarBloques(nombresCurso, titulosCurso);
   const estandares = mapaDeEstandares(encabezados, bloques);
+  const vigencias  = leerVigencias(encabezados, bloques);
 
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -504,6 +556,10 @@ function construirRegistros() {
   const plantas   = indicePlantas();
   const omitir    = CURSOS_OMITIR.map(normalizar);
   const registros = [];
+  // Lo que se movió hace poco. Va aparte de los registros: son justamente las
+  // que YA NO vencen dentro de la ventana, así que ninguna estaría en la lista.
+  const gestionadas = [];
+  const desde = new Date(hoy.getTime() - DIAS_GESTIONADAS * 86400000);
   const avisos    = {
     personasActivas:   0,
     plantasSinCorreo:  {},
@@ -548,6 +604,28 @@ function construirRegistros() {
         const vence = new Date(valor);
         vence.setHours(0, 0, 0, 0);
         dias = Math.round((vence - hoy) / 86400000);
+
+        // Cuándo se hizo = cuándo vence menos su vigencia. Se mira ANTES de
+        // descartar por la ventana: lo recién hecho vence dentro de años y si
+        // no se recoge aquí, no se recoge en ninguna parte.
+        const meses = vigencias[curso];
+        if (meses) {
+          const hecha = new Date(vence);
+          hecha.setMonth(hecha.getMonth() - Math.round(meses));
+          if (hecha <= hoy && hecha >= desde) {
+            gestionadas.push({
+              planta: planta,
+              nombre: String(nombre).trim(),
+              id:     String(cedula == null ? "" : cedula).trim(),
+              curso:  curso,
+              grupo:  (categoriaDe(curso) || [CATEGORIA_POR_DEFECTO,
+                        grupoDeCategoria(CATEGORIA_POR_DEFECTO)])[1],
+              hecha:  Utilities.formatDate(hecha, CFG.ZONA, "yyyy-MM-dd"),
+              hace:   Math.round((hoy - hecha) / 86400000)
+            });
+          }
+        }
+
         if (dias > CFG.VENTANA_DIAS) continue;      // vence más allá de la ventana
         fecha = Utilities.formatDate(vence, CFG.ZONA, "yyyy-MM-dd");
         urg = urgenciaPorDias(dias);
@@ -583,7 +661,11 @@ function construirRegistros() {
     }
   }
 
-  return { registros: registros, avisos: avisos };
+  gestionadas.sort(function (a, b) { return a.hace - b.hace; });   // lo más reciente primero
+  avisos.vigenciasLeidas = Object.keys(vigencias).length;
+  avisos.gestionadas     = gestionadas.length;
+
+  return { registros: registros, gestionadas: gestionadas, avisos: avisos };
 }
 
 
@@ -610,16 +692,17 @@ function doGet(e) {
     );
   }
 
-  let registros;
+  let datos;
   try {
-    registros = registrosDePlanta(planta);
+    datos = registrosDePlanta(planta);
   } catch (err) {
     return paginaSimple("No se pudo generar el reporte", String(err.message || err),
                         "Avise a Seguridad y Salud para revisarlo.");
   }
 
   const plantilla = HtmlService.createTemplateFromFile("reporte");
-  plantilla.datosJson     = JSON.stringify(registros);
+  plantilla.datosJson       = JSON.stringify(datos.r || []);
+  plantilla.gestionadasJson = JSON.stringify(datos.g || []);
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.logo          = logoIncrustado();
@@ -629,6 +712,7 @@ function doGet(e) {
   plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
   plantilla.resumenJson     = JSON.stringify(resumenDePlantas());
   plantilla.enlacesJson     = JSON.stringify(CURSOS_CON_ENLACE);
+  plantilla.diasGestionadas = DIAS_GESTIONADAS;
   plantilla.plantaInicial = planta;
 
   return plantilla.evaluate()
@@ -649,7 +733,7 @@ const CACHE_TROZO = 90000;
 const CACHE_MAX_TROZOS = 40;
 
 function claveDeCache(planta) {
-  return "rep_v2_" + Utilities.base64EncodeWebSafe(planta);
+  return "rep_v3_" + Utilities.base64EncodeWebSafe(planta);
 }
 
 function cacheGuardar(clave, texto) {
@@ -699,9 +783,12 @@ function cacheLeer(clave) {
 function registrosDePlanta(planta) {
   const guardado = cacheLeer(claveDeCache(planta));
   if (guardado) {
-    try { return JSON.parse(guardado); } catch (err) { /* ilegible: se recalcula */ }
+    try {
+      const v = JSON.parse(guardado);
+      if (v && v.r) return v;
+    } catch (err) { /* ilegible: se recalcula */ }
   }
-  return recalcularTodo().porPlanta[planta] || [];
+  return recalcularTodo().porPlanta[planta] || { r: [], g: [] };
 }
 
 /**
@@ -712,20 +799,22 @@ function registrosDePlanta(planta) {
  * sin tener que cargarlas.
  */
 function recalcularTodo() {
-  const todos = construirRegistros().registros;
+  const leido = construirRegistros();
 
   const porPlanta = {};
-  todos.forEach(function (r) {
-    (porPlanta[r.planta] = porPlanta[r.planta] || []).push(r);
-  });
+  const dame = function (p) {
+    return porPlanta[p] || (porPlanta[p] = { r: [], g: [] });
+  };
+  leido.registros.forEach(function (r) { dame(r.planta).r.push(r); });
+  (leido.gestionadas || []).forEach(function (g) { dame(g.planta).g.push(g); });
 
   const resumen = {};
   Object.keys(CORREOS_PLANTA).forEach(function (p) {
-    const suyos = porPlanta[p] || [];
+    const suyos = dame(p);
     cacheGuardar(claveDeCache(p), JSON.stringify(suyos));
     resumen[p] = {
-      n:   suyos.length,
-      urg: suyos.filter(function (r) { return r.urg !== "pendiente" && r.dias <= 7; }).length
+      n:   suyos.r.length,
+      urg: suyos.r.filter(function (r) { return r.urg !== "pendiente" && r.dias <= 7; }).length
     };
   });
 
@@ -770,7 +859,7 @@ function calentarCache() {
   const inicio = new Date().getTime();
   limpiarCache();
   mapaEstandares();                       // la tabla de estándares, de paso
-  const n = registrosDePlanta(Object.keys(CORREOS_PLANTA)[0]).length;
+  const n = registrosDePlanta(Object.keys(CORREOS_PLANTA)[0]).r.length;
   Logger.log("Caché lista en " + Math.round((new Date().getTime() - inicio) / 1000) +
              " s. La primera planta trae " + n + " registros.");
 }
@@ -1182,29 +1271,17 @@ function enviarEnlacesSemanales() {
   const url = ScriptApp.getService().getUrl();
   if (!url) throw new Error("No hay aplicación web publicada. Publíquela antes (ver LEEME.md).");
 
-  const todos = construirRegistros().registros;
+  // Una sola lectura de la matriz sirve para el correo y, de paso, deja la
+  // caché del enlace lista. Es el momento en que más falta hace: en cuanto
+  // salgan los correos van a entrar todos a la vez, y nadie debería ser quien
+  // pague la primera lectura.
   const fecha = fechaEnEspanol(new Date(), false);
+  const listo = recalcularTodo();
 
   const porPlanta = {};
-  todos.forEach(function (r) {
-    (porPlanta[r.planta] = porPlanta[r.planta] || []).push(r);
+  Object.keys(listo.porPlanta).forEach(function (p) {
+    porPlanta[p] = listo.porPlanta[p].r;
   });
-
-  // La matriz ya está leída: se deja la caché lista antes de mandar los correos.
-  // Es el momento en que más falta hace, porque en cuanto salgan van a entrar
-  // todos a la vez y nadie debería ser quien pague la primera lectura.
-  const resumen = {};
-  Object.keys(CORREOS_PLANTA).forEach(function (planta) {
-    const suyos = porPlanta[planta] || [];
-    cacheGuardar(claveDeCache(planta), JSON.stringify(suyos));
-    resumen[planta] = {
-      n:   suyos.length,
-      urg: suyos.filter(function (r) { return r.urg !== "pendiente" && r.dias <= 7; }).length
-    };
-  });
-  try {
-    CacheService.getScriptCache().put("res_v1", JSON.stringify(resumen), CACHE_MINUTOS * 60);
-  } catch (err) {}
 
   // Lo que ya salió hoy, para no mandarlo dos veces. Ver la nota de arriba.
   const props   = PropertiesService.getScriptProperties();
@@ -1513,11 +1590,11 @@ function medirVelocidad() {
   limpiarCache();
 
   t = ahora();
-  const nFrio  = registrosDePlanta(planta).length;
+  const nFrio  = registrosDePlanta(planta).r.length;
   const msFrio = ahora() - t;
 
   t = ahora();
-  const nCaliente  = registrosDePlanta(planta).length;
+  const nCaliente  = registrosDePlanta(planta).r.length;
   const msCaliente = ahora() - t;
 
   t = ahora();
@@ -1610,7 +1687,8 @@ function limpiarCache() {
  *                                 el curso, que es la mayor parte del volumen.
  */
 function descargarHtmlCompleto(sinPendientes) {
-  let registros = construirRegistros().registros;
+  const leido = construirRegistros();
+  let registros = leido.registros;
 
   if (sinPendientes) {
     registros = registros.filter(function (r) { return r.urg !== "pendiente"; });
@@ -1627,6 +1705,8 @@ function descargarHtmlCompleto(sinPendientes) {
   plantilla.estandaresJson  = JSON.stringify(mapaEstandares());
   plantilla.resumenJson     = JSON.stringify({});   // el archivo suelto ya las trae todas
   plantilla.enlacesJson     = JSON.stringify(CURSOS_CON_ENLACE);
+  plantilla.diasGestionadas = DIAS_GESTIONADAS;
+  plantilla.gestionadasJson = JSON.stringify(leido.gestionadas || []);
   plantilla.plantaInicial = "__ALL__";
 
   const contenido = plantilla.evaluate().getContent();
