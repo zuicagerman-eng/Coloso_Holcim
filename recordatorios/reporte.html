@@ -330,6 +330,7 @@
   .kpi.k-total .bar{background:var(--grad)} .kpi.k-total .n{color:var(--brand)}
   .kpi.k-now .bar{background:var(--u-vencida)} .kpi.k-now .n{color:var(--u-vencida)}
   .kpi.k-30 .bar{background:var(--u-alta)} .kpi.k-30 .n{color:var(--u-alta)}
+  .kpi.k-mid .bar{background:var(--u-media)} .kpi.k-mid .n{color:var(--u-media)}
   .kpi.k-pend .bar{background:var(--u-pendiente)} .kpi.k-pend .n{color:var(--u-pendiente)}
 
   /* ---------- Lista ---------- */
@@ -611,8 +612,8 @@
       <h3>4 · LOS BOTONES DE COLORES</h3>
       <p>Son la parte más importante. Cada uno deja ver solo ese grupo; púlselo otra vez para quitarlo.</p>
       <ul>
-        <li><b>Acción inmediata</b> (vino tinto) — la fecha <b>ya pasó</b>. Hay que programarlas de inmediato.</li>
-        <li><b>Esta semana &#8804; 7 días</b> (rojo) — si no se programan ahora, la semana entrante pasan a acción inmediata.</li>
+        <li><b>Vencidas</b> (vino tinto) — la fecha <b>ya pasó</b>. Hay que programarlas de inmediato.</li>
+        <li><b>Esta semana &#8804; 7 días</b> (rojo) — si no se programan ahora, la semana entrante son vencidas.</li>
         <li><b>Pronto &#8901; 8&#8211;15 días</b> (naranja) — hay margen, pero conviene agendarlas ya.</li>
         <li><b>16&#8211;30 días</b> (mostaza) — para el mes en curso.</li>
         <li><b>30&#8211;60 días</b> (verde) — avisadas con tiempo. No requieren acción todavía. Más allá de 60 días no se muestran.</li>
@@ -620,12 +621,12 @@
       </ul>
 
       <h3>5 · LOS CUATRO RECUADROS GRANDES</h3>
-      <p>Van de lo que ya está roto a lo que todavía no. Cada uno filtra la lista al pulsarlo, y ninguno repite lo que cuenta otro.</p>
+      <p>Van de lo que ya está roto a lo que todavía no, y entre los cuatro está <b>todo</b>: cada capacitación cae en uno y solo uno, así que los cuatro números suman el total. Cada recuadro filtra la lista al pulsarlo.</p>
       <ul>
-        <li><b>Acción inmediata</b> — las que <b>ya vencieron</b>, hace cuánto la más antigua y a cuánta gente afectan. Si solo va a mirar un número, mire este.</li>
-        <li><b>Vencen en 15 días</b> — lo que todavía está a tiempo pero hay que mover esta quincena.</li>
+        <li><b>Vencidas</b> — la fecha <b>ya pasó</b>, hace cuánto la más antigua y a cuánta gente afectan. Si solo va a mirar un número, mire este.</li>
+        <li><b>Vencen en 15 días</b> — esta semana y la próxima. Todavía está a tiempo, pero hay que moverlo ya.</li>
+        <li><b>Vencen en 16–60 días</b> — hay margen para agendarlas bien. Más allá de 60 días el reporte no muestra nada.</li>
         <li><b>Sin realizar</b> — las que <b>nunca se han hecho</b>. Suelen ser el montón más grande y el que más se pasa por alto.</li>
-        <li><b>Registros en vista</b> — el total de lo que está viendo con los filtros puestos. Va de último porque no es una alarma: es la suma de las tres anteriores más lo que vence entre 16 y 60 días.</li>
       </ul>
       <p>Los recuadros también filtran: al pulsarlos, la lista se reduce a eso.</p>
 
@@ -684,7 +685,7 @@
       <p>Si acaban de corregir la matriz y aún ve lo viejo, espere unos diez minutos y recargue: la página guarda una copia breve para cargar rápido.</p>
 
       <h3>13 · QUÉ HACER CON ESTO</h3>
-      <div class="paso"><span class="num">1</span><span class="txt">Mire <b>Acción inmediata</b>. Eso es lo de esta semana.</span></div>
+      <div class="paso"><span class="num">1</span><span class="txt">Mire <b>Vencidas</b>. Eso es lo que ya se le pasó.</span></div>
       <div class="paso"><span class="num">2</span><span class="txt">Pase a <b>Resumen y gráficas</b> y vea qué curso concentra más gente. Una jornada grupal resuelve muchos de un golpe.</span></div>
       <div class="paso"><span class="num">3</span><span class="txt">Filtre ese curso &mdash;y el mes, si quiere cerrar solo lo de octubre&mdash; y use <b>+ Solicitar</b> en cada persona: con un envío queda pedida la jornada entera, con la fecha que proponga. O descargue el Excel, si prefiere manejarlo aparte.</span></div>
       <div class="paso"><span class="num">4</span><span class="txt">Cuando se dicte, que quede cargada en la matriz. Al recargar, esas personas desaparecen solas de aquí.</span></div>
@@ -739,7 +740,7 @@
 
       <h3>PARA FILTRAR</h3>
       <ul>
-        <li>Los <b>botones de colores</b> (Acción inmediata, Esta semana…) dejan ver solo ese grupo. Púlsalos otra vez para quitarlos.</li>
+        <li>Los <b>botones de colores</b> (Vencidas, Esta semana…) dejan ver solo ese grupo. Púlsalos otra vez para quitarlos.</li>
         <li>Los <b>recuadros grandes</b> con los números también filtran al pulsarlos.</li>
         <li>El <b>buscador</b> encuentra por nombre, cédula, cargo o curso.</li>
         <li>Si te pierdes, pulsa <b>Quitar filtros</b> y todo vuelve a la normalidad.</li>
@@ -862,7 +863,7 @@
       <h3>Distribución por urgencia <small id="distSub"></small></h3>
       <div class="distro" id="distro"></div>
       <div class="legend">
-        <span><i style="background:var(--u-vencida)"></i>Acción inmediata</span>
+        <span><i style="background:var(--u-vencida)"></i>Vencidas</span>
         <span><i style="background:var(--u-critica)"></i>≤ 7 días</span>
         <span><i style="background:var(--u-alta)"></i>8–15 días</span>
         <span><i style="background:var(--u-media)"></i>16–30 días</span>
@@ -924,7 +925,7 @@ const GRUPO_LABEL = {externa:"Externa", interna:"Interna"};
 const URG = {
   // Los cortes los pone el servidor en urgenciaPorDias(): <0 · ≤7 · ≤15 · ≤30 · resto.
   // Como la ventana es de 60 días, "el resto" es 31–60 y así se dice.
-  vencida:{lb:"Acción inmediata",    cls:"u-vencida", short:"Acción inmediata"},
+  vencida:{lb:"Vencida",             cls:"u-vencida", short:"Vencidas"},
   critica:{lb:"Vence esta semana",   cls:"u-critica", short:"Esta semana · ≤ 7 d"},
   alta:   {lb:"Vence pronto",        cls:"u-alta",    short:"Pronto · 8–15 días"},
   media:  {lb:"Vence en 16–30 días", cls:"u-media",   short:"16–30 días"},
@@ -1118,6 +1119,7 @@ const byQ     = d => !state.q || (d.nombre+" "+d.pos+" "+d.curso+" "+d.id+" "+d.
 const byUrg   = d => {
   if(!state.urg) return true;
   if(state.urg==="d15")     return d.dias>=0 && d.dias<=15;
+  if(state.urg==="d1660")   return d.urg!=="pendiente" && d.dias>15;
   if(state.urg==="urgente") return d.dias<=7;     // enlaces antiguos
   if(state.urg==="d30")     return d.dias<=30;    // enlaces antiguos
   return d.urg===state.urg;
@@ -1592,6 +1594,7 @@ function renderChips(b){
 function renderKpis(rows){
   const vencidas = rows.filter(r=>r.dias<0);
   const d15  = rows.filter(r=>r.dias>=0 && r.dias<=15).length;
+  const d1660 = rows.filter(r=>r.urg!=="pendiente" && r.dias>15).length;
   const pend = rows.filter(r=>r.urg==="pendiente").length;
   const peor = vencidas.reduce((m,r)=>Math.max(m, -r.dias), 0);
   const pct  = rows.length ? Math.round(pend / rows.length * 100) : 0;
@@ -1599,24 +1602,25 @@ function renderKpis(rows){
   $("#kpis").innerHTML = `
     <button class="kpi k-now" data-act="vencida">
       <span class="bar"></span><div class="n tnum">${vencidas.length}</div>
-      <div class="l">Acción inmediata</div><div class="s">${
+      <div class="l">Vencidas</div><div class="s">${
         vencidas.length
-          ? `Ya vencidas · la más antigua hace ${peor} días · ${gente(new Set(vencidas.map(r=>r.id)).size)}`
+          ? `La más antigua hace ${peor} días · ${gente(new Set(vencidas.map(r=>r.id)).size)}`
           : "Ninguna vencida"}</div>
     </button>
     <button class="kpi k-30" data-act="d15">
       <span class="bar"></span><div class="n tnum">${d15}</div>
       <div class="l">Vencen en 15 días</div><div class="s">${
-        d15 ? "Todavía a tiempo · programar esta quincena" : "Nada vence en quince días"}</div>
+        d15 ? "Esta semana y la próxima · programar ya" : "Nada vence en quince días"}</div>
+    </button>
+    <button class="kpi k-mid" data-act="d1660">
+      <span class="bar"></span><div class="n tnum">${d1660}</div>
+      <div class="l">Vencen en 16–60 días</div><div class="s">${
+        d1660 ? "Hay tiempo · dejarlas agendadas" : "Nada vence en ese tramo"}</div>
     </button>
     <button class="kpi k-pend" data-act="pendiente">
       <span class="bar"></span><div class="n tnum">${pend}</div>
       <div class="l">Sin realizar</div><div class="s">${
         pend ? `Nunca se han hecho · ${pct}% de lo que está viendo` : "Todas se han hecho alguna vez"}</div>
-    </button>
-    <button class="kpi k-total" data-act="all">
-      <span class="bar"></span><div class="n tnum">${rows.length}</div>
-      <div class="l">Registros en vista</div><div class="s">${esc(nombreSeleccion())}</div>
     </button>`;
   $("#kpis").querySelectorAll(".kpi").forEach(k=>k.onclick=()=>{
     const a = k.dataset.act;
@@ -1838,6 +1842,7 @@ function renderFoot(rows){
   f.push(`Vista: <b>${esc({todas:"Todas",externa:"Externas",interna:"Internas"}[state.grupo])}</b>`);
   if(state.urg)   f.push(`Urgencia: <b>${esc(
     state.urg==="d15"     ? "Vencen en los próximos 15 días" :
+    state.urg==="d1660"   ? "Vencen en 16–60 días" :
     state.urg==="urgente" ? "Vencidas o en ≤ 7 días" :
     state.urg==="d30"     ? "≤ 30 días" : URG[state.urg].lb)}</b>`);
   if(state.estandar) f.push(`Estándar: <b>${esc(state.estandar)}</b>`);
