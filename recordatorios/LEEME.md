@@ -183,6 +183,21 @@ como están en la matriz, y con un subtotal de externas y otro de internas.
 Cuando un estándar cubre varias categorías, se listan debajo en pequeño; cuando
 cubre una sola no se repite, que no aporta nada.
 
+**Los nombres de las urgencias están en `URG`, no en el servidor.** El servidor
+solo clasifica (`urgenciaPorDias`: vencida · ≤7 · ≤15 · ≤30 · resto); cómo se
+llama cada grupo se cambia en una línea del HTML. `lb` es el nombre largo —la
+pastilla de cada fila, el pie—, `short` el corto, para las fichas y los
+rótulos de sección donde hay menos espacio.
+
+Las tres primeras tarjetas ya no se solapan: «Acción inmediata» son las
+vencidas y «Vencen en 15 días» lo que todavía no venció. Antes la primera
+mezclaba vencidas con las de ≤7 y la tercera volvía a contar a las dos, así que
+los números no se podían sumar y no era evidente por qué.
+
+**Los filtros viejos `urgente` y `d30` siguen respondiendo** aunque ninguna
+tarjeta los use: los enlaces que la gente compartió los llevan en el `#` y
+romperlos no vale la pena.
+
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
 

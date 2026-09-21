@@ -220,6 +220,32 @@
     background:var(--u-baja-s);color:var(--u-baja);font-weight:600
   }
   .aviso-carga.mal{background:var(--u-vencida-s);color:var(--u-vencida)}
+
+  /* Pantalla de carga. Traer una planta puede tardar unos segundos y sin nada
+     en pantalla parece que el tablero se colgó. */
+  .cargando{
+    position:fixed;inset:0;z-index:95;display:grid;place-items:center;
+    background:rgba(8,18,28,.52);backdrop-filter:blur(2px);animation:aparece .16s ease
+  }
+  .cargando[hidden]{display:none}
+  @keyframes aparece{from{opacity:0}to{opacity:1}}
+  .cargando .caja{
+    background:var(--card);border:1px solid var(--line);border-radius:15px;
+    padding:26px 32px;box-shadow:0 22px 60px rgba(6,16,26,.4);text-align:center;
+    min-width:255px;max-width:min(92vw,360px)
+  }
+  .cargando .rueda{
+    width:34px;height:34px;margin:0 auto 15px;border-radius:50%;
+    border:3px solid var(--line);border-top-color:var(--brand);animation:gira .8s linear infinite
+  }
+  @keyframes gira{to{transform:rotate(360deg)}}
+  .cargando .tit{font-size:14.5px;font-weight:700;color:var(--text);margin-bottom:5px}
+  .cargando .sub{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .cargando .barra{
+    height:5px;border-radius:99px;background:var(--line-2);margin-top:14px;overflow:hidden
+  }
+  .cargando .barra i{display:block;height:100%;background:var(--brand);border-radius:99px;transition:width .25s}
+  @media print{.cargando{display:none!important}}
   .aviso-carga[hidden]{display:none}
 
   .paso{display:flex;gap:13px;align-items:flex-start;margin:0 0 16px}
@@ -508,6 +534,15 @@
 </div>
 
 <!-- ===== Ventana de ayuda ===== -->
+<div class="cargando" id="cargando" role="status" aria-live="polite" hidden>
+  <div class="caja">
+    <div class="rueda"></div>
+    <div class="tit" id="cargTit">Cargando…</div>
+    <div class="sub" id="cargSub">Trayendo los datos de la matriz.</div>
+    <div class="barra" id="cargBarra" hidden><i style="width:0%"></i></div>
+  </div>
+</div>
+
 <div class="barra-sol" id="barraSol" hidden>
   <span class="cuenta" id="solCuenta">0 seleccionadas<small>listas para solicitar</small></span>
   <button class="quitar" id="solVer" type="button">Ver solo estas</button>
@@ -576,19 +611,19 @@
       <h3>4 · LOS BOTONES DE COLORES</h3>
       <p>Son la parte más importante. Cada uno deja ver solo ese grupo; púlselo otra vez para quitarlo.</p>
       <ul>
-        <li><b>Vencidas</b> (vino tinto) — la fecha ya pasó. Hay que programarlas de inmediato.</li>
-        <li><b>&#8804; 7 días</b> (rojo) — vencen esta semana. Si no se programan ahora, la semana entrante son vencidas.</li>
-        <li><b>8&#8211;15 días</b> (naranja) — hay margen, pero conviene agendarlas ya.</li>
+        <li><b>Acción inmediata</b> (vino tinto) — la fecha <b>ya pasó</b>. Hay que programarlas de inmediato.</li>
+        <li><b>Esta semana &#8804; 7 días</b> (rojo) — si no se programan ahora, la semana entrante pasan a acción inmediata.</li>
+        <li><b>Pronto &#8901; 8&#8211;15 días</b> (naranja) — hay margen, pero conviene agendarlas ya.</li>
         <li><b>16&#8211;30 días</b> (mostaza) — para el mes en curso.</li>
-        <li><b>+30 días</b> (verde) — avisadas con tiempo. No requieren acción todavía.</li>
+        <li><b>30&#8211;60 días</b> (verde) — avisadas con tiempo. No requieren acción todavía. Más allá de 60 días no se muestran.</li>
         <li><b>Sin realizar</b> (gris) — la persona <b>nunca ha hecho</b> ese curso. No tienen fecha porque no hay nada que vencer, y por eso van al final. No las pase por alto: suelen ser las más importantes.</li>
       </ul>
 
       <h3>5 · LOS CUATRO RECUADROS GRANDES</h3>
       <ul>
         <li><b>Registros en vista</b> — cuántas filas está viendo ahora mismo, con los filtros puestos.</li>
-        <li><b>Acción inmediata</b> — las vencidas más las que vencen en 7 días. Si solo va a mirar un número, mire este.</li>
-        <li><b>Vencen en &#8804; 30 días</b> — lo que debería quedar programado antes de cerrar el mes.</li>
+        <li><b>Acción inmediata</b> — las que <b>ya vencieron</b>, y hace cuánto la más antigua. Si solo va a mirar un número, mire este.</li>
+        <li><b>Vencen en 15 días</b> — lo que todavía está a tiempo pero hay que mover esta quincena. No repite lo de la tarjeta anterior: son cosas distintas y por eso se pueden sumar.</li>
         <li><b>Personas involucradas</b> — cuántos trabajadores distintos, y cuántos cursos le toca a cada uno en promedio.</li>
       </ul>
       <p>Los recuadros también filtran: al pulsarlos, la lista se reduce a eso.</p>
@@ -703,7 +738,7 @@
 
       <h3>PARA FILTRAR</h3>
       <ul>
-        <li>Los <b>botones de colores</b> (Vencidas, ≤ 7 días…) dejan ver solo ese grupo. Púlsalos otra vez para quitarlos.</li>
+        <li>Los <b>botones de colores</b> (Acción inmediata, Esta semana…) dejan ver solo ese grupo. Púlsalos otra vez para quitarlos.</li>
         <li>Los <b>recuadros grandes</b> con los números también filtran al pulsarlos.</li>
         <li>El <b>buscador</b> encuentra por nombre, cédula, cargo o curso.</li>
         <li>Si te pierdes, pulsa <b>Quitar filtros</b> y todo vuelve a la normalidad.</li>
@@ -826,11 +861,11 @@
       <h3>Distribución por urgencia <small id="distSub"></small></h3>
       <div class="distro" id="distro"></div>
       <div class="legend">
-        <span><i style="background:var(--u-vencida)"></i>Vencidas</span>
+        <span><i style="background:var(--u-vencida)"></i>Acción inmediata</span>
         <span><i style="background:var(--u-critica)"></i>≤ 7 días</span>
         <span><i style="background:var(--u-alta)"></i>8–15 días</span>
         <span><i style="background:var(--u-media)"></i>16–30 días</span>
-        <span><i style="background:var(--u-baja)"></i>+30 días</span>
+        <span><i style="background:var(--u-baja)"></i>30–60 días</span>
       </div>
     </div>
     <div class="panel" style="margin-bottom:14px">
@@ -886,11 +921,13 @@ const CORTE = new Date("<?= typeof corteIso !== "undefined" ? corteIso : "" ?>T0
 const CORTE_TXT = "<?= typeof corteTxt !== "undefined" ? corteTxt : "" ?>";
 const GRUPO_LABEL = {externa:"Externa", interna:"Interna"};
 const URG = {
-  vencida:{lb:"Vencida",  cls:"u-vencida", short:"Vencidas"},
-  critica:{lb:"≤ 7 días", cls:"u-critica", short:"≤ 7 días"},
-  alta:   {lb:"8–15 días",cls:"u-alta",    short:"8–15 días"},
-  media:  {lb:"16–30 días",cls:"u-media",  short:"16–30 días"},
-  baja:   {lb:"+30 días", cls:"u-baja",    short:"+30 días"},
+  // Los cortes los pone el servidor en urgenciaPorDias(): <0 · ≤7 · ≤15 · ≤30 · resto.
+  // Como la ventana es de 60 días, "el resto" es 31–60 y así se dice.
+  vencida:{lb:"Acción inmediata",    cls:"u-vencida", short:"Acción inmediata"},
+  critica:{lb:"Vence esta semana",   cls:"u-critica", short:"Esta semana · ≤ 7 d"},
+  alta:   {lb:"Vence pronto",        cls:"u-alta",    short:"Pronto · 8–15 días"},
+  media:  {lb:"Vence en 16–30 días", cls:"u-media",   short:"16–30 días"},
+  baja:   {lb:"Vence en 30–60 días", cls:"u-baja",    short:"30–60 días"},
   // Sin fecha de vencimiento: nunca se ha hecho el curso.
   pendiente:{lb:"Sin realizar", cls:"u-pendiente", short:"Sin realizar"}
 };
@@ -928,8 +965,9 @@ const TOTAL_N = Object.keys(PLANTA_N).reduce((t,p)=>t+PLANTA_N[p], 0);
 const todasLasPlantas = () => !state.plantas.length || state.plantas.length >= plantasList.length;
 function nombreSeleccion(){
   if(todasLasPlantas()) return "todas las plantas";
-  if(state.plantas.length === 1) return state.plantas[0];
-  return state.plantas.length + " plantas";
+  // Nombrarlas es más útil que contarlas, mientras quepan
+  if(state.plantas.length <= 4) return state.plantas.join(" · ");
+  return `${state.plantas.length} de ${plantasList.length} plantas`;
 }
 /* En la ficha de cada persona solo hace falta decir la planta si hay varias. */
 const variasPlantas = () => !(state.plantas.length === 1);
@@ -956,6 +994,25 @@ function aviso(txt, mal){
   a.hidden = false;
 }
 
+/* La pantalla de carga. Solo aparece si la espera se nota: por debajo de
+   medio segundo un parpadeo molesta más de lo que informa. */
+let temporizadorCarga = null;
+function mostrarCarga(tit, sub, hecho, total){
+  $("#cargTit").textContent = tit;
+  $("#cargSub").textContent = sub;
+  const b = $("#cargBarra");
+  b.hidden = !total || total < 2;
+  if(!b.hidden) b.firstElementChild.style.width = Math.round(hecho / total * 100) + "%";
+
+  if($("#cargando").hidden && !temporizadorCarga){
+    temporizadorCarga = setTimeout(()=>{ $("#cargando").hidden = false; temporizadorCarga = null; }, 450);
+  }
+}
+function ocultarCarga(){
+  clearTimeout(temporizadorCarga); temporizadorCarga = null;
+  $("#cargando").hidden = true;
+}
+
 /* Trae lo que falte para poder mostrar «destino». Devuelve false si no pudo. */
 async function asegurarPlantas(destino){
   const quiero = (!destino || !destino.length) ? plantasList : destino;
@@ -969,18 +1026,23 @@ async function asegurarPlantas(destino){
 
   pidiendo = true;
   $("#plantBtn").disabled = true;
+  aviso("");
   try{
     for(let i=0; i<faltan.length; i++){
-      aviso(faltan.length===1 ? `Cargando ${faltan[0]}…`
-                              : `Cargando plantas… ${i+1} de ${faltan.length}`);
+      mostrarCarga(
+        faltan.length === 1 ? "Cargando " + faltan[0] : `Cargando ${faltan.length} plantas`,
+        faltan.length === 1
+          ? "Es la primera vez que se pide esta planta. Después el cambio es inmediato."
+          : `${faltan[i]} — ${i+1} de ${faltan.length}`,
+        i, faltan.length);
       await pedirPlanta(faltan[i]);
     }
-    aviso("");
     return true;
   }catch(err){
     aviso("No se pudo cargar: " + ((err && err.message) ? err.message : err), true);
     return false;
   }finally{
+    ocultarCarga();
     pidiendo = false;
     $("#plantBtn").disabled = false;
   }
@@ -1054,8 +1116,9 @@ const bySel   = d => !state.soloSel || seleccion.has(llaveDe(d));
 const byQ     = d => !state.q || (d.nombre+" "+d.pos+" "+d.curso+" "+d.id+" "+d.planta).toLowerCase().includes(state.q);
 const byUrg   = d => {
   if(!state.urg) return true;
-  if(state.urg==="urgente") return d.dias<=7;
-  if(state.urg==="d30")     return d.dias<=30;
+  if(state.urg==="d15")     return d.dias>=0 && d.dias<=15;
+  if(state.urg==="urgente") return d.dias<=7;     // enlaces antiguos
+  if(state.urg==="d30")     return d.dias<=30;    // enlaces antiguos
   return d.urg===state.urg;
 };
 /* Base sin el filtro de urgencia: alimenta los contadores de los chips */
@@ -1109,8 +1172,8 @@ function pintarTarjetas(plantas){
   });
   $("#enter").textContent = todas
     ? "Ver capacitaciones de todas las plantas"
-    : plantas.length === 1
-      ? "Ver capacitaciones de " + plantas[0]
+    : plantas.length <= 3
+      ? "Ver capacitaciones de " + plantas.join(", ")
       : `Ver capacitaciones de ${plantas.length} plantas`;
 }
 function openModal(){
@@ -1415,6 +1478,7 @@ function pintarPicker(){
     : state.plantas.length === 1
       ? `${state.plantas[0]} (${PLANTA_N[state.plantas[0]] || 0})`
       : `${state.plantas.length} plantas seleccionadas`;
+  $("#plantBtn").title = todas ? "Todas las plantas" : state.plantas.join(" · ");
   $("#pickLista").querySelectorAll("input").forEach(c=>{
     c.checked = todas || state.plantas.indexOf(c.value) !== -1;
   });
@@ -1525,22 +1589,24 @@ function renderChips(b){
 }
 
 function renderKpis(rows){
-  const venc = rows.filter(r=>r.dias<0).length;
-  const d7   = rows.filter(r=>r.dias>=0 && r.dias<=7).length;
-  const d30  = rows.filter(r=>r.dias<=30).length;
+  const vencidas = rows.filter(r=>r.dias<0);
+  const d15  = rows.filter(r=>r.dias>=0 && r.dias<=15).length;
   const ppl  = new Set(rows.map(r=>r.id)).size;
+  const peor = vencidas.reduce((m,r)=>Math.max(m, -r.dias), 0);
   $("#kpis").innerHTML = `
     <button class="kpi k-total" data-act="all">
       <span class="bar"></span><div class="n tnum">${rows.length}</div>
       <div class="l">Registros en vista</div><div class="s">${esc(nombreSeleccion())}</div>
     </button>
-    <button class="kpi k-now" data-act="urgente">
-      <span class="bar"></span><div class="n tnum">${venc+d7}</div>
-      <div class="l">Acción inmediata</div><div class="s">${venc} vencida${venc===1?"":"s"} · ${d7} vence${d7===1?"":"n"} en ≤ 7 días</div>
+    <button class="kpi k-now" data-act="vencida">
+      <span class="bar"></span><div class="n tnum">${vencidas.length}</div>
+      <div class="l">Acción inmediata</div><div class="s">${
+        vencidas.length ? `Ya vencidas · la más antigua hace ${peor} días` : "Ninguna vencida"}</div>
     </button>
-    <button class="kpi k-30" data-act="d30">
-      <span class="bar"></span><div class="n tnum">${d30}</div>
-      <div class="l">Vencen en ≤ 30 días</div><div class="s">Programar antes del cierre de mes</div>
+    <button class="kpi k-30" data-act="d15">
+      <span class="bar"></span><div class="n tnum">${d15}</div>
+      <div class="l">Vencen en 15 días</div><div class="s">${
+        d15 ? "Programar esta quincena" : "Nada vence en quince días"}</div>
     </button>
     <button class="kpi k-ppl" data-act="ppl">
       <span class="bar"></span><div class="n tnum">${ppl}</div>
@@ -1765,7 +1831,10 @@ function renderFoot(rows){
   f.push(`${state.plantas.length > 1 ? "Plantas" : "Planta"}: <b>${
     todasLasPlantas() ? "todas" : esc(state.plantas.join(" · "))}</b>`);
   f.push(`Vista: <b>${esc({todas:"Todas",externa:"Externas",interna:"Internas"}[state.grupo])}</b>`);
-  if(state.urg)   f.push(`Urgencia: <b>${esc(state.urg==="urgente"?"Acción inmediata":state.urg==="d30"?"≤ 30 días":URG[state.urg].lb)}</b>`);
+  if(state.urg)   f.push(`Urgencia: <b>${esc(
+    state.urg==="d15"     ? "Vencen en los próximos 15 días" :
+    state.urg==="urgente" ? "Vencidas o en ≤ 7 días" :
+    state.urg==="d30"     ? "≤ 30 días" : URG[state.urg].lb)}</b>`);
   if(state.estandar) f.push(`Estándar: <b>${esc(state.estandar)}</b>`);
   if(state.curso) f.push(`Curso: <b>${esc(state.curso)}</b>`);
   if(state.mes)   f.push(`Vence en: <b>${esc(nombreMes(state.mes))}</b>`);
