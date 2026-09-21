@@ -469,7 +469,10 @@ function valoresPorBloque(fila, bloques) {
   const arrastre = [];
   let ultimo = "";
   for (let i = 0; i < fila.length; i++) {
-    const v = String(fila[i] == null ? "" : fila[i]).replace(/\s+/g, " ").trim();
+    // Solo se juntan espacios y tabuladores, NO los saltos de línea: la nota
+    // al pie suele ir en un renglón aparte dentro de la misma celda, y ese
+    // salto es la pista más fiable de dónde termina el nombre.
+    const v = String(fila[i] == null ? "" : fila[i]).replace(/[ \t\u00a0]+/g, " ").trim();
     if (v) ultimo = v;
     arrastre[i] = ultimo;
   }
@@ -543,7 +546,7 @@ function leerVigencias(encabezados, bloques) {
   if (!bloques.length) return {};
 
   const aMeses = function (v) {
-    const t = String(v == null ? "" : v).trim().replace(",", ".");
+    const t = String(v == null ? "" : v).split(/[\r\n]/)[0].trim().replace(",", ".");
     if (!t || !/^\d+(\.\d+)?$/.test(t)) return 0;
     const n = parseFloat(t);
     // Una vigencia va de un mes a diez años; fuera de ahí es otra cosa
@@ -606,11 +609,15 @@ function mapaEstandares() {
 function mapaDeEstandares(encabezados, bloques) {
   const est  = leerEstandares(encabezados, bloques);
   const mapa = {};
+  const crudos = {};
   bloques.forEach(function (b, i) {
     const limpio = limpiarEstandar(est.valores[i]);
-    if (limpio) mapa[b.curso] = limpio;
+    if (limpio) {
+      mapa[b.curso]   = limpio;
+      crudos[b.curso] = est.valores[i];
+    }
   });
-  return { fila: est.fila, mapa: mapa };
+  return { fila: est.fila, mapa: mapa, crudos: crudos };
 }
 
 /**
@@ -627,16 +634,40 @@ function mapaDeEstandares(encabezados, bloques) {
  * sitio sería recordar tres veces lo mismo.
  */
 function limpiarEstandar(valor) {
-  let t = String(valor == null ? "" : valor).replace(/\s+/g, " ").trim();
-  if (!t) return "";
+  let t = String(valor == null ? "" : valor);
+  if (!t.trim()) return "";
 
-  // Hasta el primer asterisco, que es donde empieza la nota
+  // 1. Solo el primer renglón. La nota casi siempre va debajo.
+  t = t.split(/[\r\n]/)[0];
+
+  // 2. Hasta el primer asterisco, que es la llamada a la nota al pie.
   const ast = t.indexOf("*");
   if (ast > 0) t = t.slice(0, ast);
 
-  // Y hasta el primer salto de idea, por si la nota viniera sin asterisco
+  t = t.replace(/\s+/g, " ").trim();
+
+  // 3. Hasta un guión o dos puntos que separen una aclaración. Se exige el
+  //    espacio a ambos lados para no partir "HSE-001" ni "Vigía/Entrante".
   t = t.split(/\s+[-–—]\s+/)[0];
-  t = t.replace(/[\s.,;:·*-]+$/, "").trim();
+  t = t.split(/\s+[:;]\s+/)[0];
+
+  // 4. Y hasta un arranque de aclaración reconocible, por si no trae ninguna
+  //    marca. Se comparan sin tildes ni mayúsculas.
+  const marcas = ["NOTA", "NOTAS", "APLICA A", "APLICA PARA", "INCLUYE A",
+                  "DIRIGIDO A", "ROLES COMO", "OBSERVACION", "OBSERVACIONES",
+                  "SEGUN", "SE ASIGNARA", "SE ASIGNARAN"];
+  const plano = normalizar(t);
+  for (let i = 0; i < marcas.length; i++) {
+    const donde = plano.indexOf(" " + marcas[i]);
+    if (donde > 0) { t = t.slice(0, donde); break; }
+  }
+
+  // Se limpia la puntuación que quede colgando, pero NO los paréntesis de
+  // cierre: "(SGAS)" es parte del nombre. Si el corte dejó uno abierto sin
+  // cerrar, se quita desde ahí.
+  t = t.replace(/[\s.,;:·*\-–—]+$/, "").trim();
+  const abre = (t.match(/\(/g) || []).length, cierra = (t.match(/\)/g) || []).length;
+  if (abre > cierra) t = t.slice(0, t.lastIndexOf("(")).replace(/[\s.,;:·*\-–—]+$/, "").trim();
 
   if (t.length <= ESTANDAR_MAX) return t;
   // Cortar en la última palabra completa que quepa, no a mitad de palabra
@@ -695,7 +726,8 @@ function construirRegistros() {
     cursosDetectados:  bloques.length,
     anchosDeBloque:    {},
     filaEstandar:      estandares.fila,
-    estandares:        estandares.mapa
+    estandares:        estandares.mapa,
+    estandaresCrudos:  estandares.crudos
   };
   bloques.forEach(function (b) {
     avisos.anchosDeBloque[b.ancho] = (avisos.anchosDeBloque[b.ancho] || 0) + 1;
@@ -1318,6 +1350,7 @@ function probar() {
     const e = a.estandares[curso];
     (porEstandar[e] = porEstandar[e] || []).push(curso);
   });
+  linea.push("  (a la izquierda lo que dice la matriz, a la derecha lo que se muestra)");
   const nombresEst = Object.keys(porEstandar).sort();
   if (!nombresEst.length) {
     linea.push("  NINGUNO. El tablero no mostrará el filtro por estándar.");
@@ -1331,6 +1364,25 @@ function probar() {
   }
 
   linea.push("");
+  // Crudo contra recortado, para poder revisar de una vez si alguna se quedó
+  // larga o si a alguna le recorté de más.
+  if (a.estandaresCrudos) {
+    linea.push("");
+    linea.push("RECORTE DE LOS ESTÁNDARES");
+    const vistos = {};
+    Object.keys(a.estandaresCrudos).forEach(function (curso) {
+      const crudo = a.estandaresCrudos[curso];
+      if (!crudo || vistos[crudo]) return;
+      vistos[crudo] = true;
+      const corto = limpiarEstandar(crudo);
+      const unaLinea = String(crudo).replace(/\s+/g, " ").trim();
+      linea.push("  MATRIZ  (" + unaLinea.length + ") " + unaLinea);
+      linea.push("  MUESTRA (" + corto.length + ") " + corto +
+                 (unaLinea.length === corto.length ? "   = sin recortar" : ""));
+      linea.push("");
+    });
+  }
+
   linea.push("QUIÉN DICTA CADA CURSO  (decide " +
     (ESTANDARES_EXTERNOS.length ? "el ESTÁNDAR de la matriz" : "CATEGORIAS_EXTERNAS, o sea mi clasificación") + ")");
   const porGrupo = { externa: {}, interna: {} };

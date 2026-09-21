@@ -233,8 +233,22 @@ trajera las gestionadas.
 **El estándar se limpia una sola vez, al leerlo.** La celda de la matriz no
 trae solo el nombre: la de HSE-001 sigue con un asterisco y una aclaración
 sobre los roles de COPASST y brigada, doscientos y pico caracteres en total.
-`limpiarEstandar()` corta en el asterisco, y de paso en un guión largo o a los
-`ESTANDAR_MAX` caracteres, siempre en palabra completa.
+`limpiarEstandar()` corta por cuatro reglas, en orden: el primer renglón (la
+nota suele ir debajo, dentro de la misma celda), el asterisco de la llamada al
+pie, un guión o dos puntos **con espacio a los dos lados** —para no partir
+«HSE-001»— y un arranque de aclaración reconocible («Nota», «Aplica a»,
+«Dirigido a», «Roles como»…). Lo que sobreviva se corta a `ESTANDAR_MAX`
+caracteres en palabra completa.
+
+Por eso `valoresPorBloque()` junta espacios y tabuladores pero **no** los
+saltos de línea: ese salto es la pista más fiable de dónde acaba el nombre, y
+colapsarlo antes de tiempo la borraba.
+
+Los paréntesis de cierre no se tocan: «(SGAS)» es parte del nombre. Si un
+corte deja uno abierto sin cerrar, se quita desde ahí.
+
+`probar()` imprime cada estándar crudo y recortado, uno debajo del otro, para
+revisarlos todos de una vez en vez de descubrirlos de a uno.
 
 Se limpia en `mapaDeEstandares()` y no en cada sitio donde se pinta, porque de
 ese mapa salen tres cosas: la etiqueta de cada fila, el desplegable de
