@@ -228,6 +228,40 @@ const CATEGORIAS_EXTERNAS = [
   "Brigada de emergencia"
 ];
 
+/**
+ * Estándares que dicta un proveedor externo.
+ *
+ * Mientras esté vacío manda CATEGORIAS_EXTERNAS, que trabaja sobre categorías
+ * que NO vienen de la matriz: las de los cursos nuevos las propuse yo mirando
+ * el nombre, y adivinar el nombre no es saber. "Trabajo cerca al agua" acabó
+ * bajo Alturas por eso, y de ahí salió como externa.
+ *
+ * El estándar sí es dato de la matriz. En cuanto se llene esta lista -copiando
+ * del bloque ESTÁNDARES que imprime probar()- manda ella y mis categorías
+ * dejan de decidir quién dicta cada curso. Basta el código: "HSE-004" cubre
+ * todo el estándar sin tener que escribirlo completo.
+ */
+const ESTANDARES_EXTERNOS = [];
+
+/**
+ * "externa" o "interna" para un curso.
+ *
+ * Si hay estándares configurados, el estándar del curso decide. Si no, se cae
+ * a la categoría, que es lo que había.
+ */
+function grupoDeCurso(curso, categoria) {
+  if (!ESTANDARES_EXTERNOS.length) return grupoDeCategoria(categoria);
+
+  const est = normalizar(mapaEstandares()[curso] || "");
+  if (!est) return grupoDeCategoria(categoria);
+
+  for (let i = 0; i < ESTANDARES_EXTERNOS.length; i++) {
+    const clave = normalizar(ESTANDARES_EXTERNOS[i]);
+    if (clave && est.indexOf(clave) !== -1) return "externa";
+  }
+  return "interna";
+}
+
 /** "externa" o "interna", a partir de la categoría del curso. */
 function grupoDeCategoria(categoria) {
   const buscada = normalizar(categoria);
@@ -618,8 +652,7 @@ function construirRegistros() {
               nombre: String(nombre).trim(),
               id:     String(cedula == null ? "" : cedula).trim(),
               curso:  curso,
-              grupo:  (categoriaDe(curso) || [CATEGORIA_POR_DEFECTO,
-                        grupoDeCategoria(CATEGORIA_POR_DEFECTO)])[1],
+              grupo:  grupoDeCurso(curso, (categoriaDe(curso) || [CATEGORIA_POR_DEFECTO])[0]),
               hecha:  Utilities.formatDate(hecha, CFG.ZONA, "yyyy-MM-dd"),
               hace:   Math.round((hoy - hecha) / 86400000)
             });
@@ -641,6 +674,7 @@ function construirRegistros() {
         avisos.cursosSinCategoria[curso] = (avisos.cursosSinCategoria[curso] || 0) + 1;
         categoria = [CATEGORIA_POR_DEFECTO, grupoDeCategoria(CATEGORIA_POR_DEFECTO)];
       }
+      const grupo = grupoDeCurso(curso, categoria[0]);
 
       // El enlace del curso NO se guarda aquí. Iba dentro del registro, y los
       // registros se guardan en caché: al cambiar la URL había que esperar a
@@ -653,7 +687,7 @@ function construirRegistros() {
         pos:    String(cargo == null ? "" : cargo).trim(),
         curso:  curso,
         cat:    categoria[0],
-        grupo:  categoria[1],
+        grupo:  grupo,
         fecha:  fecha,
         dias:   dias,
         urg:    urg
@@ -1201,6 +1235,23 @@ function probar() {
     const sinEstandar = a.cursosDetectados - Object.keys(a.estandares).length;
     if (sinEstandar > 0) linea.push("  " + sinEstandar + " cursos se quedaron sin estándar");
   }
+
+  linea.push("");
+  linea.push("QUIÉN DICTA CADA CURSO  (decide " +
+    (ESTANDARES_EXTERNOS.length ? "el ESTÁNDAR de la matriz" : "CATEGORIAS_EXTERNAS, o sea mi clasificación") + ")");
+  const porGrupo = { externa: {}, interna: {} };
+  Object.keys(a.estandares).concat(Object.keys(CATEGORIA_CURSO)).forEach(function (curso) {
+    const cat = (categoriaDe(curso) || [CATEGORIA_POR_DEFECTO])[0];
+    porGrupo[grupoDeCurso(curso, cat)][curso] = cat;
+  });
+  ["externa", "interna"].forEach(function (g) {
+    const cursos = Object.keys(porGrupo[g]).sort();
+    linea.push("  " + g.toUpperCase() + " (" + cursos.length + ")" +
+               (g === "externa" ? "  <- estos llevan botón de solicitar" : ""));
+    cursos.forEach(function (c) {
+      linea.push("     " + c + "   [" + porGrupo[g][c] + "]");
+    });
+  });
 
   linea.push("");
   const url = ScriptApp.getService().getUrl();

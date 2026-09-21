@@ -230,6 +230,23 @@ comparte el mismo `construirRegistros()`.
 `rep_v3_`: una caché viva de la versión anterior se habría leído como si
 trajera las gestionadas.
 
+**Quién dicta cada curso: mi clasificación o su matriz.** `CATEGORIA_CURSO`
+tiene dos mitades. Dieciocho cursos vienen del HTML original, con la
+clasificación que ya existía. Once son cursos nuevos que **clasifiqué yo
+mirando el nombre**, y están marcados como tales en el código. Adivinar el
+nombre no es saber: «Trabajo cerca al agua» acabó bajo *Alturas*, y como
+*Alturas* está en `CATEGORIAS_EXTERNAS`, ese curso salió como externa, con
+botón de solicitar y en el bloque de proveedor del correo.
+
+El estándar sí es dato de la matriz. Llenando `ESTANDARES_EXTERNOS` con los
+códigos que imprime `probar()` (basta `"HSE-004"`, no hace falta el nombre
+completo), el estándar pasa a decidir y mis categorías dejan de hacerlo. La
+categoría se sigue mostrando como etiqueta, pero ya no determina nada.
+
+`probar()` imprime ahora el reparto completo —qué cursos quedan externos, qué
+categoría tiene cada uno y qué está decidiendo— para que se revise de una vez
+en vez de irlos descubriendo de a uno.
+
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
 
