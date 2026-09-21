@@ -230,6 +230,17 @@ comparte el mismo `construirRegistros()`.
 `rep_v3_`: una caché viva de la versión anterior se habría leído como si
 trajera las gestionadas.
 
+**La etiqueta sale del estándar; el grupo, de la tabla.** Son dos cosas y
+conviene no mezclarlas. `CATEGORIA_DESDE_ESTANDAR` hace que la etiqueta que se
+ve —«Trabajo en alturas»— venga del estándar de la matriz en vez de la tabla
+escrita a mano. El grupo externa/interna lo sigue decidiendo
+`categoriaDeLaTabla()`, no la etiqueta mostrada.
+
+Esa separación no es un lujo: `CATEGORIAS_EXTERNAS` dice «Alturas» y el
+estándar dice «Trabajo en alturas». Si el grupo se calculara sobre la etiqueta,
+ninguna coincidiría, todo quedaría interna y de golpe nadie podría solicitar
+nada. Se detectó probándolo, no razonándolo.
+
 **Quién dicta cada curso: mi clasificación o su matriz.** `CATEGORIA_CURSO`
 tiene dos mitades. Dieciocho cursos vienen del HTML original, con la
 clasificación que ya existía. Once son cursos nuevos que **clasifiqué yo

@@ -167,6 +167,20 @@ const CACHE_MINUTOS = 15;
  */
 const MINUTOS_MAXIMOS = 5;
 
+/**
+ * Dejar que el estándar de la matriz ponga la categoría.
+ *
+ * CATEGORIA_CURSO es una tabla escrita a mano y once de sus entradas las
+ * propuse yo por el nombre del curso. El estándar no: está en la matriz, al
+ * lado del curso, y es lo que la organización ya decidió. Con esto en true,
+ * un curso cuyo estándar se lea toma su nombre como categoría -sin el código-
+ * y la tabla queda como respaldo para los que no tengan estándar.
+ *
+ * Fue lo que delató «Trabajo cerca al agua»: yo lo tenía bajo Alturas y la
+ * matriz dice HSE-110 Trabajos cerca al agua, que es estándar aparte.
+ */
+const CATEGORIA_DESDE_ESTANDAR = true;
+
 /** Tope de personas por solicitud, para que un envío no se desborde. */
 const MAX_POR_SOLICITUD = 60;
 
@@ -246,10 +260,17 @@ const ESTANDARES_EXTERNOS = [];
 /**
  * "externa" o "interna" para un curso.
  *
- * Si hay estándares configurados, el estándar del curso decide. Si no, se cae
- * a la categoría, que es lo que había.
+ * Si hay estándares configurados, el estándar del curso decide. Si no, decide
+ * la categoría de CATEGORIA_CURSO.
  */
-function grupoDeCurso(curso, categoria) {
+function grupoDeCurso(curso) {
+  // Sin lista de estándares manda la tabla escrita a mano, que es lo que había.
+  // Se consulta LA TABLA y no la etiqueta que se esté mostrando: con
+  // CATEGORIA_DESDE_ESTANDAR la etiqueta pasa a ser "Trabajo en alturas" y
+  // CATEGORIAS_EXTERNAS habla de "Alturas", así que mezclarlas dejaría todo
+  // como interna y de golpe nadie podría solicitar nada.
+  const deTabla = categoriaDeLaTabla(curso);
+  const categoria = deTabla ? deTabla[0] : CATEGORIA_POR_DEFECTO;
   if (!ESTANDARES_EXTERNOS.length) return grupoDeCategoria(categoria);
 
   const est = normalizar(mapaEstandares()[curso] || "");
@@ -306,7 +327,7 @@ const CATEGORIA_CURSO = {
   "Reglas basicas y habitos seguros de conduccion en vias internas":                         "Conducción defensiva",
   "Montaje y Desmontaje de Andamios":                                                        "Alturas",
   "Trabajador autorizado / Ayudante de seguridad Trabajo en alturas":                        "Alturas",
-  "Trabajo cerca al agua":                                                                   "Alturas",
+  "Trabajo cerca al agua":                                                                   "Trabajo cerca al agua",
   "Trabajador Entrante en espacios confinados":                                              "Espacios confinados",
   "Vigía de Seguridad para Trabajos en Espacios Confinados":                                 "Espacios confinados",
   "Supervisor / Emisor de permisos de espacios confinados (debe contar previamente con curso de entrante y vigía de EC)": "Espacios confinados"
@@ -345,6 +366,25 @@ function urgenciaPorDias(dias) {
 }
 
 function categoriaDe(curso) {
+  if (CATEGORIA_DESDE_ESTANDAR) {
+    const delEstandar = categoriaDelEstandar(curso);
+    if (delEstandar) return [delEstandar, grupoDeCategoria(delEstandar)];
+  }
+  return categoriaDeLaTabla(curso);
+}
+
+/**
+ * El nombre del estándar sin su código: "HSE-110 Trabajos cerca al agua" ->
+ * "Trabajos cerca al agua". Vacío si el curso no tiene estándar legible.
+ */
+function categoriaDelEstandar(curso) {
+  const est = mapaEstandares()[curso];
+  if (!est) return "";
+  const limpio = String(est).replace(/^[A-ZÁÉÍÓÚÑ]{2,6}[\s._-]*\d{1,4}[\s.:-]*/i, "").trim();
+  return limpio || String(est).trim();
+}
+
+function categoriaDeLaTabla(curso) {
   let cat = null;
   if (Object.prototype.hasOwnProperty.call(CATEGORIA_CURSO, curso)) {
     cat = CATEGORIA_CURSO[curso];
@@ -652,7 +692,7 @@ function construirRegistros() {
               nombre: String(nombre).trim(),
               id:     String(cedula == null ? "" : cedula).trim(),
               curso:  curso,
-              grupo:  grupoDeCurso(curso, (categoriaDe(curso) || [CATEGORIA_POR_DEFECTO])[0]),
+              grupo:  grupoDeCurso(curso),
               hecha:  Utilities.formatDate(hecha, CFG.ZONA, "yyyy-MM-dd"),
               hace:   Math.round((hoy - hecha) / 86400000)
             });
@@ -674,7 +714,7 @@ function construirRegistros() {
         avisos.cursosSinCategoria[curso] = (avisos.cursosSinCategoria[curso] || 0) + 1;
         categoria = [CATEGORIA_POR_DEFECTO, grupoDeCategoria(CATEGORIA_POR_DEFECTO)];
       }
-      const grupo = grupoDeCurso(curso, categoria[0]);
+      const grupo = grupoDeCurso(curso);
 
       // El enlace del curso NO se guarda aquí. Iba dentro del registro, y los
       // registros se guardan en caché: al cambiar la URL había que esperar a
@@ -1242,7 +1282,7 @@ function probar() {
   const porGrupo = { externa: {}, interna: {} };
   Object.keys(a.estandares).concat(Object.keys(CATEGORIA_CURSO)).forEach(function (curso) {
     const cat = (categoriaDe(curso) || [CATEGORIA_POR_DEFECTO])[0];
-    porGrupo[grupoDeCurso(curso, cat)][curso] = cat;
+    porGrupo[grupoDeCurso(curso)][curso] = cat;
   });
   ["externa", "interna"].forEach(function (g) {
     const cursos = Object.keys(porGrupo[g]).sort();
