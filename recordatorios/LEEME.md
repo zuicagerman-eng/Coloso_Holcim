@@ -230,6 +230,15 @@ comparte el mismo `construirRegistros()`.
 `rep_v3_`: una caché viva de la versión anterior se habría leído como si
 trajera las gestionadas.
 
+**Nada que consulte un servicio de Google puede ir dentro del bucle de la
+matriz.** Son dos mil personas por sesenta y dos cursos: lo que ahí dentro
+cueste un milisegundo cuesta dos minutos en total. `categoriaDe()` empezó a
+llamar a `mapaEstandares()`, que hace un `CacheService.get` y un `JSON.parse`,
+y la ejecución se quedó colgada sin dar error. `mapaEstandares()`,
+`categoriaDe()` y `grupoDeCurso()` recuerdan su respuesta en memoria mientras
+dura la ejecución: dependen solo del nombre del curso, que se repite en cada
+fila. Sesenta y dos respuestas distintas para cientos de miles de preguntas.
+
 **La etiqueta sale del estándar; el grupo, de la tabla.** Son dos cosas y
 conviene no mezclarlas. `CATEGORIA_DESDE_ESTANDAR` hace que la etiqueta que se
 ve —«Trabajo en alturas»— venga del estándar de la matriz en vez de la tabla

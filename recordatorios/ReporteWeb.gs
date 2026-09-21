@@ -263,7 +263,14 @@ const ESTANDARES_EXTERNOS = [];
  * Si hay estándares configurados, el estándar del curso decide. Si no, decide
  * la categoría de CATEGORIA_CURSO.
  */
+const _memoGrupo = {};
+
 function grupoDeCurso(curso) {
+  if (Object.prototype.hasOwnProperty.call(_memoGrupo, curso)) return _memoGrupo[curso];
+  return (_memoGrupo[curso] = grupoDeCursoCalculado(curso));
+}
+
+function grupoDeCursoCalculado(curso) {
   // Sin lista de estándares manda la tabla escrita a mano, que es lo que había.
   // Se consulta LA TABLA y no la etiqueta que se esté mostrando: con
   // CATEGORIA_DESDE_ESTANDAR la etiqueta pasa a ser "Trabajo en alturas" y
@@ -365,7 +372,14 @@ function urgenciaPorDias(dias) {
   return "baja";
 }
 
+const _memoCategoria = {};
+
 function categoriaDe(curso) {
+  if (Object.prototype.hasOwnProperty.call(_memoCategoria, curso)) return _memoCategoria[curso];
+  return (_memoCategoria[curso] = categoriaDeCalculada(curso));
+}
+
+function categoriaDeCalculada(curso) {
   if (CATEGORIA_DESDE_ESTANDAR) {
     const delEstandar = categoriaDelEstandar(curso);
     if (delEstandar) return [delEstandar, grupoDeCategoria(delEstandar)];
@@ -565,15 +579,19 @@ function leerVigencias(encabezados, bloques) {
  * no le suma peso al enlace. Solo lee las filas de encabezado, que es una
  * lectura mínima al lado de la matriz entera, y aun así se guarda en caché.
  */
+let _memoEstandares = null;
+
 function mapaEstandares() {
+  if (_memoEstandares) return _memoEstandares;
+
   const cache = CacheService.getScriptCache();
   const guardado = cache.get("est_v1");
   if (guardado) {
-    try { return JSON.parse(guardado); } catch (err) { /* ilegible: se relee */ }
+    try { return (_memoEstandares = JSON.parse(guardado)); } catch (err) { /* ilegible: se relee */ }
   }
 
   const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CFG.HOJA_MATRIZ);
-  if (!hoja) return {};
+  if (!hoja) return (_memoEstandares = {});
 
   const ancho = hoja.getLastColumn() - CFG.PRIMERA_COL_CURSO + 1;
   const enc   = hoja.getRange(1, CFG.PRIMERA_COL_CURSO, CFG.FILA_TITULOS, ancho).getValues();
@@ -581,7 +599,7 @@ function mapaEstandares() {
                                                       enc[CFG.FILA_TITULOS - 1])).mapa;
 
   try { cache.put("est_v1", JSON.stringify(mapa), CACHE_MINUTOS * 60); } catch (err) {}
-  return mapa;
+  return (_memoEstandares = mapa);
 }
 
 /** { fila, mapa } a partir de los encabezados ya leídos. */
