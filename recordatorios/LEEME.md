@@ -195,6 +195,13 @@ cuatro números suman lo que está en vista. Antes la primera mezclaba vencidas
 con las de ≤7, la tercera volvía a contar a las dos y no existía tarjeta para
 el tramo de 16 a 60: los números no se podían sumar y no era evidente por qué.
 
+Las fichas **son** ese reparto, así que se calculan sobre `base()` y no sobre
+las filas ya filtradas: al pulsar una, las otras tres se iban a cero y decían
+cosas falsas («todas se han hecho alguna vez») cuando lo único cierto era que
+no quedaba ninguna *en el filtro puesto*. Los botones de urgencia ya lo hacían
+bien; las fichas no. La que está puesta se marca, para que se vea que la lista
+está recortada aunque los números de arriba no se hayan movido.
+
 Salieron dos: «personas involucradas», cuyo promedio de cursos por persona no
 llevaba a ninguna acción y que la pestaña «Por persona» ya da mejor, y
 «registros en vista», que repetía el botón «Todas» de la fila de arriba.
