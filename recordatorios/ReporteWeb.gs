@@ -910,11 +910,23 @@ function enviarSolicitud(datos) {
   }
 
   datos = datos || {};
-  const planta = indicePlantas()[normalizar(datos.planta)];
-  if (!planta) throw new Error("No reconozco la planta de la solicitud.");
 
   let personas = Array.isArray(datos.personas) ? datos.personas : [];
   if (!personas.length) throw new Error("No hay ninguna capacitación seleccionada.");
+
+  // La planta la trae cada persona, no la solicitud: desde que el reporte deja
+  // ver varias a la vez, una misma selección puede mezclarlas. Se resuelve
+  // contra la lista del servidor, nunca se copia lo que diga el navegador.
+  const plantas = [];
+  const conocidas = indicePlantas();
+  personas.forEach(function (p) {
+    const planta = conocidas[normalizar(p.planta)];
+    if (!planta) throw new Error("No reconozco la planta de la solicitud.");
+    p.planta = planta;
+    if (plantas.indexOf(planta) === -1) plantas.push(planta);
+  });
+  plantas.sort();
+  const planta = plantas.join(" · ");
   if (personas.length > MAX_POR_SOLICITUD) {
     throw new Error("Son demasiadas de una vez (máximo " + MAX_POR_SOLICITUD + "). " +
                     "Divídalas en varias solicitudes.");
@@ -928,8 +940,16 @@ function enviarSolicitud(datos) {
   let solicitante = "";
   try { solicitante = Session.getActiveUser().getEmail() || ""; } catch (err) { solicitante = ""; }
 
+  const celdaPlanta = function (p) {
+    return plantas.length > 1
+      ? "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef;white-space:nowrap'>" +
+        escapar(p.planta) + "</td>"
+      : "";
+  };
+
   const filas = personas.map(function (p) {
     return "<tr>" +
+      celdaPlanta(p) +
       "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.nombre, 120)) + "</td>" +
       "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.id, 30))     + "</td>" +
       "<td style='padding:7px 10px;border-bottom:1px solid #e2e8ef'>" + escapar(recorta(p.pos, 120))   + "</td>" +
@@ -950,6 +970,7 @@ function enviarSolicitud(datos) {
     "las siguientes capacitaciones:</p>" +
     "<table style=\"border-collapse:collapse;font-size:13px;margin:14px 0;width:100%\">" +
     "<thead><tr style=\"background:#1d4370;color:#fff\">" +
+    (plantas.length > 1 ? "<th style='padding:8px 10px;text-align:left'>Planta</th>" : "") +
     "<th style='padding:8px 10px;text-align:left'>Nombre</th>" +
     "<th style='padding:8px 10px;text-align:left'>Cédula</th>" +
     "<th style='padding:8px 10px;text-align:left'>Cargo</th>" +
@@ -976,7 +997,8 @@ function enviarSolicitud(datos) {
 
   const correo = {
     to:       CORREO_SOLICITUDES,
-    subject:  "Solicitud de capacitación · " + planta + " · " + personas.length +
+    subject:  "Solicitud de capacitación · " +
+              (plantas.length > 2 ? plantas.length + " plantas" : planta) + " · " + personas.length +
               (personas.length === 1 ? " persona" : " personas") +
               (fecha ? " · propuesta: " + fecha : ""),
     htmlBody: cuerpo
@@ -1116,7 +1138,7 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
   const tabla = tablaDelCorreo(registros);
 
   const puntos = tabla.filas.length
-    ? "<p>Estas son las personas de la planta a las que les falta cada capacitación:</p>" +
+    ? "<p>Estas son las personas de la planta a las que les falta cada estándar:</p>" +
       tabla.html +
       "<p style=\"font-size:12.5px;color:#5d7186;margin:-6px 0 18px\">" +
       "Se cuentan <b>personas</b>, no capacitaciones. En total son <b>" + tabla.personas +
@@ -1296,29 +1318,38 @@ function verEnviosDeHoy() {
  * Devuelve { html, listadas, restantes, internas, pendientes }.
  */
 function tablaDelCorreo(registros) {
-  // Una persona puede tener varias capacitaciones de lo mismo. Lo que se cuenta
-  // son PERSONAS: "de alturas faltan 12" se entiende; "hay 19 vencimientos de
-  // alturas" no dice a cuánta gente hay que mover.
-  const porCat = {};
-  const todas  = {};
+  // Se agrupa por ESTÁNDAR, que es como está escrito el requisito, y no por la
+  // categoría que usa el tablero. Lo que se cuenta son PERSONAS: "del estándar
+  // de alturas faltan 12" se entiende; "hay 19 vencimientos" no dice a cuánta
+  // gente hay que mover.
+  const estandarDe = mapaEstandares();
+  const grupos = {};
 
   registros.forEach(function (r) {
-    const c = porCat[r.cat] || (porCat[r.cat] = {
-      cat: r.cat, grupo: r.grupo, vencidas: {}, proximas: {}, sinHacer: {}, personas: {}
+    const est = estandarDe[r.curso] || SIN_ESTANDAR;
+    const k   = r.grupo + " >> " + est;
+
+    const f = grupos[k] || (grupos[k] = {
+      estandar: est, grupo: r.grupo, cats: {},
+      vencidas: {}, proximas: {}, sinHacer: {}, personas: {}
     });
-    const casilla = (r.urg === "pendiente") ? c.sinHacer : (r.dias < 0 ? c.vencidas : c.proximas);
-    casilla[r.id]   = true;
-    c.personas[r.id] = true;
-    todas[r.id]      = true;
+
+    const casilla = (r.urg === "pendiente") ? f.sinHacer : (r.dias < 0 ? f.vencidas : f.proximas);
+    casilla[r.id]    = true;
+    f.personas[r.id] = true;
+    f.cats[r.cat]    = true;
   });
 
-  const cuenta = function (o) { return Object.keys(o).length; };
+  const cuantos = function (o) { return Object.keys(o).length; };
 
-  const filas = Object.keys(porCat).map(function (k) {
-    const c = porCat[k];
-    return { cat: c.cat, grupo: c.grupo,
-             vencidas: cuenta(c.vencidas), proximas: cuenta(c.proximas),
-             sinHacer: cuenta(c.sinHacer), personas: cuenta(c.personas) };
+  const filas = Object.keys(grupos).map(function (k) {
+    const f = grupos[k];
+    return {
+      estandar: f.estandar, grupo: f.grupo,
+      cats:     Object.keys(f.cats).sort(),
+      vencidas: cuantos(f.vencidas), proximas: cuantos(f.proximas),
+      sinHacer: cuantos(f.sinHacer), personas: cuantos(f.personas)
+    };
   });
 
   // Primero el grupo que hay que programar con proveedor, y dentro de cada
@@ -1327,64 +1358,104 @@ function tablaDelCorreo(registros) {
     const ga = a.grupo === CORREO_TABLA.grupoArriba ? 0 : 1;
     const gb = b.grupo === CORREO_TABLA.grupoArriba ? 0 : 1;
     return (ga - gb) || (b.vencidas - a.vencidas) || (b.personas - a.personas) ||
-           a.cat.localeCompare(b.cat);
+           a.estandar.localeCompare(b.estandar);
   });
 
-  return { filas: filas, personas: cuenta(todas), registros: registros.length,
+  const personas = {};
+  registros.forEach(function (r) { personas[r.id] = true; });
+
+  return { filas: filas, personas: cuantos(personas), registros: registros.length,
            html: htmlDeTabla(filas) };
 }
 
-/** La tabla del correo a partir de las filas ya contadas. */
+/** Etiqueta para los cursos cuyo estándar no se pudo leer de la matriz. */
+const SIN_ESTANDAR = "Sin estándar asignado";
+
+/**
+ * La tabla del correo a partir de las filas ya contadas.
+ *
+ * El correo se lee en tres segundos y muchas veces desde el teléfono: por eso
+ * cada casilla va teñida de su color y las columnas separadas. Un cero no es
+ * una alerta, así que se dibuja apagado para que salten los que no lo son.
+ */
 function htmlDeTabla(filas) {
   if (!filas.length) return "";
 
-  const celda  = "padding:8px 11px;border-bottom:1px solid #e2e8ef;font-size:13px";
-  const numero = celda + ";text-align:center;white-space:nowrap";
-  const total  = { vencidas: 0, proximas: 0, sinHacer: 0 };
+  const TONO = {
+    vencidas: { fondo: "#fdecea", texto: "#8f1d16" },
+    proximas: { fondo: "#fdf3e0", texto: "#9a5b04" },
+    sinHacer: { fondo: "#eceff3", texto: "#44596b" }
+  };
+  const SEP   = "border-right:1px solid #dbe3ec";
+  const celda = "padding:9px 12px;border-bottom:1px solid #e2e8ef;font-size:13px;" + SEP;
+  const num   = "padding:9px 12px;border-bottom:1px solid #e2e8ef;font-size:14px;" +
+                "text-align:center;white-space:nowrap;" + SEP;
 
-  let grupoActual = null;
-  const cuerpo = filas.map(function (f) {
-    total.vencidas += f.vencidas;
-    total.proximas += f.proximas;
-    total.sinHacer += f.sinHacer;
+  const casilla = function (v, tipo) {
+    if (!v) return "<td style='" + num + ";color:#c3ced8'>&middot;</td>";
+    const t = TONO[tipo];
+    return "<td style='" + num + ";background:" + t.fondo + ";color:" + t.texto +
+           ";font-weight:700'>" + v + "</td>";
+  };
 
-    let separador = "";
+  const banda = function (texto, fondo, color) {
+    return "<tr><td colspan='4' style=\"padding:10px 12px;font-size:11.5px;font-weight:700;" +
+           "letter-spacing:.07em;text-transform:uppercase;color:" + color + ";background:" + fondo +
+           ";border-bottom:1px solid #e2e8ef\">" + texto + "</td></tr>";
+  };
+
+  const subtotal = function (rotulo, t) {
+    const n = function (v, tipo) {
+      return "<td style='" + num + ";font-weight:800;color:" +
+             (v ? TONO[tipo].texto : "#c3ced8") + "'>" + (v || "&middot;") + "</td>";
+    };
+    return "<tr style=\"background:#f2f6fa\">" +
+      "<td style='" + celda + ";font-weight:700'>" + rotulo + "</td>" +
+      n(t.vencidas, "vencidas") + n(t.proximas, "proximas") + n(t.sinHacer, "sinHacer") + "</tr>";
+  };
+
+  let cuerpo = "", grupoActual = null, acum = null;
+  const cerrar = function () {
+    if (!acum) return "";
+    const html = subtotal(grupoActual === "externa" ? "Total externas" : "Total internas", acum);
+    acum = null;
+    return html;
+  };
+
+  filas.forEach(function (f) {
     if (f.grupo !== grupoActual) {
+      cuerpo += cerrar();
       grupoActual = f.grupo;
-      separador =
-        "<tr><td colspan='4' style=\"padding:11px 11px 5px;font-size:11.5px;font-weight:700;" +
-        "letter-spacing:.06em;text-transform:uppercase;color:#5d7186;background:#f4f7fa\">" +
-        (grupoActual === "externa"
-          ? "Externas &middot; se programan con el proveedor"
-          : "Internas &middot; varias se hacen en línea desde el reporte") +
-        "</td></tr>";
+      acum = { vencidas: 0, proximas: 0, sinHacer: 0 };
+      cuerpo += (grupoActual === "externa")
+        ? banda("Externas &middot; se programan con el proveedor", "#fdf0ed", "#8f1d16")
+        : banda("Internas &middot; varias se hacen en línea desde el reporte", "#edf2f8", "#2c5c8f");
     }
 
-    // Un cero no es una alerta: se pinta apagado para que salten los que no lo son
-    const n = function (v, color) {
-      return "<td style='" + numero + (v ? ";color:" + color + ";font-weight:700" : ";color:#b6c2cf") + "'>" +
-             (v || "&middot;") + "</td>";
-    };
+    acum.vencidas += f.vencidas;
+    acum.proximas += f.proximas;
+    acum.sinHacer += f.sinHacer;
 
-    return separador +
-      "<tr><td style='" + celda + "'>" + escapar(f.cat) + "</td>" +
-      n(f.vencidas, "#8f1d16") + n(f.proximas, "#e07a0c") + n(f.sinHacer, "#5d7186") + "</tr>";
-  }).join("");
+    // Debajo del estándar, qué capacitaciones cubre. Solo cuando son varias:
+    // repetir "Alturas" bajo "HSE-004 Trabajo en alturas" no dice nada nuevo.
+    const detalle = (f.cats.length > 1)
+      ? "<br><span style='color:#5d7186;font-size:11.5px'>" + escapar(f.cats.join(" &middot; ")) + "</span>"
+      : "";
 
-  const pie =
-    "<tr style=\"background:#eef3f8\">" +
-    "<td style='" + celda + ";border-bottom:0;font-weight:700'>Total</td>" +
-    "<td style='" + numero + ";border-bottom:0;font-weight:700'>" + (total.vencidas || "&middot;") + "</td>" +
-    "<td style='" + numero + ";border-bottom:0;font-weight:700'>" + (total.proximas || "&middot;") + "</td>" +
-    "<td style='" + numero + ";border-bottom:0;font-weight:700'>" + (total.sinHacer || "&middot;") + "</td></tr>";
+    cuerpo += "<tr><td style='" + celda + "'>" + escapar(f.estandar) + detalle + "</td>" +
+      casilla(f.vencidas, "vencidas") + casilla(f.proximas, "proximas") +
+      casilla(f.sinHacer, "sinHacer") + "</tr>";
+  });
+  cuerpo += cerrar();
 
-  return "<table style=\"border-collapse:collapse;width:100%;margin:16px 0\">" +
+  const th = "padding:10px 12px;font-size:12px;border-right:1px solid rgba(255,255,255,.22)";
+  return "<table style=\"border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #dbe3ec\">" +
     "<thead><tr style=\"background:#1d4370;color:#fff\">" +
-    "<th style='padding:9px 11px;text-align:left;font-size:12px'>Capacitación</th>" +
-    "<th style='padding:9px 11px;font-size:12px;white-space:nowrap'>Vencidas</th>" +
-    "<th style='padding:9px 11px;font-size:12px;white-space:nowrap'>Vencen en " + CFG.VENTANA_DIAS + " días</th>" +
-    "<th style='padding:9px 11px;font-size:12px;white-space:nowrap'>Sin realizar</th>" +
-    "</tr></thead><tbody>" + cuerpo + pie + "</tbody></table>";
+    "<th style='" + th + ";text-align:left'>Estándar</th>" +
+    "<th style='" + th + "'>Vencidas</th>" +
+    "<th style='" + th + "'>Vencen en " + CFG.VENTANA_DIAS + " días</th>" +
+    "<th style='" + th + ";border-right:0'>Sin realizar</th>" +
+    "</tr></thead><tbody>" + cuerpo + "</tbody></table>";
 }
 
 /** Planta que se usa al probar el correo. */

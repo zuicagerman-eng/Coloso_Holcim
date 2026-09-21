@@ -85,6 +85,37 @@
     padding:8px 12px;font-size:13.5px;font-weight:600;min-width:200px;cursor:pointer;
   }
   select.plant:hover{border-color:var(--h-cyan)}
+  /* Selector de plantas: varias a la vez, con casillas */
+  .pickwrap{position:relative}
+  .pickbtn{
+    background:var(--head-ctl);color:var(--head-text);border:1px solid var(--head-line);border-radius:9px;
+    padding:8px 12px;font-size:13.5px;font-weight:600;min-width:210px;cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left
+  }
+  .pickbtn:hover{border-color:var(--h-cyan)}
+  .pickbtn .cara{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pickbtn .flecha{flex:none;opacity:.7;font-size:10px}
+  .pickpanel{
+    position:absolute;top:calc(100% + 6px);right:0;z-index:70;width:290px;max-height:min(70vh,430px);
+    overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 18px 46px rgba(6,16,26,.28);padding:8px
+  }
+  .pickpanel[hidden]{display:none}
+  .pickpanel .acc{display:flex;gap:6px;padding:4px 6px 8px;border-bottom:1px solid var(--line-2);margin-bottom:6px}
+  .pickpanel .acc button{
+    flex:1;border:1px solid var(--line);background:var(--card-2);color:var(--text);border-radius:8px;
+    padding:7px 9px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit
+  }
+  .pickpanel .acc button:hover{border-color:var(--brand)}
+  .pickop{
+    display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:8px;cursor:pointer;
+    font-size:13px;line-height:1.35
+  }
+  .pickop:hover{background:var(--card-2)}
+  .pickop input{accent-color:var(--brand);width:16px;height:16px;flex:none;cursor:pointer}
+  .pickop .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pickop .ct{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+  .pickop .ct b{color:var(--u-vencida)}
   .btn-ghost{
     background:transparent;color:var(--head-text);border:1px solid var(--head-line);border-radius:9px;
     padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;gap:7px;align-items:center;white-space:nowrap
@@ -420,6 +451,9 @@
     .right{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;padding-top:8px;border-top:1px dashed var(--line-2)}
     .plantpick{order:3;width:100%}
     select.plant{flex:1;min-width:0}
+    .pickwrap{flex:1;min-width:0}
+    .pickbtn{width:100%;min-width:0}
+    .pickpanel{left:0;right:0;width:auto}
     .weeks{height:140px}
     .view-opts{grid-template-columns:1fr 1fr}
     .plant-grid{grid-template-columns:1fr 1fr}
@@ -456,7 +490,7 @@
     <div class="modal-h">
       <? if (typeof logo !== "undefined" && logo) { ?><span class="logo-crop" style="<?= (typeof logoAncho !== "undefined" && logoAncho) ? "width:" + logoAncho + "px" : "" ?>"><img class="logo-img" src="<?!= typeof logo !== "undefined" ? logo : "" ?>" alt="Holcim"></span><? } else { ?><svg class="logo" viewBox="0 0 64 32" role="img" aria-label="Holcim"><defs><linearGradient id="hg2" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#94c12e"/><stop offset=".5" stop-color="#04bbf1"/><stop offset="1" stop-color="#1d4370"/></linearGradient></defs><path d="M18.6 6.6C13.5 6.6 9.4 10.7 9.4 15.8S13.5 25 18.6 25c5.1 0 9.2-4.1 13.4-9.2 4.2-5.1 8.3-9.2 13.4-9.2s9.2 4.1 9.2 9.2S50.5 25 45.4 25c-5.1 0-9.2-4.1-13.4-9.2C27.8 10.7 23.7 6.6 18.6 6.6Z" fill="none" stroke="url(#hg2)" stroke-width="6.4" stroke-linecap="round"/></svg><? } ?>
       <h2 id="mTitle">Vencimientos de capacitaciones</h2>
-      <p>Elige tu planta y qué capacitaciones quieres revisar. Todo se puede cambiar después.</p>
+      <p>Elige tu planta &mdash;o varias, se pueden marcar juntas&mdash; y qué capacitaciones quieres revisar. Todo se puede cambiar después.</p>
     </div>
     <div class="modal-b">
       <p class="step-l">PASO 1 · ¿EN QUÉ PLANTA TRABAJAS?</p>
@@ -525,7 +559,7 @@
       <div class="nota">El enlace es solo de su planta. No puede ver las de otras, y en las otras no ven la suya.</div>
 
       <h3>2 · LA BARRA DE ARRIBA</h3>
-      <div class="paso"><span class="num">1</span><span class="txt"><b>Planta</b> — su enlace abre siempre en su planta, con el número de registros entre paréntesis. En la lista están <b>todas las demás</b>: si elige otra, se carga en ese momento (tarda unos segundos la primera vez, después es instantáneo). Y <b>Todas las plantas</b> las junta, aunque cargarlas todas sí toma su tiempo.</span></div>
+      <div class="paso"><span class="num">1</span><span class="txt"><b>Planta</b> — su enlace abre siempre en su planta. Al pulsar el botón se despliega la lista con <b>todas</b>, cada una con sus registros y, en rojo, los urgentes. Son <b>casillas</b>: puede marcar dos, tres o las que quiera y verlas juntas. Cada planta nueva se carga en ese momento (unos segundos la primera vez, después instantáneo). <b>Todas</b> las junta y <b>Solo la mía</b> vuelve a la del enlace.</span></div>
       <div class="paso"><span class="num">2</span><span class="txt"><b>Modo oscuro / claro</b> — cambia los colores de la pantalla. Queda guardado para la próxima vez.</span></div>
       <div class="paso"><span class="num">3</span><span class="txt"><b>¿Primera vez?</b> — este botón. Abre esta guía.</span></div>
       <div class="paso"><span class="num">4</span><span class="txt"><b>Ayuda</b> — un resumen más corto, para cuando solo quiera recordar un detalle.</span></div>
@@ -701,8 +735,19 @@
       </div>
     </div>
     <div class="plantpick">
-      <label for="plantSel">Planta</label>
-      <select class="plant" id="plantSel"></select>
+      <label for="plantBtn">Planta</label>
+      <div class="pickwrap">
+        <button class="pickbtn" id="plantBtn" type="button" aria-haspopup="true" aria-expanded="false">
+          <span class="cara" id="plantCara">Todas las plantas</span><span class="flecha">&#9660;</span>
+        </button>
+        <div class="pickpanel" id="plantPanel" role="group" aria-label="Elegir plantas" hidden>
+          <div class="acc">
+            <button type="button" id="pickTodas">Todas</button>
+            <button type="button" id="pickNinguna">Solo la mía</button>
+          </div>
+          <div id="pickLista"></div>
+        </div>
+      </div>
     </div>
     <button class="btn-ghost" id="theme">🌙 Modo oscuro</button>
     <span class="guia-wrap">
@@ -852,7 +897,10 @@ const URG = {
 const URG_ORDER = ["vencida","critica","alta","media","baja","pendiente"];
 const PAGE = 60;                              // filas por tanda (render progresivo)
 
-const state = {planta:"<?= typeof plantaInicial !== "undefined" ? plantaInicial : "__ALL__" ?>", grupo:"todas", estandar:"", curso:"", mes:"", soloSel:false, q:"", urg:"", sort:"fecha", tab:"lista"};
+/* Varias plantas a la vez. Lista vacía = todas; así el caso "todas" no
+   necesita un valor especial que haya que recordar en cada comparación. */
+const PLANTA_ENLACE = "<?= typeof plantaInicial !== "undefined" ? plantaInicial : "__ALL__" ?>";
+const state = {plantas: PLANTA_ENLACE === "__ALL__" ? [] : [PLANTA_ENLACE], grupo:"todas", estandar:"", curso:"", mes:"", soloSel:false, q:"", urg:"", sort:"fecha", tab:"lista"};
 let shown = PAGE, shownPpl = 30;
 
 const $  = s => document.querySelector(s);
@@ -876,9 +924,18 @@ const TOTAL_N = Object.keys(PLANTA_N).reduce((t,p)=>t+PLANTA_N[p], 0);
    El enlace trae la planta de cada quien, que es lo que lo hace abrir rápido.
    Al elegir otra en el selector se pide al servidor y se suma a lo que ya hay;
    una vez traída, moverse entre ellas es instantáneo. */
+/* Cómo se nombra la selección en títulos, pies y descargas. */
+const todasLasPlantas = () => !state.plantas.length || state.plantas.length >= plantasList.length;
+function nombreSeleccion(){
+  if(todasLasPlantas()) return "todas las plantas";
+  if(state.plantas.length === 1) return state.plantas[0];
+  return state.plantas.length + " plantas";
+}
+/* En la ficha de cada persona solo hace falta decir la planta si hay varias. */
+const variasPlantas = () => !(state.plantas.length === 1);
+
 const cargadas = new Set(DATA.map(d => d.planta));
 let pidiendo = false;
-let plantaPrevia = "__ALL__";   // a la que volver si una carga falla
 
 const hayServidor = () => typeof google !== "undefined" && google.script && google.script.run;
 
@@ -901,7 +958,7 @@ function aviso(txt, mal){
 
 /* Trae lo que falte para poder mostrar «destino». Devuelve false si no pudo. */
 async function asegurarPlantas(destino){
-  const quiero = destino === "__ALL__" ? plantasList : [destino];
+  const quiero = (!destino || !destino.length) ? plantasList : destino;
   const faltan = quiero.filter(p => !cargadas.has(p));
   if(!faltan.length) return true;
 
@@ -911,7 +968,7 @@ async function asegurarPlantas(destino){
   }
 
   pidiendo = true;
-  $("#plantSel").disabled = true;
+  $("#plantBtn").disabled = true;
   try{
     for(let i=0; i<faltan.length; i++){
       aviso(faltan.length===1 ? `Cargando ${faltan[0]}…`
@@ -925,7 +982,7 @@ async function asegurarPlantas(destino){
     return false;
   }finally{
     pidiendo = false;
-    $("#plantSel").disabled = false;
+    $("#plantBtn").disabled = false;
   }
 }
 
@@ -949,7 +1006,7 @@ $("#theme").onclick = () => applyTheme(document.documentElement.getAttribute("da
 /* ---------- Persistencia: URL (compartible) + localStorage ---------- */
 function stateToHash(){
   const p = new URLSearchParams();
-  if(state.planta!=="__ALL__") p.set("p", state.planta);
+  if(state.plantas.length) p.set("p", state.plantas.join("~"));
   if(state.grupo!=="todas")    p.set("g", state.grupo);
   if(state.urg)                p.set("u", state.urg);
   if(state.estandar)           p.set("e", state.estandar);
@@ -965,7 +1022,7 @@ function hashToState(){
   const h = location.hash.replace(/^#/,"");
   if(!h) return false;
   const p = new URLSearchParams(h);
-  if(p.has("p")) state.planta = p.get("p");
+  if(p.has("p")) state.plantas = p.get("p").split("~").filter(Boolean);
   if(p.has("g")) state.grupo  = p.get("g");
   if(p.has("u")) state.urg    = p.get("u");
   if(p.has("e")) state.estandar = p.get("e");
@@ -976,11 +1033,11 @@ function hashToState(){
   if(p.has("t")) state.tab    = p.get("t");
   return true;
 }
-function savePref(){ try{ localStorage.setItem("hs_pref", JSON.stringify({planta:state.planta, grupo:state.grupo})); }catch(e){} }
+function savePref(){ try{ localStorage.setItem("hs_pref", JSON.stringify({plantas:state.plantas, grupo:state.grupo})); }catch(e){} }
 function loadPref(){ try{ return JSON.parse(localStorage.getItem("hs_pref")||"null"); }catch(e){ return null; } }
 
 /* ---------- Filtros ---------- */
-const byPlanta = d => state.planta==="__ALL__" || d.planta===state.planta;
+const byPlanta = d => !state.plantas.length || state.plantas.indexOf(d.planta) !== -1;
 const byGrupo  = d => {
   if(state.grupo==="todas")   return true;
   if(state.grupo==="externa") return d.grupo==="externa";
@@ -1014,7 +1071,7 @@ function sortRows(a,b){
 }
 
 /* ---------- Modal de bienvenida ---------- */
-let modalPlanta = null, modalGrupo = "todas";
+let modalPlantas = [], modalGrupo = "todas";
 function buildModal(){
   const g = $("#plantGrid");
   const cards = [{p:"__ALL__", n:DATA.length, u:DATA.filter(d=>d.dias<=7).length, label:"Todas las plantas", all:true}]
@@ -1025,45 +1082,58 @@ function buildModal(){
       <span class="pc">${c.n} registros</span>
       ${c.u?`<span class="pu"><i class="dot"></i>${c.u} urgente${c.u===1?"":"s"}</span>`:""}
     </button>`).join("");
-  g.querySelectorAll(".pcard").forEach(b=>b.onclick=()=>selPlanta(b.dataset.p));
+  g.querySelectorAll(".pcard").forEach(b=>b.onclick=()=>alternarTarjeta(b.dataset.p));
   const vo = $("#viewOpts");
   vo.querySelectorAll(".vopt").forEach(b=>b.onclick=()=>{
     vo.querySelectorAll(".vopt").forEach(x=>x.setAttribute("aria-pressed","false"));
     b.setAttribute("aria-pressed","true"); modalGrupo = b.dataset.g;
   });
-  selPlanta(state.planta);
+  pintarTarjetas(state.plantas);
 }
-/* Marca la planta elegida y dice en el botón qué se va a abrir */
-function selPlanta(p){
-  const g = $("#plantGrid");
-  let card = g.querySelector(`.pcard[data-p="${CSS.escape(p)}"]`);
-  if(!card){ card = g.querySelector(".pcard"); p = card.dataset.p; }
-  g.querySelectorAll(".pcard").forEach(x=>x.setAttribute("aria-pressed","false"));
-  card.setAttribute("aria-pressed","true");
-  modalPlanta = p;
-  $("#enter").textContent = "Ver capacitaciones de " + (p==="__ALL__" ? "todas las plantas" : p);
+/* Se pueden marcar varias. "Todas las plantas" es exclusiva: marcarla limpia
+   el resto, y marcar una concreta la desmarca a ella. */
+function alternarTarjeta(p){
+  if(p === "__ALL__"){ pintarTarjetas([]); return; }
+  const i = modalPlantas.indexOf(p);
+  const nuevas = i === -1 ? modalPlantas.concat([p])
+                          : modalPlantas.filter(x => x !== p);
+  pintarTarjetas(nuevas.length >= plantasList.length ? [] : nuevas);
+}
+/* Marca lo elegido y dice en el botón qué se va a abrir */
+function pintarTarjetas(plantas){
+  modalPlantas = plantas;
+  const todas = !plantas.length;
+  $("#plantGrid").querySelectorAll(".pcard").forEach(x=>{
+    const p = x.dataset.p;
+    x.setAttribute("aria-pressed", String(p === "__ALL__" ? todas : plantas.indexOf(p) !== -1));
+  });
+  $("#enter").textContent = todas
+    ? "Ver capacitaciones de todas las plantas"
+    : plantas.length === 1
+      ? "Ver capacitaciones de " + plantas[0]
+      : `Ver capacitaciones de ${plantas.length} plantas`;
 }
 function openModal(){
-  selPlanta(state.planta);
+  pintarTarjetas(state.plantas);
   $("#overlay").hidden = false;
   const sel = $(`.pcard[aria-pressed="true"]`) || $(".pcard");
   setTimeout(()=>sel && sel.focus(), 40);
 }
 function closeModal(){ $("#overlay").hidden = true; $("#reopen").focus(); }
-function applyModal(planta, grupo){
-  state.planta = planta; state.grupo = grupo;
+function applyModal(plantas, grupo){
+  state.plantas = plantas; state.grupo = grupo;
   state.estandar = ""; state.curso = ""; state.mes = ""; state.soloSel = false;
   state.q = ""; state.urg = ""; shown = PAGE;
-  plantaPrevia = planta;
-  $("#plantSel").value = planta; $("#q").value = "";
+  $("#q").value = "";
+  pintarPicker();
   syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); closeModal(); render();
 }
 $("#enter").onclick = async () => {
-  const destino = modalPlanta || "__ALL__";
+  const destino = modalPlantas;
   const btn = $("#enter"), txt = btn.textContent;
+  const faltan = (destino.length ? destino : plantasList).filter(p => !cargadas.has(p));
   btn.disabled = true;
-  if(destino !== "__ALL__" && !cargadas.has(destino)) btn.textContent = "Cargando " + destino + "…";
-  else if(destino === "__ALL__" && plantasList.some(p=>!cargadas.has(p))) btn.textContent = "Cargando las plantas…";
+  if(faltan.length) btn.textContent = faltan.length === 1 ? "Cargando " + faltan[0] + "…" : "Cargando las plantas…";
   const listo = await asegurarPlantas(destino);
   btn.disabled = false; btn.textContent = txt;
   if(listo) applyModal(destino, modalGrupo);
@@ -1100,7 +1170,9 @@ function abrirSolicitud(){
   const items = [...seleccion.values()];
   if(!items.length) return;
 
-  $("#solSub").textContent = SALUDO.planta || items[0].planta;
+  // Con varias plantas a la vista la selección puede mezclarlas: se dicen todas
+  const plantasSol = [...new Set(items.map(r => r.planta))].sort();
+  $("#solSub").textContent = plantasSol.join(" · ");
   $("#solIntro").textContent = items.length === 1
     ? "Se enviará una solicitud para programar esta capacitación:"
     : `Se enviará una solicitud para programar estas ${items.length} capacitaciones:`;
@@ -1109,7 +1181,8 @@ function abrirSolicitud(){
     const est = r.urg === "pendiente" ? "sin realizar"
               : r.dias < 0 ? `vencida hace ${Math.abs(r.dias)} días`
               : r.dias === 0 ? "vence hoy" : `vence en ${r.dias} días`;
-    return `<li><b>${esc(r.nombre)}</b> &middot; CC ${esc(r.id)}<br>
+    const pl = plantasSol.length > 1 ? ` <span style="color:var(--muted)">&middot; ${esc(r.planta)}</span>` : "";
+    return `<li><b>${esc(r.nombre)}</b> &middot; CC ${esc(r.id)}${pl}<br>
       ${esc(r.curso)} <span style="color:var(--muted)">&mdash; ${est}</span></li>`;
   }).join("");
 
@@ -1214,11 +1287,10 @@ function enviarSolicitud(){
       btn.textContent = "Reintentar";
     })
     .enviarSolicitud({
-      planta:   items[0].planta,
       fecha:    $("#solFecha").value,
       nota:     $("#solNota").value,
       personas: items.map(r => ({
-        nombre: r.nombre, id: r.id, pos: r.pos, curso: r.curso,
+        planta: r.planta, nombre: r.nombre, id: r.id, pos: r.pos, curso: r.curso,
         estado: r.urg === "pendiente" ? "Sin realizar"
               : r.dias < 0 ? `Vencida hace ${Math.abs(r.dias)} d`
               : r.dias === 0 ? "Vence hoy" : `Vence en ${r.dias} d`
@@ -1285,18 +1357,7 @@ document.addEventListener("keydown", e => {
 /* ---------- Controles ---------- */
 function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
 function buildControls(){
-  const ps = $("#plantSel");
-  ps.innerHTML = `<option value="__ALL__">Todas las plantas (${DATA.length})</option>`
-    + plantasList.map(p=>`<option value="${esc(p)}">${esc(p)} (${PLANTA_N[p]})</option>`).join("");
-  plantaPrevia = state.planta;
-  ps.onchange = async () => {
-    const destino = ps.value;
-    if(pidiendo){ ps.value = state.planta; return; }
-    if(!await asegurarPlantas(destino)){ ps.value = plantaPrevia; return; }
-    plantaPrevia = state.planta = destino;
-    state.estandar=""; state.curso=""; state.mes=""; shown=PAGE;
-    refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render();
-  };
+  buildPicker();
 
   $("#grpSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{
     state.grupo = b.dataset.g; state.curso=""; shown=PAGE; syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render();
@@ -1319,6 +1380,64 @@ function buildControls(){
   $$(".tab").forEach(t=>t.onclick=()=>setTab(t.dataset.tab));
 }
 function flash(btn, txt){ const o = btn.textContent; btn.textContent = txt; setTimeout(()=>btn.textContent=o, 1600); }
+
+/* ---------- Selector de plantas (varias a la vez) ---------- */
+function buildPicker(){
+  $("#pickLista").innerHTML = plantasList.map(p=>`
+    <label class="pickop">
+      <input type="checkbox" value="${esc(p)}">
+      <span class="nm">${esc(p)}</span>
+      <span class="ct">${PLANTA_N[p]}${PLANTA_URG[p]?` · <b>${PLANTA_URG[p]}</b>`:""}</span>
+    </label>`).join("");
+
+  $("#pickLista").querySelectorAll("input").forEach(c=>{
+    c.onchange = () => aplicarPlantas(
+      [...$("#pickLista").querySelectorAll("input:checked")].map(x=>x.value), c);
+  });
+  $("#pickTodas").onclick   = () => aplicarPlantas([]);
+  $("#pickNinguna").onclick = () => aplicarPlantas(PLANTA_ENLACE === "__ALL__" ? [plantasList[0]] : [PLANTA_ENLACE]);
+
+  $("#plantBtn").onclick = e => { e.stopPropagation(); togglePanel(); };
+  document.addEventListener("click", e => {
+    if(!$("#plantPanel").hidden && !e.target.closest(".pickwrap")) cerrarPanel();
+  });
+  pintarPicker();
+}
+function togglePanel(){ $("#plantPanel").hidden ? abrirPanel() : cerrarPanel(); }
+function abrirPanel(){ $("#plantPanel").hidden = false; $("#plantBtn").setAttribute("aria-expanded","true"); }
+function cerrarPanel(){ $("#plantPanel").hidden = true;  $("#plantBtn").setAttribute("aria-expanded","false"); }
+
+/* Refleja el estado en el botón y en las casillas */
+function pintarPicker(){
+  const todas = !state.plantas.length;
+  $("#plantCara").textContent = todas
+    ? `Todas las plantas (${TOTAL_N})`
+    : state.plantas.length === 1
+      ? `${state.plantas[0]} (${PLANTA_N[state.plantas[0]] || 0})`
+      : `${state.plantas.length} plantas seleccionadas`;
+  $("#pickLista").querySelectorAll("input").forEach(c=>{
+    c.checked = todas || state.plantas.indexOf(c.value) !== -1;
+  });
+}
+
+/* Cambia la selección, trayendo del servidor lo que aún no esté cargado.
+   Si la carga falla se vuelve a lo que había: más vale no moverse que
+   quedarse mostrando una planta a medio traer. */
+async function aplicarPlantas(nuevas, control){
+  if(pidiendo){ pintarPicker(); return; }
+
+  // Marcarlas todas a mano es lo mismo que "todas": se guarda como lista vacía
+  if(nuevas.length >= plantasList.length) nuevas = [];
+  // Desmarcar la última dejaría la pantalla en blanco sin decir por qué
+  if(!nuevas.length && control){ pintarPicker(); return; }
+
+  const antes = state.plantas;
+  if(!await asegurarPlantas(nuevas)){ state.plantas = antes; pintarPicker(); return; }
+
+  state.plantas = nuevas;
+  state.estandar=""; state.curso=""; state.mes=""; shown=PAGE;
+  pintarPicker(); refreshEstandares(); refreshCursos(); refreshMeses(); savePref(); render();
+}
 function setTab(tab){
   state.tab = tab;
   $$(".tab").forEach(x=>x.setAttribute("aria-selected", String(x.dataset.tab===tab)));
@@ -1413,7 +1532,7 @@ function renderKpis(rows){
   $("#kpis").innerHTML = `
     <button class="kpi k-total" data-act="all">
       <span class="bar"></span><div class="n tnum">${rows.length}</div>
-      <div class="l">Registros en vista</div><div class="s">${state.planta==="__ALL__"?"Todas las plantas":esc(state.planta)}</div>
+      <div class="l">Registros en vista</div><div class="s">${esc(nombreSeleccion())}</div>
     </button>
     <button class="kpi k-now" data-act="urgente">
       <span class="bar"></span><div class="n tnum">${venc+d7}</div>
@@ -1438,9 +1557,9 @@ function renderKpis(rows){
 function badgeClass(g){ return g==="externa" ? "b-alto" : "b-int"; }
 function renderList(rows){
   rows = [...rows].sort(sortRows);
-  $("#listTitle").textContent = state.planta==="__ALL__"
+  $("#listTitle").textContent = todasLasPlantas()
     ? "Capacitaciones por vencer · todas las plantas"
-    : `Capacitaciones por vencer · ${state.planta}`;
+    : `Capacitaciones por vencer · ${nombreSeleccion()}`;
   $("#listCnt").textContent = `${rows.length} resultado${rows.length!==1?"s":""}` + (rows.length>shown ? ` · mostrando ${shown}` : "");
   if(!rows.length){
     $("#rows").innerHTML = `<div class="empty"><b>Sin resultados</b>No hay capacitaciones con estos filtros. Prueba cambiar la planta, el tipo de capacitación o el buscador.</div>`;
@@ -1473,7 +1592,7 @@ function renderList(rows){
       <div class="days"><div class="d tnum">${dtxt}</div><div class="dl">${dlab}</div></div>
       <div class="who">
         <div class="nm">${esc(r.nombre)}</div>
-        <div class="meta">${esc(r.pos)} · CC ${esc(r.id)}${state.planta==="__ALL__" ? " · "+esc(r.planta) : ""}</div>
+        <div class="meta">${esc(r.pos)} · CC ${esc(r.id)}${variasPlantas() ? " · "+esc(r.planta) : ""}</div>
         <div class="course"><span class="badge ${badgeClass(r.grupo)}">${esc(r.cat)}</span> ${esc(r.curso)}</div>
       </div>
       <div class="right">
@@ -1531,7 +1650,7 @@ function renderPeople(rows){
 const URG_COLOR = {vencida:"var(--u-vencida)", critica:"var(--u-critica)", alta:"var(--u-alta)", media:"var(--u-media)", baja:"var(--u-baja)", pendiente:"var(--u-pendiente)"};
 function renderDash(rows){
   const tot = rows.length || 1;
-  $("#distSub").textContent = (state.planta==="__ALL__" ? "todas las plantas" : state.planta) + ` · ${rows.length} registros`;
+  $("#distSub").textContent = nombreSeleccion() + ` · ${rows.length} registros`;
   $("#distro").innerHTML = URG_ORDER.map(u=>{
     const n = rows.filter(r=>r.urg===u).length; if(!n) return "";
     const pct = n/tot*100;
@@ -1542,7 +1661,7 @@ function renderDash(rows){
   bars("#barCat",     tally(rows,"cat"),         true);
   bars("#barCurso",   tally(rows,"curso",8),     true);
   bars("#barPersona", tallyPersona(rows,8),      true);
-  if(state.planta==="__ALL__"){
+  if(variasPlantas()){
     $("#barPlTitle").textContent = "Por planta";
     bars("#barPlanta", tally(rows,"planta",10), true);
   }else{
@@ -1609,7 +1728,9 @@ function exportCSV(){
     r.fecha || "", r.urg==="pendiente" ? "" : r.dias, URG[r.urg].lb
   ].map(x=>`"${String(x).replace(/"/g,'""')}"`).join(";")));
   const blob = new Blob(["﻿"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
-  const tag  = state.planta==="__ALL__" ? "todas" : state.planta.replace(/[^\w]+/g,"_");
+  const tag  = todasLasPlantas() ? "todas"
+             : state.plantas.length === 1 ? state.plantas[0].replace(/[^\w]+/g,"_")
+             : state.plantas.length + "_plantas";
   guardar(blob, `vencimientos_${tag}_${state.grupo}_${[CORTE.getFullYear(),String(CORTE.getMonth()+1).padStart(2,"0"),String(CORTE.getDate()).padStart(2,"0")].join("-")}.csv`, rows.length);
 }
 
@@ -1641,7 +1762,8 @@ if(window.claude && typeof window.claude.use === "function"){
 /* ---------- Pie y encabezado de impresión ---------- */
 function renderFoot(rows){
   const f = [];
-  f.push(`Planta: <b>${state.planta==="__ALL__" ? "todas" : esc(state.planta)}</b>`);
+  f.push(`${state.plantas.length > 1 ? "Plantas" : "Planta"}: <b>${
+    todasLasPlantas() ? "todas" : esc(state.plantas.join(" · "))}</b>`);
   f.push(`Vista: <b>${esc({todas:"Todas",externa:"Externas",interna:"Internas"}[state.grupo])}</b>`);
   if(state.urg)   f.push(`Urgencia: <b>${esc(state.urg==="urgente"?"Acción inmediata":state.urg==="d30"?"≤ 30 días":URG[state.urg].lb)}</b>`);
   if(state.estandar) f.push(`Estándar: <b>${esc(state.estandar)}</b>`);
@@ -1663,16 +1785,16 @@ function renderFoot(rows){
 /* ---------- Inicio ---------- */
 /* Vuelca el estado en los controles (arranque y navegación por enlace) */
 function syncUI(){
-  if(state.planta!=="__ALL__" && !plantasList.includes(state.planta)) state.planta = "__ALL__";
-  $("#plantSel").value = state.planta;
-  plantaPrevia = state.planta;
+  state.plantas = state.plantas.filter(p => plantasList.includes(p));
+  if(state.plantas.length >= plantasList.length) state.plantas = [];
+  pintarPicker();
   $("#q").value = state.q;
   $("#sortSel").value = state.sort;
   syncGrpSeg(); refreshEstandares(); refreshCursos(); refreshMeses();
   $("#estSel").value = state.estandar;
   $("#cursoSel").value = state.curso;
   $("#mesSel").value = state.mes;
-  modalPlanta = state.planta;
+  modalPlantas = state.plantas;
   shown = PAGE; shownPpl = 30;
   setTab(["lista","persona","dash"].includes(state.tab) ? state.tab : "lista");
 }
@@ -1682,14 +1804,14 @@ buildModal(); buildControls();
   // El enlace trae su planta y esa manda: de Mondoñedo para Mondoñedo, aunque
   // el navegador recuerde que la última vez se miró otra. La preferencia
   // guardada solo decide cuando el enlace no dice nada (el archivo descargado).
-  const enlaceTraePlanta = state.planta !== "__ALL__";
+  const enlaceTraePlanta = PLANTA_ENLACE !== "__ALL__";
   const fromHash = hashToState();
   const pref = loadPref();
   if(!fromHash && pref){
-    if(!enlaceTraePlanta && pref.planta) state.planta = pref.planta;
+    if(!enlaceTraePlanta && pref.plantas && pref.plantas.length) state.plantas = pref.plantas;
     if(pref.grupo) state.grupo = pref.grupo;
   }
-  if(state.planta !== "__ALL__" && !cargadas.has(state.planta)) await asegurarPlantas(state.planta);
+  if(state.plantas.length) await asegurarPlantas(state.plantas);
   syncUI();
   // Con una sola planta disponible el selector no tiene sentido.
   const unaPlanta = plantasList.length <= 1;

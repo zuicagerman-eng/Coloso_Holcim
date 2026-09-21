@@ -166,6 +166,23 @@ pintar cada fila. Cambiar una URL solo exige publicar una versión nueva.
 `enviarSolicitud()` sigue resolviéndolo en el servidor y no lo toma del
 navegador: lo que va en un correo no se decide desde el cliente.
 
+**El selector de plantas admite varias a la vez.** `state.plantas` es una lista
+y la lista vacía significa «todas», para que ese caso no necesite un valor
+especial que haya que recordar en cada comparación. Marcarlas todas a mano se
+guarda como lista vacía, y desmarcar la última no se permite: dejaría la
+pantalla en blanco sin decir por qué.
+
+Con varias plantas a la vista una misma selección de solicitudes puede
+mezclarlas. Por eso la planta viaja con **cada persona** y no con la solicitud,
+`enviarSolicitud()` la resuelve contra la lista del servidor —nunca copia lo que
+diga el navegador— y el correo añade una columna «Planta» solo cuando hay más
+de una.
+
+**La tabla del correo va por estándar**, con su número y su nombre completo tal
+como están en la matriz, y con un subtotal de externas y otro de internas.
+Cuando un estándar cubre varias categorías, se listan debajo en pequeño; cuando
+cubre una sola no se repite, que no aporta nada.
+
 **La ventana es de 60 días**, tomada de los datos del HTML original. Se cambia en
 `CFG.VENTANA_DIAS`.
 
