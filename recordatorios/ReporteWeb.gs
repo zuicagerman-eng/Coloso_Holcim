@@ -201,6 +201,15 @@ const CATEGORIA_DESDE_ESTANDAR = true;
 /** Tope de personas por solicitud, para que un envío no se desborde. */
 const MAX_POR_SOLICITUD = 60;
 
+/**
+ * Una marca que solo existe en el tablero.
+ *
+ * Sirve para comprobar que el archivo "reporte" es de verdad el tablero y no
+ * otra cosa que alguien pegó encima. Si algún día se cambia el HTML, esta
+ * cadena tiene que seguir apareciendo en él.
+ */
+const MARCA_DEL_TABLERO = 'id="view-lista"';
+
 /** Geometría de la matriz. Coincide con lo que ya usa el correo actual. */
 const CFG = {
   HOJA_MATRIZ:         "Matriz de Capacitaciones H&S",
@@ -892,7 +901,22 @@ function doGet(e) {
   plantilla.diasGestionadas = DIAS_GESTIONADAS;
   plantilla.plantaInicial = planta;
 
-  return plantilla.evaluate()
+  // Comprobar que lo que se va a servir ES el tablero.
+  //
+  // El archivo "reporte" es un archivo más del proyecto y se puede pisar sin
+  // querer: si dentro hay otra cosa, HtmlService la sirve igual y el navegador
+  // la enseña tal cual. Ya pasó dos veces con el código de otro proyecto, que
+  // acabó a la vista de quien abriera el enlace. Un reporte que no es el
+  // reporte es mejor que no salga.
+  const salida = plantilla.evaluate();
+  if (salida.getContent().indexOf(MARCA_DEL_TABLERO) === -1) {
+    return paginaSimple(
+      "El reporte no está disponible",
+      "El archivo <b>reporte</b> del proyecto no contiene el tablero.",
+      "Avise a Seguridad y Salud: hay que volver a pegar reporte.html en ese archivo.");
+  }
+
+  return salida
     .setTitle("Vencimientos de Capacitaciones · " + planta)
     .addMetaTag("viewport", "width=device-width, initial-scale=1")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
