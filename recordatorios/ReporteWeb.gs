@@ -35,6 +35,25 @@ const ENVIAR_CORREOS = true;
  */
 const URL_APP = "";
 
+/**
+ * Aviso puntual al principio del correo.
+ *
+ * Con `texto` vacío no sale nada y el correo es el de siempre. Con texto,
+ * aparece destacado encima del saludo, y `prefijoAsunto` se antepone al
+ * asunto.
+ *
+ * Es para avisos de una sola vez: una corrección, un cambio de fecha, una
+ * jornada extraordinaria. HAY QUE VACIARLO DESPUÉS DE USARLO — si no, el
+ * aviso de hoy vuelve a salir el martes que viene, cuando ya no significa
+ * nada. enviarEnlacesSemanales() lo recuerda en el registro cada vez que
+ * envía con un aviso puesto.
+ */
+const AVISO_CORREO = {
+  texto: "Este informe <b>reemplaza al que les llegó esta mañana</b>: el enlace que " +
+         "llevaba no abría. Ya está corregido y verificado. Una disculpa por el inconveniente.",
+  prefijoAsunto: "Corrección · "
+};
+
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
 const CORREOS_PLANTA = {
   "AF-NOBSA":           "carlos.vargash@holcim.com, maria.diazp@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
@@ -1478,6 +1497,7 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
 
   const cuerpo =
     "<div style=\"font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:14px;color:#0f1e2b;line-height:1.6\">" +
+    avisoDelCorreo() +
     "<p>Buen día.</p>" +
     "<p>De parte de <b>Capacitaciones H&amp;S</b> enviamos el informe semanal de las capacitaciones de la " +
     "planta <b>" + escapar(planta) + "</b>, con corte al " + fecha + ".</p>" +
@@ -1494,9 +1514,20 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
     "</div>";
 
   return {
-    asunto: "Informe semanal de capacitaciones · " + planta,
+    asunto: (AVISO_CORREO.prefijoAsunto || "") + "Informe semanal de capacitaciones · " + planta,
     cuerpo: cuerpo
   };
+}
+
+/** El recuadro del aviso puntual, o nada si no hay aviso puesto. */
+function avisoDelCorreo() {
+  const texto = String((AVISO_CORREO && AVISO_CORREO.texto) || "").trim();
+  if (!texto) return "";
+  // El texto lo escribe quien configura el script, no llega de fuera, así que
+  // se deja pasar el HTML: hace falta para poner una negrita o un enlace.
+  return "<p style=\"background:#fbf3dc;border-left:4px solid #bd9000;padding:12px 15px;" +
+         "border-radius:0 8px 8px 0;margin:0 0 18px;font-size:13.5px;line-height:1.6\">" +
+         texto + "</p>";
 }
 
 /**
@@ -1593,6 +1624,13 @@ function enviarEnlacesSemanales() {
     linea.push("SE ACABÓ EL TIEMPO con " + pendientes.length + " plantas sin enviar: " + pendientes.join(", "));
     linea.push("  Vuelva a ejecutar enviarEnlacesSemanales(): sigue por donde quedó,");
     linea.push("  las ya enviadas no se repiten.");
+  }
+
+  if (String((AVISO_CORREO && AVISO_CORREO.texto) || "").trim()) {
+    linea.push("");
+    linea.push("AVISO PUESTO EN EL CORREO — acuérdese de vaciar AVISO_CORREO.");
+    linea.push("  Si se queda, este mismo aviso vuelve a salir el martes que viene.");
+    linea.push("  texto: " + AVISO_CORREO.texto.replace(/<[^>]+>/g, "").slice(0, 90) + "…");
   }
 
   linea.push("");

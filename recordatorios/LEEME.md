@@ -156,6 +156,12 @@ exista, que no sea pasada, que el año sea razonable— y si no cuadra la ignora
 silencio en vez de tumbar la solicitud. Cuando viene, sale destacada en el correo
 y en el asunto.
 
+**`AVISO_CORREO` pone un recuadro al principio del correo**, para avisos de
+una sola vez: una corrección, un cambio de fecha. Con `texto` vacío no sale
+nada. Hay que **vaciarlo después de usarlo**, o el aviso de hoy vuelve a salir
+el martes que viene cuando ya no significa nada; `enviarEnlacesSemanales()` lo
+recuerda en el registro cada vez que envía con uno puesto.
+
 **El correo del martes va totalizado.** Una fila por tipo de capacitación con
 cuántas **personas** están vencidas, por vencer o sin realizar, no el listado
 persona por persona: eso vive en el enlace, que es donde se puede filtrar,
