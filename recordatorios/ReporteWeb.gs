@@ -18,6 +18,23 @@
 /** Mientras esté en false, enviarEnlacesSemanales() no manda ningún correo. */
 const ENVIAR_CORREOS = true;
 
+/**
+ * El enlace de la aplicación web, fijado a mano.
+ *
+ * Vacío significa "pregúntaselo a ScriptApp". El problema es que
+ * ScriptApp.getService().getUrl() NO devuelve siempre lo mismo: depende de
+ * desde dónde se ejecute. Ejecutado a mano desde el editor devuelve una cosa,
+ * y disparado por el activador del martes puede devolver otra —normalmente la
+ * de la última implementación creada—. Por eso probarCorreo() mandaba un
+ * enlace que abría y el envío de las siete mandó uno que no.
+ *
+ * Puesto aquí, el enlace es el que usted verificó que abre, y no cambia
+ * porque alguien publique una versión nueva. Se saca de
+ * Implementar -> Administrar implementaciones, copiando la URL de la
+ * implementación activa (termina en /exec).
+ */
+const URL_APP = "";
+
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
 const CORREOS_PLANTA = {
   "AF-NOBSA":           "carlos.vargash@holcim.com, maria.diazp@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
@@ -1400,9 +1417,11 @@ function probar() {
   });
 
   linea.push("");
-  const url = ScriptApp.getService().getUrl();
+  let url = "";
+  try { url = enlaceDeLaApp(); } catch (err) { url = ""; }
   linea.push(url
-    ? "ENLACE DE EJEMPLO\n  " + url + "?planta=" + encodeURIComponent("HC-BELLO")
+    ? "ENLACE DE EJEMPLO   (" + (URL_APP ? "fijado en URL_APP" : "según ScriptApp") + ")\n  " +
+      url + "?planta=" + encodeURIComponent("HC-BELLO")
     : "Todavía no hay aplicación web publicada (ver LEEME.md).");
 
   Logger.log(linea.join("\n"));
@@ -1465,17 +1484,20 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
 function enviarEnlacesSemanales() {
   const arranque = new Date().getTime();
 
-  const url = ScriptApp.getService().getUrl();
-  if (!url) throw new Error("No hay aplicación web publicada. Publíquela antes (ver LEEME.md).");
+  const url = enlaceDeLaApp();
 
-  // El enlace que va en el correo es de una sola implementación. Si después se
-  // archiva o se borra esa implementación, Google responde "No se pudo abrir el
-  // archivo" y los correos ya enviados quedan inservibles: nadie se entera
-  // hasta que alguien intenta abrirlos. Aquí queda anotado con qué enlace
-  // salieron, para poder compararlo.
-  if (url.indexOf("/dev") !== -1) {
-    throw new Error("getUrl() devolvió la URL /dev, que solo abre a los editores del script. " +
-                    "Publique la aplicación web (Implementar) antes de enviar.");
+  // Se comprueba ANTES de mandar nada. Dieciséis correos con un enlace muerto
+  // no se pueden recoger, y el que los manda es el último en enterarse.
+  if (ENVIAR_CORREOS) {
+    const prueba = elEnlaceAbre(url);
+    if (!prueba.ok) {
+      throw new Error(
+        "El enlace no abre (" + prueba.codigo + "):\n  " + url + "\n\n" +
+        "Si la implementación se archivó o se borró, publique de nuevo\n" +
+        "(Implementar -> Administrar implementaciones -> lápiz -> Versión: Nueva)\n" +
+        "y ponga la dirección /exec resultante en URL_APP.\n" +
+        "No se envió ningún correo.");
+    }
   }
   guardarEnlaceUsado(url);
 
@@ -1577,16 +1599,19 @@ function guardarEnlaceUsado(url) {
  * que cambió, y hay que volver a enviarlos.
  */
 function verEnlaceActual() {
-  const ahora = ScriptApp.getService().getUrl() || "(no hay aplicación web publicada)";
+  let ahora = "";
+  try { ahora = enlaceDeLaApp(); } catch (err) { ahora = "(" + err.message + ")"; }
   let ultimo = "";
   try {
     ultimo = PropertiesService.getScriptProperties().getProperty("enlace_ultimo_envio") || "";
   } catch (err) {}
 
   const partes = ultimo.split(" | ");
+  const abre = /^https/.test(ahora) ? elEnlaceAbre(ahora) : { ok: false, codigo: "sin enlace" };
   const linea = [
-    "ENLACE DE AHORA",
+    "ENLACE DE AHORA   (" + (URL_APP ? "fijado en URL_APP" : "según ScriptApp") + ")",
     "  " + ahora,
+    "  " + (abre.ok ? "ABRE correctamente." : "NO ABRE (" + abre.codigo + ")."),
     "  ejemplo: " + ahora + "?planta=" + encodeURIComponent(PLANTA_DE_PRUEBA),
     ""
   ];
@@ -1606,6 +1631,55 @@ function verEnlaceActual() {
 
   Logger.log(linea.join("\n"));
   return ahora;
+}
+
+/**
+ * El enlace de la aplicación web que se va a mandar.
+ *
+ * Manda URL_APP si está puesto; si no, lo que diga ScriptApp. Nunca una URL
+ * /dev: esa solo abre a los editores del script, así que un correo con ella
+ * llega roto a las dieciséis plantas y el que lo manda no lo nota, porque a
+ * él sí le abre.
+ */
+function enlaceDeLaApp() {
+  const fijado = String(URL_APP || "").trim();
+  if (fijado) {
+    if (fijado.indexOf("/dev") !== -1) {
+      throw new Error("URL_APP es una dirección /dev, que solo abre a los editores del " +
+                      "script. Copie la que termina en /exec.");
+    }
+    return fijado;
+  }
+
+  const url = ScriptApp.getService().getUrl();
+  if (!url) {
+    throw new Error("No hay aplicación web publicada. Publíquela antes (ver LEEME.md).");
+  }
+  if (url.indexOf("/dev") !== -1) {
+    throw new Error("ScriptApp devolvió la URL /dev. Publique la aplicación web, o " +
+                    "mejor, ponga la dirección /exec en URL_APP.");
+  }
+  return url;
+}
+
+/**
+ * Comprueba que el enlace abre de verdad, antes de mandarlo a nadie.
+ *
+ * Es la diferencia entre enterarse ahora o enterarse por un reclamo el jueves.
+ * Una implementación archivada o borrada responde 404 y el correo sale igual
+ * de bonito, con un enlace que no lleva a ninguna parte.
+ */
+function elEnlaceAbre(url) {
+  try {
+    const r = UrlFetchApp.fetch(url + "?planta=" + encodeURIComponent(PLANTA_DE_PRUEBA), {
+      muteHttpExceptions: true,
+      followRedirects:    true,
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }
+    });
+    return { ok: r.getResponseCode() === 200, codigo: r.getResponseCode() };
+  } catch (err) {
+    return { ok: false, codigo: String(err.message || err) };
+  }
 }
 
 /** La marca del día, en la zona de la planta y no en la del servidor. */
@@ -1805,8 +1879,14 @@ const PLANTA_DE_PRUEBA = "HC-MONDOÑEDO";
  * el activador. Sirve para revisar antes de soltarlo.
  */
 function probarCorreo() {
-  const url = ScriptApp.getService().getUrl();
-  if (!url) throw new Error("Publique la aplicación web antes de probar el correo.");
+  // El mismo camino que el envío del martes. Si aquí abre y allá no, es que
+  // no estaban usando el mismo enlace, que es justo lo que pasó.
+  const url = enlaceDeLaApp();
+  const prueba = elEnlaceAbre(url);
+  if (!prueba.ok) {
+    throw new Error("El enlace no abre (" + prueba.codigo + "):\n  " + url +
+                    "\nNo se mandó la prueba.");
+  }
 
   const planta = indicePlantas()[normalizar(PLANTA_DE_PRUEBA)];
   if (!planta) throw new Error("PLANTA_DE_PRUEBA no coincide con ninguna de CORREOS_PLANTA.");

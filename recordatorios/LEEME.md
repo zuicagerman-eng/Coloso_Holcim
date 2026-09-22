@@ -96,6 +96,22 @@ concreta; si desaparece, Google responde «No se pudo abrir el archivo en este
 momento» y los correos enviados quedan inservibles. No avisa: se descubre
 cuando alguien intenta abrirlos.
 
+**`ScriptApp.getService().getUrl()` no devuelve siempre lo mismo.** Depende de
+desde dónde se ejecute: a mano desde el editor da una cosa, y disparado por el
+activador del martes puede dar otra. Eso explica que `probarCorreo()` mandara
+un enlace que abría y el envío de las siete mandara uno que no.
+
+Por eso está `URL_APP`: se pega ahí la dirección `/exec` de la implementación
+activa y manda esa, no lo que opine ScriptApp. `enlaceDeLaApp()` es el único
+sitio donde se decide, y rechaza cualquier `/dev` —esa solo abre a los
+editores del script, así que un correo con ella llega roto a las dieciséis
+plantas sin que el remitente lo note, porque a él sí le abre—.
+
+**Y antes de mandar, se comprueba que el enlace abre.** `elEnlaceAbre()` lo
+pide con el token del script y mira el código de respuesta; si no es 200,
+`enviarEnlacesSemanales()` aborta sin mandar nada y dice por qué. Dieciséis
+correos con un enlace muerto no se pueden recoger.
+
 `verEnlaceActual()` compara el enlace de ahora con el que llevaba el último
 correo y dice si siguen coincidiendo. `enviarEnlacesSemanales()` anota el
 enlace en cada envío, y se niega a enviar si `getUrl()` devuelve una URL `/dev`
