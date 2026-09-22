@@ -156,6 +156,19 @@ exista, que no sea pasada, que el año sea razonable— y si no cuadra la ignora
 silencio en vez de tumbar la solicitud. Cuando viene, sale destacada en el correo
 y en el asunto.
 
+**`ENSAYO.correo` hace el envío de verdad, pero a una sola dirección.** El
+mismo enlace, la misma tabla, el mismo Excel y el mismo recorrido por las
+dieciséis plantas; lo único que cambia es a quién llega.
+
+`probarCorreo()` no cubre esto y ahí estuvo el fallo del 22 de septiembre: es
+otra función, así que la prueba abría y el envío real no, porque no pasaban
+por el mismo sitio. Un ensayo que no recorre el mismo camino no prueba nada.
+
+El ensayo **no marca las plantas como enviadas**, así que después se hace el
+envío real sin tener que borrar ninguna marca. Cada correo llega con
+`[ENSAYO · PLANTA]` en el asunto y una franja azul arriba, para que no se
+confunda con el bueno ni aunque se reenvíe.
+
 **`AVISO_CORREO` pone un recuadro al principio del correo**, para avisos de
 una sola vez: una corrección, un cambio de fecha. Con `texto` vacío no sale
 nada. Hay que **vaciarlo después de usarlo**, o el aviso de hoy vuelve a salir

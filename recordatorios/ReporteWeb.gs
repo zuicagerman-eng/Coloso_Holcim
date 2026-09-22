@@ -54,6 +54,29 @@ const AVISO_CORREO = {
   prefijoAsunto: "Corrección · "
 };
 
+/**
+ * Ensayo del envío semanal.
+ *
+ * Con un correo puesto, enviarEnlacesSemanales() hace EXACTAMENTE lo mismo que
+ * el martes —el mismo enlace, la misma tabla, el mismo Excel, el mismo
+ * recorrido por las dieciséis plantas— pero todo llega a esa dirección en vez
+ * de a las plantas.
+ *
+ * probarCorreo() no sirve para esto: es otra función, y ahí estuvo el
+ * problema. El martes la prueba abría y el envío de verdad no, porque no
+ * pasaban por el mismo sitio. Un ensayo que no recorre el mismo camino no
+ * prueba nada.
+ *
+ * El ensayo NO marca las plantas como enviadas, así que después se puede
+ * hacer el envío real sin tener que borrar ninguna marca.
+ *
+ * maxPlantas: 0 son todas. Poner 2 o 3 si no quiere dieciséis correos.
+ */
+const ENSAYO = {
+  correo:     "",
+  maxPlantas: 0
+};
+
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
 const CORREOS_PLANTA = {
   "AF-NOBSA":           "carlos.vargash@holcim.com, maria.diazp@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
@@ -1519,6 +1542,16 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
   };
 }
 
+/** La franja que deja claro que un correo de ensayo no es el de verdad. */
+function avisoDeEnsayo(planta) {
+  return "<p style=\"background:#1d4370;color:#fff;padding:12px 16px;border-radius:8px;" +
+         "margin:0 0 16px;font-family:system-ui,Segoe UI,Arial,sans-serif;font-size:13px;line-height:1.6\">" +
+         "<b>ENSAYO — esto no salió de aquí.</b><br>" +
+         "Así es como le llegaría este correo a <b>" + escapar(planta) + "</b>. " +
+         "Nadie de la planta lo ha recibido. Revise el enlace de abajo: si abre, el envío real está listo." +
+         "</p>";
+}
+
 /** El recuadro del aviso puntual, o nada si no hay aviso puesto. */
 function avisoDelCorreo() {
   const texto = String((AVISO_CORREO && AVISO_CORREO.texto) || "").trim();
@@ -1573,7 +1606,17 @@ function enviarEnlacesSemanales() {
   const clave   = claveDeEnviosDeHoy();
   const yaSalio = leerEnviadas(props, clave);
 
+  const enEnsayo = String((ENSAYO && ENSAYO.correo) || "").trim();
+  const tope     = enEnsayo ? (ENSAYO.maxPlantas || 0) : 0;
+
   const linea = [], pendientes = [], repetidas = [];
+  let hechas = 0;
+
+  if (enEnsayo) {
+    linea.push("ENSAYO — todo va a " + enEnsayo + ", ninguna planta recibe nada.");
+    linea.push("Mismo enlace, misma tabla, mismo Excel y el mismo recorrido que el martes.");
+    linea.push("");
+  }
 
   Object.keys(CORREOS_PLANTA).forEach(function (planta) {
     const registros = porPlanta[planta] || [];
@@ -1587,7 +1630,11 @@ function enviarEnlacesSemanales() {
       return;
     }
 
-    if (yaSalio.indexOf(planta) !== -1) { repetidas.push(planta); return; }
+    if (enEnsayo) {
+      if (tope && hechas >= tope) return;
+    } else if (yaSalio.indexOf(planta) !== -1) {
+      repetidas.push(planta); return;
+    }
 
     // Apps Script corta la ejecución a los seis minutos. Antes de empezar una
     // planta se mira si hay tiempo para terminarla: más vale dejarla para la
@@ -1600,11 +1647,17 @@ function enviarEnlacesSemanales() {
     const armado = armarCorreoDePlanta(planta, registros, enlace, fecha);
 
     MailApp.sendEmail({
-      to:          CORREOS_PLANTA[planta],
-      subject:     armado.asunto,
-      htmlBody:    armado.cuerpo,
+      to:          enEnsayo || CORREOS_PLANTA[planta],
+      subject:     (enEnsayo ? "[ENSAYO · " + planta + "] " : "") + armado.asunto,
+      htmlBody:    (enEnsayo ? avisoDeEnsayo(planta) : "") + armado.cuerpo,
       attachments: [excelDePlanta(planta, registros)]
     });
+    hechas++;
+
+    if (enEnsayo) {
+      linea.push("ensayo   " + planta + "  " + registros.length + " registros -> " + enEnsayo);
+      return;
+    }
 
     // Se apunta enseguida, no al final: si la ejecución muere en la planta
     // siguiente, esta ya quedó registrada como enviada.
@@ -1631,6 +1684,15 @@ function enviarEnlacesSemanales() {
     linea.push("AVISO PUESTO EN EL CORREO — acuérdese de vaciar AVISO_CORREO.");
     linea.push("  Si se queda, este mismo aviso vuelve a salir el martes que viene.");
     linea.push("  texto: " + AVISO_CORREO.texto.replace(/<[^>]+>/g, "").slice(0, 90) + "…");
+  }
+
+  if (enEnsayo) {
+    linea.push("");
+    linea.push("ENSAYO TERMINADO. " + hechas + (hechas === 1 ? " correo" : " correos") +
+               " a " + enEnsayo + ". Ninguna planta recibió nada,");
+    linea.push("y ninguna quedó marcada como enviada: el envío real sigue disponible.");
+    linea.push("");
+    linea.push("Cuando el ensayo se vea bien: vacíe ENSAYO.correo y vuelva a ejecutar.");
   }
 
   linea.push("");
