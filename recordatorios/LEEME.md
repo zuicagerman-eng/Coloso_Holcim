@@ -90,6 +90,17 @@ Para modificar el código y que **el enlace siga siendo el mismo**:
 Si en vez de eso se crea una *implementación nueva*, **la URL cambia** y los
 enlaces de los correos anteriores dejan de servir.
 
+**Y nunca se archiva ni se borra una implementación cuyo enlace ya salió por
+correo.** El enlace lleva dentro el identificador de esa implementación
+concreta; si desaparece, Google responde «No se pudo abrir el archivo en este
+momento» y los correos enviados quedan inservibles. No avisa: se descubre
+cuando alguien intenta abrirlos.
+
+`verEnlaceActual()` compara el enlace de ahora con el que llevaba el último
+correo y dice si siguen coincidiendo. `enviarEnlacesSemanales()` anota el
+enlace en cada envío, y se niega a enviar si `getUrl()` devuelve una URL `/dev`
+—que solo abre a los editores del script—.
+
 ## Lo que hay que saber
 
 **Los pendientes no están en el tablero.** Quien nunca ha hecho un curso no

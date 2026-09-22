@@ -1468,6 +1468,17 @@ function enviarEnlacesSemanales() {
   const url = ScriptApp.getService().getUrl();
   if (!url) throw new Error("No hay aplicación web publicada. Publíquela antes (ver LEEME.md).");
 
+  // El enlace que va en el correo es de una sola implementación. Si después se
+  // archiva o se borra esa implementación, Google responde "No se pudo abrir el
+  // archivo" y los correos ya enviados quedan inservibles: nadie se entera
+  // hasta que alguien intenta abrirlos. Aquí queda anotado con qué enlace
+  // salieron, para poder compararlo.
+  if (url.indexOf("/dev") !== -1) {
+    throw new Error("getUrl() devolvió la URL /dev, que solo abre a los editores del script. " +
+                    "Publique la aplicación web (Implementar) antes de enviar.");
+  }
+  guardarEnlaceUsado(url);
+
   // Una sola lectura de la matriz sirve para el correo y, de paso, deja la
   // caché del enlace lista. Es el momento en que más falta hace: en cuanto
   // salgan los correos van a entrar todos a la vez, y nadie debería ser quien
@@ -1544,6 +1555,57 @@ function enviarEnlacesSemanales() {
     : "Prueba terminada: NO se envió nada. ENVIAR_CORREOS está en false.");
 
   Logger.log(linea.join("\n"));
+}
+
+/**
+ * Deja anotado con qué enlace salieron los correos.
+ *
+ * Sirve para responder a "¿el enlace que le llegó a la planta es el de ahora?"
+ * sin tener que buscar el correo. verEnlaceActual() compara los dos.
+ */
+function guardarEnlaceUsado(url) {
+  try {
+    PropertiesService.getScriptProperties().setProperty("enlace_ultimo_envio",
+      url + " | " + Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd HH:mm"));
+  } catch (err) {}
+}
+
+/**
+ * Compara el enlace de ahora con el que se mandó en el último correo.
+ *
+ * Si no coinciden, los correos que ya salieron apuntan a una implementación
+ * que cambió, y hay que volver a enviarlos.
+ */
+function verEnlaceActual() {
+  const ahora = ScriptApp.getService().getUrl() || "(no hay aplicación web publicada)";
+  let ultimo = "";
+  try {
+    ultimo = PropertiesService.getScriptProperties().getProperty("enlace_ultimo_envio") || "";
+  } catch (err) {}
+
+  const partes = ultimo.split(" | ");
+  const linea = [
+    "ENLACE DE AHORA",
+    "  " + ahora,
+    "  ejemplo: " + ahora + "?planta=" + encodeURIComponent(PLANTA_DE_PRUEBA),
+    ""
+  ];
+
+  if (!partes[0]) {
+    linea.push("Todavía no hay registro de ningún envío con este código.");
+  } else {
+    linea.push("ENLACE DEL ÚLTIMO CORREO   (" + (partes[1] || "sin fecha") + ")");
+    linea.push("  " + partes[0]);
+    linea.push("");
+    linea.push(partes[0] === ahora
+      ? "COINCIDEN. Los correos enviados siguen sirviendo."
+      : "NO COINCIDEN. Los correos enviados apuntan a una implementación que ya\n" +
+        "no es la de ahora, y quien los abra verá 'No se pudo abrir el archivo'.\n" +
+        "Hay que volver a enviarlos: olvidarEnviosDeHoy() y enviarEnlacesSemanales().");
+  }
+
+  Logger.log(linea.join("\n"));
+  return ahora;
 }
 
 /** La marca del día, en la zona de la planta y no en la del servidor. */
