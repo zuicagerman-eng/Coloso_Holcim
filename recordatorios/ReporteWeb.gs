@@ -33,7 +33,7 @@ const ENVIAR_CORREOS = true;
  * Implementar -> Administrar implementaciones, copiando la URL de la
  * implementación activa (termina en /exec).
  */
-const URL_APP = "";
+const URL_APP = "https://script.google.com/a/macros/holcim.com/s/AKfycbx40AQr3aB9uFwn3iPsgQsFyjTpFxMWw0IrNlpkXuD6B-_JtZmPcx-zF31cRJUcFmOAVQ/exec";
 
 /**
  * Aviso puntual al principio del correo.
@@ -73,8 +73,8 @@ const AVISO_CORREO = {
  * maxPlantas: 0 son todas. Poner 2 o 3 si no quiere dieciséis correos.
  */
 const ENSAYO = {
-  correo:     "",
-  maxPlantas: 0
+  correo:     "german.zuica@holcim.com",
+  maxPlantas: 3
 };
 
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
