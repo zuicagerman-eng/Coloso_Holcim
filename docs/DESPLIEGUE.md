@@ -87,16 +87,42 @@ Es un proyecto **nuevo y aparte**, que no va ligado a ninguna hoja.
 | Registrar una empresa | Fila en la hoja, con esa dirección en *Diligenciado por* |
 | El correo de aviso | Llega a `NOTIFICAR_A`, con copia a quien diligenció |
 
+### Cambiar entre correo automático y correo escrito
+
+El código sirve para los dos modos sin tocar una línea. Lo decide la
+implementación del FORMULARIO:
+
+| Ejecutar como | Quién tiene acceso | Resultado |
+|---|---|---|
+| Usuario que accede | Cualquier usuario con cuenta de Google | El correo sale de la sesión. Sale la pantalla de "no verificada". |
+| **Yo** | **Cualquier usuario** | Sin inicio de sesión ni pantalla de aviso. La página muestra sola el campo para escribir el correo. |
+
+Para cambiar: **Administrar implementaciones → ✏️**, mueva los dos desplegables,
+**Versión: Nueva**. Nada más. La página pregunta al servidor si hay sesión; si
+no la hay, saca el campo.
+
+Lo que se pierde al escribirlo: el correo lo pone la persona y podría poner
+otro. Con sesión lo pone el servidor y no se puede alterar desde el navegador.
+
 ### La pantalla de "aplicación no verificada"
 
 La primera vez, a cada proveedor le aparecerá un aviso de Google diciendo que
 la aplicación no está verificada, con un **Configuración avanzada → Ir a
 (no seguro)**. Es lo normal en un script propio sin verificar ante Google.
 
-Si eso resulta inaceptable de cara a proveedores, hay dos salidas: pedir la
-verificación de la aplicación ante Google —un trámite con pantalla de consentimiento,
-política de privacidad y revisión—, o volver al formulario abierto, donde la
-persona escribe su correo y nadie tiene que iniciar sesión.
+Lo que el proveedor ve después de *Revisar permisos* es un solo permiso:
+**ver su dirección de correo electrónico**. La aplicación no puede leer sus
+archivos ni nada más. Pero la palabra *Unverified* en rojo aparece antes, y de
+cara a un tercero pesa.
+
+Quitarla del todo exige un trámite, no un ajuste: hay que vincular el script a
+un proyecto de Google Cloud propio, configurar allí la pantalla de
+consentimiento —nombre, logotipo, correo de soporte, política de privacidad en
+un dominio verificado— y, según los permisos, pasar una revisión de Google. Es
+un proyecto con TI, no cosa de diez minutos.
+
+La alternativa inmediata es la tabla de arriba: volver al correo escrito, donde
+nadie inicia sesión y no aparece ningún aviso.
 
 ---
 
