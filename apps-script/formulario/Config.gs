@@ -15,7 +15,7 @@ var CONFIG = {
    * a la hoja de cálculo), publicado con "Ejecutar como: Yo" y acceso
    * "Cualquier usuario".
    */
-  URL_SERVICIO: '',
+  URL_SERVICIO: 'https://script.google.com/macros/s/AKfycbzoWJnJDeczWNv_JvoCbNv9tJjErBh42XDcQbo8U6AR4yQdIc_PAl0VY4IZ7mUnrfl7/exec',
 
   /**
    * Opcional. Vacío = no se manda clave. Solo se usa si en el Config.gs

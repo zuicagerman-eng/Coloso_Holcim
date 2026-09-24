@@ -46,9 +46,9 @@ Es el que ya está montado, ligado a la hoja de cálculo.
    **No lleva ningún archivo HTML**: este servicio no atiende personas.
 3. En **Configuración del proyecto**, muestre `appsscript.json` y pegue el de
    esa misma carpeta.
-4. En `Config.gs`:
-   - `NOTIFICAR_A`: los correos que reciben el aviso.
-   - `ID_HOJA_HOLCIM`: opcional, la copia en la hoja de Holcim.
+4. `Config.gs` **ya viene con los valores reales**: el correo que recibe el
+   aviso y `ID_HOJA_HOLCIM` vacío. No hay nada que escribir. Solo se toca si
+   cambian los destinatarios o si algún día aparece una segunda hoja.
 5. Ejecute **`prepararHojas`** y acepte los permisos.
 6. **Implementar → Nueva implementación → Aplicación web**
    - Ejecutar como: **Yo**
@@ -67,8 +67,10 @@ Es un proyecto **nuevo y aparte**, que no va ligado a ninguna hoja.
    `apps-script/formulario/pagina.html`.
 4. Muestre `appsscript.json` y pegue el de esa carpeta. Es importante: es lo
    que mantiene los permisos en el mínimo.
-5. En `Config.gs`:
-   - `URL_SERVICIO`: la URL `/exec` del servicio de registro.
+5. `Config.gs` **ya trae la dirección del servicio de registro**. Solo hay que
+   cambiarla si vuelve a publicar ese servicio como implementación nueva, cosa
+   que no debería pasar: los cambios van siempre con *Administrar
+   implementaciones → ✏️ → Versión nueva*, que conserva la dirección.
 6. Ejecute **`probarEnlace`**. Debe responder el JSON del otro servicio. Si
    responde otra cosa, la URL quedó mal copiada.
 7. **Implementar → Nueva implementación → Aplicación web**
@@ -97,6 +99,21 @@ política de privacidad y revisión—, o volver al formulario abierto, donde la
 persona escribe su correo y nadie tiene que iniciar sesión.
 
 ---
+
+## Los datos de este montaje
+
+Quedan escritos en el repositorio, así que **copiar y pegar los archivos es todo
+lo que hay que hacer**: no queda nada por configurar a mano.
+
+| Qué | Dónde está escrito |
+|---|---|
+| Correo que recibe el aviso | `registro/Config.gs` → `NOTIFICAR_A` |
+| Dirección del servicio de registro | `formulario/Config.gs` → `URL_SERVICIO` |
+| Copia en otra hoja | `registro/Config.gs` → `ID_HOJA_HOLCIM`, **vacío a propósito** |
+
+La hoja donde vive el registro **no se configura en ninguna parte**: el script
+está ligado a ella y la encuentra solo. Por eso `ID_HOJA_HOLCIM` va vacío —
+poner ahí esa misma hoja fue lo que duplicó las filas.
 
 ## Qué se guarda
 

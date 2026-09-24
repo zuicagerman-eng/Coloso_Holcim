@@ -11,21 +11,25 @@ var CONFIG = {
    * Ponga uno o varios, separados por coma. Vacío = no se envía nada.
    */
   NOTIFICAR_A: [
-    'su.correo@holcim.com'
+    'german.zuica@holcim.com'
   ],
 
   /** Copia oculta, si alguien más debe quedar enterado sin figurar. */
   CON_COPIA_OCULTA: [],
 
   /**
-   * ► COPIA EN UNA HOJA DE HOLCIM ◄
-   * Cada registro se guarda dos veces: en esta hoja y en la de Holcim.
-   * Pegue aquí el identificador de esa hoja, que sale de su dirección:
+   * ► COPIA EN OTRA HOJA ◄
    *
-   *   docs.google.com/spreadsheets/d/[ESTO ES EL IDENTIFICADOR]/edit
+   * DEJE ESTO VACÍO salvo que exista una SEGUNDA hoja, distinta de esta,
+   * donde quiera una copia de cada registro.
    *
-   * Requisito: esa hoja debe estar compartida CON PERMISO DE EDICIÓN con
-   * la cuenta que ejecuta este script. Vacío = no se copia nada.
+   * NO ponga aquí el identificador de la hoja donde vive este script: la
+   * fila se escribiría dos veces, con el mismo radicado y el mismo
+   * segundo. El código ya no lo permite, pero mejor ni intentarlo.
+   *
+   * Cuando sí haya otra hoja, pegue su identificador —el trozo que va
+   * entre /d/ y /edit en su dirección— y compártala con permiso de
+   * EDITOR con la cuenta que ejecuta este script.
    */
   ID_HOJA_HOLCIM: '',
 
