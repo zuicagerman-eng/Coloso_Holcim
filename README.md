@@ -5,15 +5,17 @@ Formulario web con la identidad de Holcim que registra **empresas** y las
 de Google.
 
 ```
-vista/index.html            un solo archivo, se abre en cualquier navegador
-        │  fetch POST (JSON + token)
-        ▼
-Apps Script  Api.gs         valida otra vez y escribe
+El proveedor entra con su cuenta de Google
         │
         ▼
-Google Sheet  EMPRESAS · PERSONAS · ERRORES
+apps-script/formulario/     ← sabe quién entró; solo pide ver su correo
+        │  le pasa los datos con una clave compartida
+        ▼
+apps-script/registro/       ← valida y escribe; corre con la cuenta dueña
         │
-        └──►  correo de aviso (opcional, apagado por defecto)
+        ├─► Google Sheet   EMPRESAS · ERRORES
+        ├─► copia en una hoja de Holcim (opcional)
+        └─► correo de aviso, con copia a quien diligenció
 ```
 
 ## Qué se captura
@@ -41,13 +43,16 @@ sirve para mostrarlo sin montar nada.
 
 | Archivo | Para qué |
 |---|---|
-| `vista/index.html` | El formulario completo: un archivo, sin dependencias |
-| `vista/assets/logo-holcim.svg` | Símbolo de la marca (reconstrucción, ver abajo) |
-| `apps-script/Config.gs` | **Lo único que se edita**: token y correos de aviso |
-| `apps-script/Api.gs` | Recibe los registros y los guarda |
-| `apps-script/Validaciones.gs` | Las reglas, del lado del servidor |
-| `apps-script/Hoja.gs` | Único punto que toca la hoja de cálculo |
-| `apps-script/Correo.gs` | Aviso por correo, apagado mientras no haya destinatarios |
+| `vista/index.html` | El formulario. Única fuente del diseño |
+| `vista/assets/logo-holcim.png` | Logotipo oficial, incrustado en la página |
+| `apps-script/formulario/Config.gs` | **Se edita**: dirección del otro servicio y clave |
+| `apps-script/formulario/Codigo.gs` | Entrega la página y averigua quién entró |
+| `apps-script/formulario/pagina.html` | Generado desde la vista, no se edita a mano |
+| `apps-script/registro/Config.gs` | **Se edita**: correos del aviso, clave, hoja de Holcim |
+| `apps-script/registro/Api.gs` | Recibe los registros y los guarda |
+| `apps-script/registro/Validaciones.gs` | Las reglas, del lado del servidor |
+| `apps-script/registro/Hoja.gs` | Único punto que toca la hoja de cálculo |
+| `apps-script/registro/Correo.gs` | Aviso por correo |
 
 Las reglas están escritas dos veces a propósito: en el navegador para que quien
 diligencia vea el error mientras escribe, y en el servidor porque cualquiera

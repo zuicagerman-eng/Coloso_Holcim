@@ -302,6 +302,36 @@
   .con-prefijo:focus-within input { box-shadow: none; }
   .con-prefijo:focus-within { border-radius: 4px; box-shadow: 0 0 0 3px var(--accent-suave); }
 
+  /* Franja que dice con qué cuenta entró la persona */
+  .identidad {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent-suave);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 11px 13px;
+    font-size: 13.5px;
+  }
+  .identidad .marca-cuenta {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--accent-fill);
+    color: var(--accent-texto);
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex: none;
+    text-transform: uppercase;
+  }
+  .identidad .quien { min-width: 0; }
+  .identidad .rotulo { color: var(--muted); font-size: 12px; display: block; }
+  .identidad .correo {
+    font-weight: 600;
+    word-break: break-all;
+    line-height: 1.3;
+  }
+
   .separador {
     border: none;
     border-top: 1px solid var(--line);
@@ -563,7 +593,7 @@
   <div class="titular">
     <div>
       <h1>Registro de la empresa</h1>
-      <p>Cinco datos. Si alguno no le queda claro, abra la ayuda: se los explicamos uno por uno.</p>
+      <p id="bajada">Cinco datos. Si alguno no le queda claro, abra la ayuda: se los explicamos uno por uno.</p>
     </div>
     <button class="boton-ayuda" type="button" onclick="abrirAyuda(0)">
       <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -628,6 +658,19 @@
 
       <hr class="separador">
       <p class="rotulo-grupo">Quién está diligenciando</p>
+
+      <!-- Si el servicio reconoce la cuenta de Google, aquí se muestra y el
+           campo de abajo no aparece: el dato no se escribe, se toma de la
+           sesión y no se puede alterar desde el navegador. -->
+      <div class="campo oculto" id="franjaIdentidad">
+        <div class="identidad">
+          <span class="marca-cuenta" id="inicialCuenta" aria-hidden="true"></span>
+          <span class="quien">
+            <span class="rotulo">Registrando con su cuenta de Google</span>
+            <span class="correo" id="correoSesion"></span>
+          </span>
+        </div>
+      </div>
 
       <div class="campo" id="campo-correoRegistra">
         <label for="correoRegistra">Su correo electrónico
@@ -765,7 +808,12 @@ function revisarCorreo(v) {
   return '';
 }
 
-var CAMPOS = ['nit', 'nombreEmpresa', 'correoEmpresa', 'contacto', 'correoRegistra'];
+/* Con sesión de Google el correo no se escribe: lo pone el servidor. */
+var sesion = { correo: '' };
+var CAMPOS_BASE = ['nit', 'nombreEmpresa', 'correoEmpresa', 'contacto'];
+function campos() {
+  return sesion.correo ? CAMPOS_BASE : CAMPOS_BASE.concat('correoRegistra');
+}
 var MAYUSCULAS = ['nombreEmpresa'];
 var MINUSCULAS = ['correoEmpresa', 'correoRegistra'];
 var INDICATIVO = '+57';
@@ -811,9 +859,9 @@ function enviar(evento) {
   limpiarAviso();
 
   var valido = true;
-  CAMPOS.forEach(function (id) { if (!revisar(id)) valido = false; });
+  campos().forEach(function (id) { if (!revisar(id)) valido = false; });
   if (!valido) {
-    var primero = CAMPOS.filter(function (id) {
+    var primero = campos().filter(function (id) {
       return elemento(id).getAttribute('aria-invalid') === 'true';
     })[0];
     if (primero) elemento(primero).focus();
@@ -821,7 +869,8 @@ function enviar(evento) {
   }
 
   var datos = {};
-  CAMPOS.forEach(function (id) {
+  if (sesion.correo) datos.correoRegistra = sesion.correo;
+  campos().forEach(function (id) {
     var valor = limpiar(elemento(id).value);
     if (MAYUSCULAS.indexOf(id) >= 0) valor = valor.toUpperCase();
     if (MINUSCULAS.indexOf(id) >= 0) valor = valor.toLowerCase();
@@ -935,7 +984,7 @@ function mostrarConfirmacion(datos, idServidor) {
 function volverAEmpezar() {
   var form = elemento('formEmpresa');
   form.reset();
-  CAMPOS.forEach(function (id) {
+  campos().forEach(function (id) {
     elemento(id).setAttribute('aria-invalid', 'false');
     elemento('error' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = '';
   });
@@ -943,7 +992,7 @@ function volverAEmpezar() {
   limpiarAviso();
   elemento('confirmacion').classList.add('oculto');
   form.classList.remove('oculto');
-  elemento(CAMPOS[0]).focus();
+  elemento(campos()[0]).focus();
 }
 
 /** +573001234567 → +57 300 123 4567 */
@@ -1008,8 +1057,9 @@ function cerrarAyuda() {
 
 /** Resalta en el formulario el campo del que habla la ayuda. */
 function destacar(idCampo) {
-  CAMPOS.forEach(function (id) {
-    elemento('campo-' + id).classList.toggle('destacado', id === idCampo);
+  campos().forEach(function (id) {
+    var caja = elemento('campo-' + id);
+    if (caja) caja.classList.toggle('destacado', id === idCampo);
   });
   if (idCampo) {
     elemento('campo-' + idCampo).scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1028,6 +1078,35 @@ function escapar(t) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
   });
 }
+
+/* ---------- Identidad de quien entra ---------- */
+/**
+ * Le pregunta al servicio con qué cuenta de Google entró la persona.
+ * Si la reconoce, se muestra y desaparece el campo del correo. Si no
+ * —por ejemplo abriendo el archivo suelto— el campo se queda, para que
+ * el formulario nunca deje de servir.
+ */
+function reconocerCuenta() {
+  if (!dentroDeGoogle()) return;
+  google.script.run
+    .withSuccessHandler(function (r) {
+      if (!r || !r.correo) return;
+      sesion.correo = r.correo;
+      elemento('correoSesion').textContent = r.correo;
+      elemento('inicialCuenta').textContent = r.correo.charAt(0);
+      elemento('franjaIdentidad').classList.remove('oculto');
+      elemento('campo-correoRegistra').classList.add('oculto');
+      /* La ayuda deja de hablar de un campo que ya no existe, y el
+         encabezado deja de prometer cinco datos cuando son cuatro. */
+      AYUDA = AYUDA.filter(function (a) { return a.campo !== 'correoRegistra'; });
+      elemento('bajada').textContent =
+        'Cuatro datos. Si alguno no le queda claro, abra la ayuda: se los explicamos uno por uno.';
+    })
+    .withFailureHandler(function () { /* se queda el campo escrito */ })
+    .identidad();
+}
+
+reconocerCuenta();
 </script>
 <!--FIN-CONTENIDO-->
 </body>

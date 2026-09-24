@@ -1,41 +1,30 @@
 /**
- * Servicio web que recibe los registros del formulario y los guarda
- * en la hoja de cálculo.
+ * Servicio de REGISTRO: recibe los datos y los guarda en la hoja.
  *
- * Se publica con: Implementar → Nueva implementación → Aplicación web.
- * La URL que entrega Google (termina en /exec) es la que se pega en
- * vista/index.html, en API.url.
+ * No lo abre ninguna persona: lo llama el servicio del FORMULARIO, que es
+ * el que atiende al proveedor. Por eso se publica con "Ejecutar como: Yo"
+ * —así escribe con los permisos del dueño y nadie más necesita acceso a la
+ * hoja— y con acceso "Cualquier usuario", porque quien lo llama es otro
+ * script, no un navegador con sesión. Lo que lo protege es CONFIG.TOKEN.
+ *
+ * Su URL (la que termina en /exec) es la que se pega en el Config.gs del
+ * formulario, en URL_SERVICIO. No se le comparte a nadie más.
  */
 
-/**
- * Abrir la URL en el navegador entrega el formulario.
- * Con `?ping=1` responde un JSON, para comprobar que la publicación quedó viva.
- */
-function doGet(e) {
-  if (e && e.parameter && e.parameter.ping) {
-    return responder_({
-      ok: true,
-      servicio: 'Registro de Empresas y Personas — Holcim',
-      listo: true
-    });
-  }
-  return HtmlService.createHtmlOutputFromFile('pagina')
-    .setTitle('Registro de Empresas y Personas — Holcim')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+/** Abrir esta URL solo sirve para comprobar que la publicación quedó viva. */
+function doGet() {
+  return responder_({
+    ok: true,
+    servicio: 'Registro de empresas — Holcim',
+    listo: true,
+    nota: 'Este servicio no atiende personas. El formulario es el otro.'
+  });
 }
 
 /**
- * Entrada desde la propia página (google.script.run).
- * Aquí no se pide token: Google ya verificó que quien llama tiene sesión
- * del dominio, que es una garantía mucho más fuerte.
- */
-function atender(cuerpo) {
-  return manejar_(cuerpo || {});
-}
-
-/**
- * Entrada desde un formulario que vive fuera de Google.
- * Como cualquiera puede llamar esta URL, aquí sí se exige el token.
+ * Única entrada. La llama el servicio del formulario, y también serviría
+ * para un formulario alojado fuera de Google. Como cualquiera puede
+ * alcanzar esta URL, el token es obligatorio.
  */
 function doPost(e) {
   var cuerpo;

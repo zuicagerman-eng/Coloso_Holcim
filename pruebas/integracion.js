@@ -1,7 +1,7 @@
 /* Prueba de integración: reproduce lo que arma el formulario y se lo pasa
    a la validación del servidor. Esto es lo que nunca probé junto. */
 const fs = require('fs');
-eval(fs.readFileSync('/home/user/Coloso_Holcim/apps-script/Validaciones.gs','utf8'));
+eval(fs.readFileSync('/home/user/Coloso_Holcim/apps-script/registro/Validaciones.gs','utf8'));
 
 // Copia exacta de la normalización del formulario (vista/index.html, enviar())
 const soloDigitos = v => String(v||'').replace(/[^0-9]/g,'');

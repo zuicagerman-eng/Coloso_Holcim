@@ -36,7 +36,7 @@ const SpreadsheetApp = {
   getActive: () => personal,
   openById: id => { if (romperCopia) throw new Error('no tienes permiso sobre ese archivo'); return holcim; }
 };
-eval(fs.readFileSync('/home/user/Coloso_Holcim/apps-script/Hoja.gs','utf8'));
+eval(fs.readFileSync('/home/user/Coloso_Holcim/apps-script/registro/Hoja.gs','utf8'));
 
 agregarFila_('EMPRESAS', {'ID':'EMP-2026-0001','NIT':'848848338','Nombre empresa':'PRUEBA 1','Correo':'p@g.com','Teléfono':'+571234567890','DV':0,'Fecha':'hoy'});
 console.log('EMPRESAS en personal:', personal.hojas.EMPRESAS.filas.length - 1, 'fila(s) de datos');
