@@ -125,6 +125,45 @@ function copiarEnHolcim_(nombreHoja, fila) {
 }
 
 /**
+ * Dice en voz alta cómo está configurado esto. Ejecútela desde el editor
+ * cuando algo no cuadre: responde sin tocar ni una fila.
+ */
+function diagnostico() {
+  var libro = libro_();
+  var idActivo = libro.getId();
+  var idCopia = String(CONFIG.ID_HOJA_HOLCIM || '').trim();
+  var hoja = hoja_(CONFIG.HOJAS.EMPRESAS);
+
+  var lineas = [
+    'Hoja donde vive el script: ' + libro.getName(),
+    '  su identificador:        ' + idActivo,
+    'ID_HOJA_HOLCIM:            ' + (idCopia || '(vacío)'),
+    '',
+    'Filas de datos en EMPRESAS: ' + Math.max(0, hoja.getLastRow() - 1),
+    'Avisos a:                   ' + (CONFIG.NOTIFICAR_A || []).join(', '),
+    ''
+  ];
+
+  if (!idCopia) {
+    lineas.push('CORRECTO: no se copia a ninguna otra hoja, cada registro se');
+    lineas.push('escribe una sola vez.');
+  } else if (idCopia === idActivo) {
+    lineas.push('AQUÍ ESTÁ EL PROBLEMA: ID_HOJA_HOLCIM apunta a esta misma hoja,');
+    lineas.push('así que cada registro se escribiría dos veces. Déjelo vacío en');
+    lineas.push('Config.gs. Esta versión del código ya lo omite, pero si sigue');
+    lineas.push('viendo filas repetidas es que la implementación publicada todavía');
+    lineas.push('corre el código viejo: Administrar implementaciones → editar →');
+    lineas.push('Versión: Nueva.');
+  } else {
+    lineas.push('Se copia a otra hoja distinta. Correcto.');
+  }
+
+  var texto = lineas.join('\n');
+  console.log(texto);
+  return texto;
+}
+
+/**
  * Comprueba la copia sin registrar nada: abre la hoja de Holcim, crea sus
  * pestañas si faltan y devuelve su nombre. Ejecútela desde el editor.
  */
