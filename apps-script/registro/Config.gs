@@ -37,11 +37,11 @@ var CONFIG = {
      ------------------------------------------------------------------ */
 
   /**
-   * Solo aplica si algún día se sirve el formulario POR FUERA de Google,
-   * como archivo suelto. En el montaje actual la página la entrega la
-   * propia aplicación web, así que esto no se usa. Déjelo como está.
+   * Opcional. Vacío = no se pide clave, que es como está funcionando.
+   * Si algún día quiere cerrar esta entrada, escriba aquí cualquier
+   * texto y el mismo en el Config.gs del formulario.
    */
-  TOKEN: 'CAMBIE-ESTA-CLAVE',
+  TOKEN: '',
 
   HOJAS: {
     EMPRESAS: 'EMPRESAS',

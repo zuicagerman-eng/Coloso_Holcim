@@ -18,10 +18,8 @@ var CONFIG = {
   URL_SERVICIO: '',
 
   /**
-   * ► CLAVE COMPARTIDA ◄
-   * Debe ser idéntica a la de Config.gs del servicio de registro. Es lo
-   * que evita que alguien que descubra aquella URL escriba en la hoja
-   * sin pasar por aquí.
+   * Opcional. Vacío = no se manda clave. Solo se usa si en el Config.gs
+   * del registro escribió una; entonces aquí va exactamente la misma.
    */
-  TOKEN: 'CAMBIE-ESTA-CLAVE'
+  TOKEN: ''
 };

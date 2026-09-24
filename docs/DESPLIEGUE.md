@@ -12,7 +12,7 @@ por qué antes de montarlos, porque explica todos los pasos que siguen.
 │  entrega la página y       │  Acceso: Cualquier usuario con cuenta de Google
 │  averigua quién entró      │  Permisos que pide: ver su correo
 └────────────┬───────────────┘
-             │  le pasa los datos + el correo, con una clave compartida
+             │  le pasa los datos junto con el correo
              ▼
 ┌────────────────────────────┐
 │  REGISTRO                  │  Ejecutar como: Yo
@@ -48,7 +48,6 @@ Es el que ya está montado, ligado a la hoja de cálculo.
    esa misma carpeta.
 4. En `Config.gs`:
    - `NOTIFICAR_A`: los correos que reciben el aviso.
-   - `TOKEN`: invente una clave larga. **Anótela**, va también en el otro proyecto.
    - `ID_HOJA_HOLCIM`: opcional, la copia en la hoja de Holcim.
 5. Ejecute **`prepararHojas`** y acepte los permisos.
 6. **Implementar → Nueva implementación → Aplicación web**
@@ -70,9 +69,8 @@ Es un proyecto **nuevo y aparte**, que no va ligado a ninguna hoja.
    que mantiene los permisos en el mínimo.
 5. En `Config.gs`:
    - `URL_SERVICIO`: la URL `/exec` del servicio de registro.
-   - `TOKEN`: **la misma clave** que puso allá.
 6. Ejecute **`probarEnlace`**. Debe responder el JSON del otro servicio. Si
-   responde otra cosa, la URL o la clave están mal.
+   responde otra cosa, la URL quedó mal copiada.
 7. **Implementar → Nueva implementación → Aplicación web**
    - Ejecutar como: **Usuario que accede a la app web**
    - Quién tiene acceso: **Cualquier usuario con una cuenta de Google**

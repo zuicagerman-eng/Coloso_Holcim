@@ -5,7 +5,8 @@
  * el que atiende al proveedor. Por eso se publica con "Ejecutar como: Yo"
  * —así escribe con los permisos del dueño y nadie más necesita acceso a la
  * hoja— y con acceso "Cualquier usuario", porque quien lo llama es otro
- * script, no un navegador con sesión. Lo que lo protege es CONFIG.TOKEN.
+ * script, no un navegador con sesión. Su dirección no se publica en ningún
+ * lado; si algún día hace falta cerrarla, está CONFIG.TOKEN.
  *
  * Su URL (la que termina en /exec) es la que se pega en el Config.gs del
  * formulario, en URL_SERVICIO. No se le comparte a nadie más.
