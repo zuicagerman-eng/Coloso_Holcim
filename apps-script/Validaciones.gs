@@ -55,6 +55,13 @@ function depurarEmpresa_(datos) {
   if (telefono.length !== 10) errores.push('El teléfono debe tener exactamente 10 dígitos.');
   d.telefono = '+57' + telefono;
 
+  /* Quién está llenando el formulario. Como la página se publica sin
+     inicio de sesión, Google no lo sabe: lo dice la propia persona. */
+  d.correoRegistra = limpiar_(datos.correoRegistra).toLowerCase();
+  if (!esCorreo_(d.correoRegistra)) {
+    errores.push('El correo de quien diligencia no es válido.');
+  }
+
   return { ok: errores.length === 0, errores: errores, datos: d };
 }
 

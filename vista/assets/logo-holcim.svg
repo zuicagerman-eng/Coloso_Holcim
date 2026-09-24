@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 222 222" role="img" aria-label="Símbolo Holcim">
   <defs>
     <linearGradient id="degradadoHolcim" x1="10" y1="212" x2="212" y2="10" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7AC143"/>
-      <stop offset=".26" stop-color="#00A94F"/>
-      <stop offset=".58" stop-color="#009BB4"/>
-      <stop offset="1" stop-color="#00AEEF"/>
+      <stop offset="0" stop-color="#8CC63F"/>
+      <stop offset=".22" stop-color="#5FBC6A"/>
+      <stop offset=".45" stop-color="#2FB3A8"/>
+      <stop offset=".68" stop-color="#29ABE2"/>
+      <stop offset="1" stop-color="#123A5E"/>
     </linearGradient>
     <mask id="recorteHolcim">
       <rect width="222" height="222" fill="#fff"/>

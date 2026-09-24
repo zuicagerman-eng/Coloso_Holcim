@@ -98,15 +98,17 @@ function guardarEmpresa_(entrada) {
       'DV': d.dv,
       'Nombre empresa': d.nombreEmpresa,
       'Correo': d.correoEmpresa,
-      'Teléfono': d.telefono
+      'Teléfono': d.telefono,
+      'Diligenciado por': d.correoRegistra
     });
 
     avisar_('Nueva empresa registrada', d.nombreEmpresa, id, [
       ['NIT', d.nit + '  ·  DV ' + d.dv],
-      ['Empresa', d.nombreEmpresa],
-      ['Correo', d.correoEmpresa],
-      ['Teléfono', d.telefono]
-    ]);
+      ['Razón social', d.nombreEmpresa],
+      ['Correo principal', d.correoEmpresa],
+      ['Teléfono', d.telefono],
+      ['Diligenciado por', d.correoRegistra]
+    ], d.correoRegistra);
 
     return { ok: true, id: id, mensaje: 'Empresa registrada con el radicado ' + id + '.' };
   } finally {
@@ -167,7 +169,8 @@ function pruebaDeEscritura() {
     nit: '900123456',
     nombreEmpresa: 'Empresa de prueba S.A.S.',
     correoEmpresa: 'contacto@empresadeprueba.com',
-    contacto: '3000000000'
+    contacto: '3000000000',
+    correoRegistra: 'quien.diligencia@empresadeprueba.com'
   });
   console.log(JSON.stringify(resultado));
   return resultado;

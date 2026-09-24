@@ -4,7 +4,7 @@
  * El mensaje se arma aquí mismo, sin archivo de plantilla aparte, para que
  * el proyecto tenga un archivo menos que mantener.
  */
-function avisar_(titulo, sujeto, id, filas) {
+function avisar_(titulo, sujeto, id, filas, copiaA) {
   var destinatarios = (CONFIG.NOTIFICAR_A || []).filter(function (c) { return !!c; });
   if (!destinatarios.length) return;
 
@@ -19,6 +19,9 @@ function avisar_(titulo, sujeto, id, filas) {
     if ((CONFIG.CON_COPIA_OCULTA || []).length) {
       opciones.bcc = CONFIG.CON_COPIA_OCULTA.join(',');
     }
+    /* Copia visible para quien diligenció, como constancia de lo que envió.
+       Si ya está entre los destinatarios no se repite. */
+    if (copiaA && destinatarios.indexOf(copiaA) < 0) opciones.cc = copiaA;
 
     MailApp.sendEmail(
       destinatarios.join(','),
@@ -92,11 +95,13 @@ function escaparHtml_(texto) {
 
 /** Prueba: manda el aviso a los correos configurados, sin tocar la hoja. */
 function pruebaDeCorreo() {
+  var quien = 'quien.diligencia@empresadeprueba.com';
   avisar_('Nueva empresa registrada', 'EMPRESA DE PRUEBA S.A.S.', 'EMP-PRUEBA-0000', [
     ['NIT', '900123456  ·  DV 8'],
-    ['Empresa', 'EMPRESA DE PRUEBA S.A.S.'],
-    ['Correo', 'contacto@empresadeprueba.com'],
-    ['Teléfono', '+573000000000']
-  ]);
-  return 'Aviso enviado a: ' + CONFIG.NOTIFICAR_A.join(', ');
+    ['Razón social', 'EMPRESA DE PRUEBA S.A.S.'],
+    ['Correo principal', 'contacto@empresadeprueba.com'],
+    ['Teléfono', '+573000000000'],
+    ['Diligenciado por', quien]
+  ], quien);
+  return 'Aviso enviado a: ' + CONFIG.NOTIFICAR_A.join(', ') + ' — con copia a ' + quien;
 }

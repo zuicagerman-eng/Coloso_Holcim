@@ -12,11 +12,13 @@ function comoLoEnviaElFormulario(c) {
     nit: soloDigitos(c.nit),
     nombreEmpresa: limpiar(c.nombreEmpresa).toUpperCase(),
     correoEmpresa: limpiar(c.correoEmpresa).toLowerCase(),
-    contacto: INDICATIVO + soloDigitos(c.contacto)
+    contacto: INDICATIVO + soloDigitos(c.contacto),
+    correoRegistra: limpiar(c.correoRegistra).toLowerCase()
   };
 }
 
-const escrito = { nit:'848848338', nombreEmpresa:'Prueba 1', correoEmpresa:'prueba1@gmail.com', contacto:'1234567890' };
+const escrito = { nit:'848848338', nombreEmpresa:'Prueba 1', correoEmpresa:'prueba1@gmail.com',
+                  contacto:'1234567890', correoRegistra:'Juan.Perez@Empresa.COM' };
 const enviado = comoLoEnviaElFormulario(escrito);
 console.log('Tu caso — lo que viaja al servidor:');
 console.log('  ' + JSON.stringify(enviado));
@@ -31,5 +33,9 @@ console.log('\nOtros teléfonos:');
     const p = depurarEmpresa_(comoLoEnviaElFormulario({...escrito, contacto: tel}));
     console.log('  ' + etiqueta.padEnd(16) + '→ ' + (p.ok ? 'acepta   ' + p.datos.telefono : 'rechaza'));
   });
+
+console.log('\nSin el correo de quien diligencia:');
+const sinQuien = depurarEmpresa_(comoLoEnviaElFormulario({...escrito, correoRegistra:''}));
+console.log('  → ' + (sinQuien.ok ? 'acepta (mal)' : 'rechaza: ' + sinQuien.errores.join(' / ')));
 
 console.log('\nDV de 848848338 = ' + calcularDV_('848848338') + '  (el formulario mostró 0)');

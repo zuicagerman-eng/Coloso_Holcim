@@ -51,7 +51,8 @@ var CONFIG = {
 
   ENCABEZADOS: {
     EMPRESAS: [
-      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono'
+      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono',
+      'Diligenciado por'
     ],
     PERSONAS: [
       'ID', 'Fecha', 'Nombres', 'Primer apellido', 'Segundo apellido',

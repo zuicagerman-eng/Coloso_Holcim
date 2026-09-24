@@ -31,6 +31,7 @@
     --danger: #B3261E;
     --danger-suave: #FBEAE8;
     --sombra: 0 1px 2px rgba(15, 36, 56, .05), 0 12px 32px -22px rgba(15, 36, 56, .5);
+    --sombra-alta: 0 24px 60px -24px rgba(15, 36, 56, .45);
     --r: 6px;
   }
   @media (prefers-color-scheme: dark) {
@@ -54,6 +55,7 @@
       --danger: #F09A92;
       --danger-suave: #2E1A18;
       --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -22px rgba(0, 0, 0, .9);
+      --sombra-alta: 0 24px 60px -24px rgba(0, 0, 0, .95);
     }
   }
   :root[data-theme="dark"] {
@@ -76,6 +78,7 @@
     --danger: #F09A92;
     --danger-suave: #2E1A18;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -22px rgba(0, 0, 0, .9);
+    --sombra-alta: 0 24px 60px -24px rgba(0, 0, 0, .95);
   }
 
   * { box-sizing: border-box; }
@@ -90,7 +93,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  input, select, .mono { font-variant-numeric: tabular-nums; }
+  input, .mono { font-variant-numeric: tabular-nums; }
 
   /* ---------- Cabecera con el logotipo ---------- */
   .cabecera {
@@ -123,71 +126,48 @@
   }
 
   /* ---------- Envoltura ---------- */
-  .hoja {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 34px 20px 60px;
-  }
+  .hoja { max-width: 700px; margin: 0 auto; padding: 34px 20px 60px; }
 
-  .titular { margin-bottom: 26px; }
+  .titular {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
   h1 {
     font-family: "Archivo", sans-serif;
     font-weight: 800;
-    font-size: clamp(27px, 4vw, 36px);
+    font-size: clamp(26px, 4vw, 34px);
     line-height: 1.1;
     letter-spacing: -.02em;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     text-wrap: balance;
   }
-  .titular p {
-    margin: 0;
-    color: var(--muted);
-    max-width: 56ch;
-  }
+  .titular p { margin: 0; color: var(--muted); max-width: 46ch; }
 
-  /* ---------- Selector Empresa / Personas ---------- */
-  .selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  .opcion {
+  /* ---------- Botón de ayuda ---------- */
+  .boton-ayuda {
     appearance: none;
-    text-align: left;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background: var(--surface);
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--line-fuerte);
-    border-radius: var(--r);
-    padding: 13px 16px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 9px 17px;
     font: inherit;
-    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    transition: border-color .15s, color .15s;
+    white-space: nowrap;
+    flex: none;
   }
-  .opcion .orden {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 11px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    display: block;
-  }
-  .opcion .nombre {
-    font-family: "Archivo", sans-serif;
-    font-weight: 700;
-    font-size: 17px;
-    color: inherit;
-    display: block;
-    margin-top: 1px;
-  }
-  .opcion:hover { border-color: var(--line-fuerte); }
-  .opcion[aria-selected="true"] {
-    color: var(--ink);
-    border-color: var(--line);
-    border-left-color: var(--accent-fill);
-    box-shadow: var(--sombra);
-  }
-  .opcion:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .boton-ayuda:hover { background: var(--accent-suave); }
+  .boton-ayuda:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .boton-ayuda svg { flex: none; }
 
   /* ---------- Tarjeta del formulario ---------- */
   .tarjeta {
@@ -198,15 +178,7 @@
     padding: 26px;
   }
 
-  .grupo { display: grid; gap: 0 18px; }
-  .grupo.dos { grid-template-columns: 1fr 1fr; }
-  /* Los campos de una misma fila alinean sus casillas aunque solo uno
-     lleve texto de ayuda. */
-  .grupo.dos .campo { display: flex; flex-direction: column; }
-  .grupo.dos .campo > label { margin-bottom: auto; padding-bottom: 6px; }
-  @media (max-width: 560px) { .grupo.dos { grid-template-columns: 1fr; } }
-
-  .campo { margin-bottom: 18px; }
+  .campo { margin-bottom: 20px; position: relative; }
   .campo > label {
     display: block;
     font-size: 12px;
@@ -224,8 +196,33 @@
     color: var(--muted);
     margin-top: 2px;
   }
+  /* Interrogante que abre la ayuda en ese campo */
+  .pista {
+    appearance: none;
+    background: none;
+    border: 1px solid var(--line-fuerte);
+    color: var(--muted);
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    margin-left: 7px;
+    vertical-align: -2px;
+    /* Zona de toque de 44px sin agrandar el círculo visible */
+    position: relative;
+  }
+  .pista::after {
+    content: "";
+    position: absolute;
+    inset: -12px;
+  }
+  .pista:hover { border-color: var(--accent); color: var(--accent); }
+  .pista:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  input, select {
+  input {
     width: 100%;
     padding: 11px 12px;
     background: var(--surface);
@@ -236,19 +233,40 @@
     font-size: 15px;
   }
   input.mono { font-family: "IBM Plex Mono", monospace; letter-spacing: .05em; }
-  /* El dato se captura y se guarda en mayúscula sostenida; el correo,
-     al contrario, siempre en minúscula. */
   input.mayus { text-transform: uppercase; }
-  /* Campo calculado: se muestra pero no se escribe. */
-  input.resultado {
-    background: var(--surface-2);
-    border-style: dashed;
-    cursor: default;
-  }
-  input.resultado:focus { box-shadow: none; border-color: var(--line-fuerte); }
   input.minus { text-transform: lowercase; }
+  input::placeholder { color: var(--muted); opacity: .65; }
+  /* El texto de ejemplo no se transforma: en mayúscula no cabía y se cortaba. */
+  input.mayus::placeholder, input.minus::placeholder { text-transform: none; }
+  input:focus {
+    outline: none;
+    border-color: var(--accent-fill);
+    box-shadow: 0 0 0 3px var(--accent-suave);
+  }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--danger-suave); }
 
-  /* Teléfono con el indicativo fijo del país. */
+  /* Resalte mientras la ayuda habla de este campo */
+  .campo.destacado {
+    outline: 2px solid var(--accent);
+    outline-offset: 8px;
+    border-radius: 3px;
+  }
+
+  .error { display: block; color: var(--danger); font-size: 12.5px; margin-top: 5px; }
+  .error:empty { display: none; }
+
+  .pista-dv {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .pista-dv b { color: var(--accent); font-weight: 500; }
+  .pista-dv:empty { display: none; }
+
+  /* Teléfono con el indicativo fijo del país */
   .con-prefijo { display: flex; }
   .con-prefijo .prefijo {
     display: flex;
@@ -264,52 +282,24 @@
     white-space: nowrap;
   }
   .con-prefijo input { border-radius: 0 4px 4px 0; }
-  .con-prefijo:focus-within .prefijo {
-    border-color: var(--accent-fill);
-    color: var(--ink);
-  }
+  .con-prefijo:focus-within .prefijo { border-color: var(--accent-fill); color: var(--ink); }
   .con-prefijo:focus-within input { box-shadow: none; }
-  .con-prefijo:focus-within {
-    border-radius: 4px;
-    box-shadow: 0 0 0 3px var(--accent-suave);
-  }
-  input:focus, select:focus {
-    outline: none;
-    border-color: var(--accent-fill);
-    box-shadow: 0 0 0 3px var(--accent-suave);
-  }
-  input[aria-invalid="true"] { border-color: var(--danger); }
-  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--danger-suave); }
+  .con-prefijo:focus-within { border-radius: 4px; box-shadow: 0 0 0 3px var(--accent-suave); }
 
-  .error {
-    display: block;
-    color: var(--danger);
-    font-size: 12.5px;
-    margin-top: 5px;
-    min-height: 0;
+  .separador {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 26px 0 22px;
   }
-  .error:empty { display: none; }
-
-  .aviso {
-    padding: 12px 14px;
-    border-radius: 4px;
-    font-size: 14px;
-    margin-bottom: 20px;
-    border: 1px solid;
-  }
-  .aviso ul { margin: 6px 0 0; padding-left: 18px; }
-  .aviso-error { background: var(--danger-suave); border-color: var(--danger); color: var(--danger); }
-  .aviso:empty { display: none; }
-
-  .pista-dv {
-    display: block;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 12.5px;
+  .rotulo-grupo {
+    font-family: "Archivo", sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
     color: var(--muted);
-    margin-top: 6px;
+    margin: 0 0 16px;
   }
-  .pista-dv b { color: var(--accent); font-weight: 500; }
-  .pista-dv:empty { display: none; }
 
   .barra-envio {
     display: flex;
@@ -318,7 +308,6 @@
     flex-wrap: wrap;
     border-top: 1px solid var(--line);
     padding-top: 20px;
-    margin-top: 4px;
   }
   .obligatorio { color: var(--muted); font-size: 12.5px; }
 
@@ -335,6 +324,7 @@
   }
   .boton:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   .boton:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .boton[disabled] { opacity: .6; cursor: progress; }
   .boton.hueco {
     background: none;
     color: var(--accent);
@@ -342,8 +332,92 @@
   }
   .boton.hueco:hover { background: var(--accent-suave); border-color: var(--accent); }
 
+  .aviso {
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    border: 1px solid;
+  }
+  .aviso ul { margin: 6px 0 0; padding-left: 18px; }
+  .aviso-error { background: var(--danger-suave); border-color: var(--danger); color: var(--danger); }
+  .aviso:empty { display: none; }
+
+  /* ---------- Ayuda guiada ---------- */
+  .fondo-ayuda {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 22, 35, .55);
+    display: grid;
+    place-items: end center;
+    padding: 18px;
+    z-index: 30;
+  }
+  @media (min-width: 620px) { .fondo-ayuda { place-items: center; } }
+
+  .ventana-ayuda {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--sombra-alta);
+    width: min(460px, 100%);
+    overflow: hidden;
+  }
+  .ayuda-cima {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .ayuda-paso {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .04em;
+  }
+  .cerrar {
+    appearance: none; background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 24px; line-height: 1; padding: 0 2px;
+  }
+  .cerrar:hover { color: var(--ink); }
+  .ayuda-cuerpo { padding: 20px 18px 6px; }
+  .ayuda-cuerpo h3 {
+    font-family: "Archivo", sans-serif;
+    font-size: 19px;
+    margin: 0 0 8px;
+  }
+  .ayuda-cuerpo p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .ejemplo {
+    margin-top: 14px;
+    background: var(--surface-2);
+    border: 1px dashed var(--line-fuerte);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .ejemplo span { color: var(--muted); }
+  .ejemplo b { font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+  .ayuda-pie {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px 18px;
+  }
+  .ayuda-pie .boton { padding: 9px 18px; font-size: 14px; }
+  .ayuda-pie .relleno { margin-left: auto; }
+
+  .puntos { display: flex; gap: 6px; }
+  .punto {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--line-fuerte);
+  }
+  .punto.activo { background: var(--accent); }
+
   /* ---------- Confirmación ---------- */
-  .confirmacion { text-align: left; }
   .sello {
     display: inline-flex;
     align-items: center;
@@ -357,49 +431,103 @@
     font-weight: 600;
     margin-bottom: 16px;
   }
-  .sello svg { display: block; }
-  .confirmacion h2 {
-    font-family: "Archivo", sans-serif;
-    font-size: 22px;
-    margin: 0 0 6px;
-  }
+  .confirmacion h2 { font-family: "Archivo", sans-serif; font-size: 22px; margin: 0 0 6px; }
   .confirmacion .radicado {
     font-family: "IBM Plex Mono", monospace;
     color: var(--accent);
-    font-weight: 500;
     font-size: 15px;
+    font-weight: 500;
   }
-  .repaso {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0 24px;
-    font-size: 14px;
-  }
-  .repaso td {
-    border-bottom: 1px solid var(--line);
-    padding: 10px 2px;
-    vertical-align: top;
-  }
+  .repaso { width: 100%; border-collapse: collapse; margin: 20px 0 10px; font-size: 14px; }
+  .repaso td { border-bottom: 1px solid var(--line); padding: 10px 2px; vertical-align: top; }
   .repaso tr:last-child td { border-bottom: none; }
   .repaso td:first-child { color: var(--muted); width: 44%; }
   .repaso td:last-child { font-weight: 600; }
-
-  .nota-pie {
-    margin: 22px 0 0;
-    color: var(--muted);
-    font-size: 12.5px;
-    text-align: center;
+  .copia-a {
+    background: var(--verde-suave);
+    border-left: 3px solid var(--verde);
+    padding: 11px 13px;
+    border-radius: 0 4px 4px 0;
+    font-size: 13.5px;
+    margin: 0 0 22px;
   }
+
+  .nota-pie { margin: 22px 0 0; color: var(--muted); font-size: 12.5px; text-align: center; }
   .oculto { display: none !important; }
-  /* Visible solo para lectores de pantalla. */
   .solo-lectores {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+  }
+
+  /* ================================================================
+     Celular. Se prueba a 360 px de ancho, que es lo que tiene un
+     teléfono corriente.
+     ================================================================ */
+  @media (max-width: 600px) {
+    .cabecera { padding: 12px 16px; gap: 10px; }
+    .logotipo svg { width: 30px; height: 30px; }
+    .logotipo .palabra { font-size: 21px; }
+    /* El rótulo pasa debajo del logotipo en vez de apretarse al lado */
+    .cabecera .contexto {
+      margin-left: 0;
+      flex-basis: 100%;
+      font-size: 12.5px;
+    }
+
+    .hoja { padding: 22px 14px 44px; }
+
+    .titular { gap: 16px; margin-bottom: 20px; }
+    .titular p { font-size: 14.5px; }
+    /* El botón de ayuda, ancho completo: es el que más se usa en celular */
+    .boton-ayuda { width: 100%; justify-content: center; padding: 12px 16px; }
+
+    .tarjeta { padding: 18px 16px; border-radius: 8px; }
+
+    /* 16 px evita que iOS haga zoom al tocar una casilla */
+    input, .con-prefijo .prefijo { font-size: 16px; }
+    input { padding: 12px; }
+
+    .campo { margin-bottom: 18px; }
+    .campo.destacado { outline-offset: 5px; }
+
+    .barra-envio { flex-direction: column; align-items: stretch; gap: 12px; }
+    .barra-envio .boton { width: 100%; padding: 14px; font-size: 16px; }
+    .obligatorio { text-align: center; }
+
+    /* La ayuda sube desde abajo, como una hoja: se alcanza con el pulgar */
+    .fondo-ayuda { padding: 0; align-items: end; }
+    .ventana-ayuda {
+      width: 100%;
+      border-radius: 14px 14px 0 0;
+      border-bottom: none;
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+    .ayuda-cuerpo { padding: 18px 16px 4px; }
+    .ayuda-cuerpo h3 { font-size: 18px; }
+    .ayuda-pie { padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); }
+    .ayuda-pie .boton { flex: 1; text-align: center; padding: 12px 14px; }
+    .puntos { order: -1; width: 100%; justify-content: center; margin-bottom: 4px; }
+    .ayuda-pie { flex-wrap: wrap; }
+    .ayuda-pie .relleno { margin-left: 0; }
+
+    .confirmacion h2 { font-size: 19px; }
+    .repaso td { display: block; padding: 6px 2px; }
+    .repaso td:first-child { width: auto; padding-bottom: 0; font-size: 12.5px; }
+    .repaso tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; }
+    .repaso tr:last-child { border-bottom: none; }
+    .repaso td { border-bottom: none; }
+    .confirmacion .boton { width: 100%; padding: 14px; }
+  }
+
+  @media (max-width: 360px) {
+    .logotipo .palabra { font-size: 19px; }
+    h1 { font-size: 23px; }
+    .tarjeta { padding: 16px 13px; }
   }
 </style>
 </head>
@@ -412,10 +540,11 @@
     <svg viewBox="0 0 222 222" role="img" aria-label="Holcim">
       <defs>
         <linearGradient id="degradadoHolcim" x1="10" y1="212" x2="212" y2="10" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stop-color="#7AC143"/>
-          <stop offset=".26" stop-color="#00A94F"/>
-          <stop offset=".58" stop-color="#009BB4"/>
-          <stop offset="1" stop-color="#00AEEF"/>
+          <stop offset="0" stop-color="#8CC63F"/>
+          <stop offset=".22" stop-color="#5FBC6A"/>
+          <stop offset=".45" stop-color="#2FB3A8"/>
+          <stop offset=".68" stop-color="#29ABE2"/>
+          <stop offset="1" stop-color="#123A5E"/>
         </linearGradient>
         <mask id="recorteHolcim">
           <rect width="222" height="222" fill="#fff"/>
@@ -431,67 +560,88 @@
     </svg>
     <span class="palabra">HOLCIM</span>
   </div>
-  <span class="contexto">Registro de proveedores y personal en planta</span>
+  <span class="contexto">Registro de empresas proveedoras</span>
 </header>
 <div class="filo"></div>
 
 <main class="hoja">
   <div class="titular">
-    <h1>Registro de Empresas y Personas</h1>
-    <p>Primero se registra la empresa; después las personas que pertenecen a ella.</p>
-  </div>
-
-  <div class="selector" role="tablist">
-    <button class="opcion" id="opEmpresa" role="tab" aria-selected="true" aria-controls="formEmpresa" onclick="cambiar('empresa')">
-      <span class="orden">Paso 1</span>
-      <span class="nombre">Empresa</span>
-    </button>
-    <button class="opcion" id="opPersona" role="tab" aria-selected="false" aria-controls="formPersona" onclick="cambiar('persona')">
-      <span class="orden">Paso 2</span>
-      <span class="nombre">Personas</span>
+    <div>
+      <h1>Registro de la empresa</h1>
+      <p>Cinco datos. Si alguno no le queda claro, abra la ayuda: se los explicamos uno por uno.</p>
+    </div>
+    <button class="boton-ayuda" type="button" onclick="abrirAyuda(0)">
+      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="10" cy="10" r="8.2" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M7.9 7.6a2.1 2.1 0 1 1 2.6 2.05c-.4.12-.5.42-.5.8v.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="10" cy="14.2" r=".95" fill="currentColor"/>
+      </svg>
+      Ayuda campo por campo
     </button>
   </div>
 
   <div class="tarjeta">
     <div id="avisoGeneral" role="alert"></div>
 
-    <!-- ---------- Empresa ---------- -->
-    <form id="formEmpresa" role="tabpanel" aria-labelledby="opEmpresa" novalidate onsubmit="enviar(event, 'empresa')">
-      <div class="campo">
-        <label for="nit">NIT
+    <form id="formEmpresa" novalidate onsubmit="enviar(event)">
+
+      <div class="campo" id="campo-nit">
+        <label for="nit">NIT de la empresa
+          <button class="pista" type="button" onclick="abrirAyuda(0)" aria-label="Ayuda sobre el NIT">?</button>
           <span class="ayuda">Solo números: sin puntos, sin guion y sin el dígito de verificación.</span>
         </label>
         <input id="nit" name="nit" class="mono" inputmode="numeric" maxlength="12" autocomplete="off"
-               oninput="depurarNit(this); pintarDV()" onblur="revisar('nit')">
+               placeholder="900123456" oninput="depurarNit(this); pintarDV()" onblur="revisar('nit')">
         <span class="pista-dv" id="pistaDV"></span>
         <span class="error" id="errorNit"></span>
       </div>
 
-      <div class="campo">
-        <label for="nombreEmpresa">Nombre de la empresa</label>
-        <input id="nombreEmpresa" name="nombre" class="mayus" autocomplete="off" onblur="revisar('nombreEmpresa')">
+      <div class="campo" id="campo-nombreEmpresa">
+        <label for="nombreEmpresa">Razón social de la empresa
+          <button class="pista" type="button" onclick="abrirAyuda(1)" aria-label="Ayuda sobre la razón social">?</button>
+          <span class="ayuda">El nombre legal, como aparece en el RUT.</span>
+        </label>
+        <input id="nombreEmpresa" name="nombreEmpresa" class="mayus" autocomplete="organization"
+               placeholder="Transportes del Magdalena SAS" onblur="revisar('nombreEmpresa')">
         <span class="error" id="errorNombreEmpresa"></span>
       </div>
 
-      <div class="grupo dos">
-        <div class="campo">
-          <label for="correoEmpresa">Correo</label>
-          <input id="correoEmpresa" name="correo" type="email" class="minus" autocomplete="off" onblur="revisar('correoEmpresa')">
-          <span class="error" id="errorCorreoEmpresa"></span>
+      <div class="campo" id="campo-correoEmpresa">
+        <label for="correoEmpresa">Correo electrónico principal
+          <button class="pista" type="button" onclick="abrirAyuda(2)" aria-label="Ayuda sobre el correo de la empresa">?</button>
+          <span class="ayuda">Al que Holcim enviará las comunicaciones del proceso.</span>
+        </label>
+        <input id="correoEmpresa" name="correoEmpresa" type="email" class="minus" autocomplete="email"
+               placeholder="contratos@empresa.com" onblur="revisar('correoEmpresa')">
+        <span class="error" id="errorCorreoEmpresa"></span>
+      </div>
+
+      <div class="campo" id="campo-contacto">
+        <label for="contacto">Teléfono de contacto
+          <button class="pista" type="button" onclick="abrirAyuda(3)" aria-label="Ayuda sobre el teléfono">?</button>
+          <span class="ayuda">10 dígitos, sin espacios. El +57 ya está puesto.</span>
+        </label>
+        <div class="con-prefijo">
+          <span class="prefijo" aria-hidden="true">+57</span>
+          <input id="contacto" name="contacto" class="mono" type="tel" inputmode="numeric" maxlength="10"
+                 autocomplete="tel-national" placeholder="3154421180" aria-describedby="prefijoPais"
+                 oninput="soloNumeros(this)" onblur="revisar('contacto')">
         </div>
-        <div class="campo">
-          <label for="contacto">Teléfono de contacto
-            <span class="ayuda">10 dígitos, sin espacios.</span>
-          </label>
-          <div class="con-prefijo">
-            <span class="prefijo" aria-hidden="true">+57</span>
-            <input id="contacto" name="contacto" class="mono" type="tel" inputmode="numeric" maxlength="10"
-                   autocomplete="off" aria-describedby="prefijoPais"
-                   oninput="soloNumeros(this)" onblur="revisar('contacto')">
-          </div>
-          <span id="prefijoPais" class="solo-lectores">Indicativo de Colombia, más 57</span>
-          <span class="error" id="errorContacto"></span>
-        </div>
+        <span id="prefijoPais" class="solo-lectores">Indicativo de Colombia, más 57</span>
+        <span class="error" id="errorContacto"></span>
+      </div>
+
+      <hr class="separador">
+      <p class="rotulo-grupo">Quién está diligenciando</p>
+
+      <div class="campo" id="campo-correoRegistra">
+        <label for="correoRegistra">Su correo electrónico
+          <button class="pista" type="button" onclick="abrirAyuda(4)" aria-label="Ayuda sobre su correo">?</button>
+          <span class="ayuda">El de usted, la persona que llena el formulario. Le llegará copia.</span>
+        </label>
+        <input id="correoRegistra" name="correoRegistra" type="email" class="minus" autocomplete="email"
+               placeholder="juan.perez@empresa.com" onblur="revisar('correoRegistra')">
+        <span class="error" id="errorCorreoRegistra"></span>
       </div>
 
       <div class="barra-envio">
@@ -500,112 +650,83 @@
       </div>
     </form>
 
-    <!-- ---------- Personas ---------- -->
-    <form id="formPersona" class="oculto" role="tabpanel" aria-labelledby="opPersona" novalidate onsubmit="enviar(event, 'persona')">
-      <div class="grupo dos">
-        <div class="campo">
-          <label for="nombres">Nombres</label>
-          <input id="nombres" name="nombres" class="mayus" autocomplete="off"
-                 oninput="componerNombre()" onblur="revisar('nombres')">
-          <span class="error" id="errorNombres"></span>
-        </div>
-        <div class="campo">
-          <label for="apellido1">Primer apellido</label>
-          <input id="apellido1" name="apellido1" class="mayus" autocomplete="off"
-                 oninput="componerNombre()" onblur="revisar('apellido1')">
-          <span class="error" id="errorApellido1"></span>
-        </div>
-        <div class="campo">
-          <label for="apellido2">Segundo apellido
-            <span class="ayuda">Opcional.</span>
-          </label>
-          <input id="apellido2" name="apellido2" class="mayus" autocomplete="off"
-                 oninput="componerNombre()" onblur="revisar('apellido2')">
-          <span class="error" id="errorApellido2"></span>
-        </div>
-        <div class="campo">
-          <label for="cedula">Cédula
-            <span class="ayuda">Solo números, sin puntos.</span>
-          </label>
-          <input id="cedula" name="cedula" class="mono" inputmode="numeric" maxlength="10" autocomplete="off"
-                 oninput="soloNumeros(this)" onblur="revisar('cedula')">
-          <span class="error" id="errorCedula"></span>
-        </div>
-      </div>
-
-      <div class="campo">
-        <label for="nombreCompleto">Nombre completo
-          <span class="ayuda">Se arma solo con los campos de arriba; así queda registrado.</span>
-        </label>
-        <input id="nombreCompleto" name="nombreCompleto" class="mayus resultado" readonly
-               tabindex="-1" aria-live="polite" placeholder="—">
-      </div>
-
-      <div class="campo">
-        <label for="correoPersona">Correo</label>
-        <input id="correoPersona" name="correo" type="email" class="minus" autocomplete="off" onblur="revisar('correoPersona')">
-        <span class="error" id="errorCorreoPersona"></span>
-      </div>
-
-      <div class="campo">
-        <label for="empresa">Empresa a la que pertenece
-          <span class="ayuda">Debe estar registrada en el paso 1.</span>
-        </label>
-        <select id="empresa" name="empresa" onblur="revisar('empresa')"></select>
-        <span class="error" id="errorEmpresa"></span>
-      </div>
-
-      <div class="barra-envio">
-        <button class="boton" type="submit">Registrar persona</button>
-        <span class="obligatorio">Todos los campos son obligatorios, salvo el segundo apellido.</span>
-      </div>
-    </form>
-
-    <!-- ---------- Confirmación ---------- -->
     <div id="confirmacion" class="confirmacion oculto"></div>
   </div>
 
-  <p class="nota-pie">Los datos quedan bajo custodia de Holcim y se usan solo para el trámite de ingreso.</p>
+  <p class="nota-pie">Los datos quedan bajo custodia de Holcim y se usan solo para el trámite de vinculación.</p>
 </main>
+
+<div id="ayuda" class="oculto"></div>
 
 <script>
 /* ==================================================================
-   Vista del registro — Coloso Holcim
-   Solo interfaz y validación. El envío está aislado en enviarAlServidor():
-   ahí se conecta el flujo cuando esté definido.
-   ================================================================== */
-
-/* ==================================================================
    CONEXIÓN CON LA HOJA DE CÁLCULO
 
-   Hay dos maneras de usar esta página y se acomoda sola:
-
-   1. Servida por Apps Script (la URL que termina en /exec).
-      Es la recomendada: Google exige sesión del dominio, sabe quién
-      entra y no hay que configurar nada aquí abajo.
-
-   2. Como archivo suelto que se abre con doble clic.
-      Entonces hay que llenar url y token, y la aplicación web debe
-      estar publicada con acceso "Cualquier usuario". Si está
-      restringida al dominio, esta vía no funciona: el navegador no
-      puede entregarle la sesión de Google.
-
-   Sin ninguna de las dos, el formulario valida y confirma en pantalla
-   pero no guarda nada. Sirve para mostrarlo.
+   Servida por Apps Script (la URL que termina en /exec) no hay nada que
+   configurar: la página lo detecta sola. Como archivo suelto, hay que
+   llenar url y token, y la aplicación web debe estar publicada con
+   acceso "Cualquier usuario". Sin ninguna de las dos, el formulario
+   valida y confirma en pantalla pero no guarda nada.
    ================================================================== */
 var API = {
   url: '',
   token: 'CAMBIE-ESTA-CLAVE'
 };
 
-/** ¿Nos está sirviendo Apps Script? */
 function dentroDeGoogle() {
   return typeof google !== 'undefined' && !!(google.script && google.script.run);
 }
+function hayServicio() { return dentroDeGoogle() || !!API.url; }
 
-function hayServicio() {
-  return dentroDeGoogle() || !!API.url;
-}
+/* ==================================================================
+   AYUDA CAMPO POR CAMPO
+   El orden de esta lista es el de los campos en pantalla.
+   ================================================================== */
+var AYUDA = [
+  {
+    campo: 'nit',
+    titulo: 'NIT de la empresa',
+    texto: 'Escríbalo solo con números. Sin puntos, sin el guion y sin el dígito de ' +
+           'verificación: ese último lo calculamos nosotros y se lo mostramos debajo ' +
+           'del campo para que confirme que coincide con el suyo.',
+    ejemplo: '900123456',
+    nota: 'Si su NIT es 900.123.456-8, aquí escribe 900123456'
+  },
+  {
+    campo: 'nombreEmpresa',
+    titulo: 'Razón social',
+    texto: 'El nombre legal completo de la empresa, tal como aparece en el RUT o en el ' +
+           'certificado de cámara de comercio. No el nombre comercial ni la sigla.',
+    ejemplo: 'Transportes del Magdalena S.A.S.',
+    nota: 'Se guarda en mayúsculas, no se preocupe por eso'
+  },
+  {
+    campo: 'correoEmpresa',
+    titulo: 'Correo electrónico principal',
+    texto: 'El correo institucional de la empresa. A esta dirección llegarán las ' +
+           'comunicaciones de Holcim sobre el proceso de vinculación.',
+    ejemplo: 'contratos@empresa.com',
+    nota: 'Un correo al que alguien revise con frecuencia'
+  },
+  {
+    campo: 'contacto',
+    titulo: 'Teléfono de contacto',
+    texto: 'Diez dígitos, sin espacios ni guiones. El indicativo +57 ya está puesto en ' +
+           'el recuadro gris, no lo escriba otra vez. Sirve un celular o un fijo con su ' +
+           'indicativo de ciudad.',
+    ejemplo: '3154421180',
+    nota: 'Un fijo de Bogotá sería 6015551234'
+  },
+  {
+    campo: 'correoRegistra',
+    titulo: 'Su correo electrónico',
+    texto: 'El correo de usted, la persona que está llenando este formulario. Queda ' +
+           'registrado como responsable del diligenciamiento y le llegará una copia ' +
+           'del registro, para que tenga constancia de lo que envió.',
+    ejemplo: 'juan.perez@empresa.com',
+    nota: 'Puede ser el mismo de arriba si usted atiende ese buzón'
+  }
+];
 
 /* ---------- Reglas de validación ---------- */
 function soloDigitos(v) { return String(v || '').replace(/[^0-9]/g, ''); }
@@ -624,7 +745,7 @@ function calcularDV(nitSinDV) {
 var REGLAS = {
   nit: function (v) {
     if (!limpiar(v)) return 'Escriba el NIT de la empresa.';
-    if (/[-.]/.test(v)) return 'Escriba el NIT sin puntos, sin guion y sin el dígito de verificación.';
+    if (/-/.test(v)) return 'Escriba el NIT sin el guion ni el dígito de verificación.';
     var n = soloDigitos(v);
     if (n.length < 8 || n.length > 10) return 'El NIT tiene entre 8 y 10 dígitos, sin el de verificación.';
     return '';
@@ -634,30 +755,27 @@ var REGLAS = {
   },
   correoEmpresa: function (v) { return revisarCorreo(v); },
   contacto: function (v) {
-    var d = soloDigitos(v);
-    if (!d) return 'Escriba el teléfono de contacto.';
-    if (d.length !== 10) return 'El teléfono debe tener exactamente 10 dígitos.';
-    return '';
-  },
-  nombres: function (v) { return limpiar(v).length < 2 ? 'Escriba los nombres.' : ''; },
-  apellido1: function (v) { return limpiar(v).length < 2 ? 'Escriba el primer apellido.' : ''; },
-  /* El segundo apellido es opcional: solo se revisa si escribieron algo. */
-  apellido2: function (v) {
-    var t = limpiar(v);
-    if (!t) return '';
-    return t.length < 2 ? 'El segundo apellido es muy corto; déjelo vacío si no aplica.' : '';
-  },
-  cedula: function (v) {
-    if (!limpiar(v)) return 'Escriba el número de cédula.';
+    if (!limpiar(v)) return 'Escriba el teléfono de contacto.';
     var c = soloDigitos(v);
-    if (c.length < 6 || c.length > 10) return 'La cédula tiene entre 6 y 10 dígitos.';
+    if (c.length !== 10) return 'El teléfono tiene exactamente 10 dígitos.';
     return '';
   },
-  correoPersona: function (v) { return revisarCorreo(v); },
-  empresa: function (v) { return v ? '' : 'Seleccione la empresa a la que pertenece.'; }
+  correoRegistra: function (v) { return revisarCorreo(v); }
 };
 
-/** Deja solo dígitos mientras se escribe (cédula, teléfono). */
+function revisarCorreo(v) {
+  var c = limpiar(v).toLowerCase();
+  if (!c) return 'Escriba el correo electrónico.';
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(c)) return 'Ese correo no tiene un formato válido.';
+  return '';
+}
+
+var CAMPOS = ['nit', 'nombreEmpresa', 'correoEmpresa', 'contacto', 'correoRegistra'];
+var MAYUSCULAS = ['nombreEmpresa'];
+var MINUSCULAS = ['correoEmpresa', 'correoRegistra'];
+var INDICATIVO = '+57';
+
+/* ---------- Limpieza mientras se escribe ---------- */
 function soloNumeros(campo) {
   var limpio = campo.value.replace(/[^0-9]/g, '');
   if (limpio !== campo.value) campo.value = limpio;
@@ -673,23 +791,6 @@ function depurarNit(campo) {
   if (limpio !== campo.value) campo.value = limpio;
 }
 
-function revisarCorreo(v) {
-  var c = limpiar(v).toLowerCase();
-  if (!c) return 'Escriba el correo electrónico.';
-  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(c)) return 'Ese correo no tiene un formato válido.';
-  return '';
-}
-
-/* El dato se guarda normalizado, no solo se ve normalizado. */
-var MAYUSCULAS = ['nombreEmpresa', 'nombres', 'apellido1', 'apellido2'];
-var MINUSCULAS = ['correoEmpresa', 'correoPersona'];
-var INDICATIVO = '+57';
-
-var CAMPOS = {
-  empresa: ['nit', 'nombreEmpresa', 'correoEmpresa', 'contacto'],
-  persona: ['nombres', 'apellido1', 'apellido2', 'cedula', 'correoPersona', 'empresa']
-};
-
 /* ---------- Validación en pantalla ---------- */
 function elemento(id) { return document.getElementById(id); }
 
@@ -701,23 +802,6 @@ function revisar(id) {
   return !mensaje;
 }
 
-/**
- * Nombre completo = nombres + primer apellido + segundo apellido.
- * Se arma en vivo y es el valor que se registra.
- */
-function nombreCompletoDe(nombres, apellido1, apellido2) {
-  return [nombres, apellido1, apellido2]
-    .map(limpiar)
-    .filter(Boolean)
-    .join(' ')
-    .toUpperCase();
-}
-
-function componerNombre() {
-  elemento('nombreCompleto').value = nombreCompletoDe(
-    elemento('nombres').value, elemento('apellido1').value, elemento('apellido2').value);
-}
-
 function pintarDV() {
   var valor = elemento('nit').value;
   var pista = elemento('pistaDV');
@@ -726,25 +810,15 @@ function pintarDV() {
   pista.innerHTML = 'Se registra <b>' + nit + '</b> · dígito de verificación <b>' + calcularDV(nit) + '</b>';
 }
 
-function cambiar(cual) {
-  var esEmpresa = cual === 'empresa';
-  elemento('formEmpresa').classList.toggle('oculto', !esEmpresa);
-  elemento('formPersona').classList.toggle('oculto', esEmpresa);
-  elemento('confirmacion').classList.add('oculto');
-  limpiarAviso();
-  elemento('opEmpresa').setAttribute('aria-selected', String(esEmpresa));
-  elemento('opPersona').setAttribute('aria-selected', String(!esEmpresa));
-}
-
 /* ---------- Envío ---------- */
-function enviar(evento, tipo) {
+function enviar(evento) {
   evento.preventDefault();
   limpiarAviso();
 
   var valido = true;
-  CAMPOS[tipo].forEach(function (id) { if (!revisar(id)) valido = false; });
+  CAMPOS.forEach(function (id) { if (!revisar(id)) valido = false; });
   if (!valido) {
-    var primero = CAMPOS[tipo].filter(function (id) {
+    var primero = CAMPOS.filter(function (id) {
       return elemento(id).getAttribute('aria-invalid') === 'true';
     })[0];
     if (primero) elemento(primero).focus();
@@ -752,52 +826,34 @@ function enviar(evento, tipo) {
   }
 
   var datos = {};
-  CAMPOS[tipo].forEach(function (id) {
+  CAMPOS.forEach(function (id) {
     var valor = limpiar(elemento(id).value);
     if (MAYUSCULAS.indexOf(id) >= 0) valor = valor.toUpperCase();
     if (MINUSCULAS.indexOf(id) >= 0) valor = valor.toLowerCase();
     datos[id] = valor;
   });
-  if (tipo === 'empresa') {
-    datos.nit = soloDigitos(datos.nit);
-    datos.dv = calcularDV(datos.nit);
-    datos.contacto = INDICATIVO + soloDigitos(datos.contacto);
-  }
-  if (tipo === 'persona') {
-    datos.cedula = soloDigitos(datos.cedula);
-    datos.nombreCompleto = nombreCompletoDe(datos.nombres, datos.apellido1, datos.apellido2);
-  }
+  datos.nit = soloDigitos(datos.nit);
+  datos.dv = calcularDV(datos.nit);
+  datos.contacto = INDICATIVO + soloDigitos(datos.contacto);
 
-  enviarAlServidor(tipo, datos);
+  enviarAlServidor(datos);
 }
 
-/**
- * ▼▼▼  AQUÍ SE CONECTA EL FLUJO  ▼▼▼
- * Por ahora solo confirma en pantalla. Cuando se defina a dónde van los
- * datos (hoja de cálculo, base propia, correo), se reemplaza el cuerpo
- * de esta función; nada más de la vista cambia.
- */
-function enviarAlServidor(tipo, datos) {
-  if (!hayServicio()) {
-    recordarEmpresaLocal(tipo, datos);
-    mostrarConfirmacion(tipo, datos, null);
-    return;
-  }
+function enviarAlServidor(datos) {
+  if (!hayServicio()) { mostrarConfirmacion(datos, null); return; }
 
-  ocupado(tipo, true);
-  llamarApi({
-    accion: tipo === 'empresa' ? 'registrarEmpresa' : 'registrarPersona',
-    datos: datos
-  }).then(function (respuesta) {
-    ocupado(tipo, false);
-    if (!respuesta.ok) return avisar(respuesta.errores || ['No se pudo guardar.']);
-    mostrarConfirmacion(tipo, datos, respuesta.id);
-    if (tipo === 'empresa') cargarEmpresas();
-  }).catch(function (error) {
-    ocupado(tipo, false);
-    avisar(['No se pudo guardar: ' + error.message,
-            'Revise la conexión e intente de nuevo. Los datos siguen en el formulario.']);
-  });
+  ocupado(true);
+  llamarApi({ accion: 'registrarEmpresa', datos: datos })
+    .then(function (respuesta) {
+      ocupado(false);
+      if (!respuesta.ok) return avisar(respuesta.errores || ['No se pudo guardar.']);
+      mostrarConfirmacion(datos, respuesta.id);
+    })
+    .catch(function (error) {
+      ocupado(false);
+      avisar(['No se pudo guardar: ' + error.message,
+              'Revise la conexión e intente de nuevo. Los datos siguen en el formulario.']);
+    });
 }
 
 function llamarApi(cuerpo) {
@@ -811,7 +867,6 @@ function llamarApi(cuerpo) {
         .atender(cuerpo);
     });
   }
-
   cuerpo.token = API.token;
   return fetch(API.url, {
     method: 'POST',
@@ -825,9 +880,8 @@ function llamarApi(cuerpo) {
   });
 }
 
-function ocupado(tipo, activo) {
-  var form = elemento(tipo === 'empresa' ? 'formEmpresa' : 'formPersona');
-  var boton = form.querySelector('button[type="submit"]');
+function ocupado(activo) {
+  var boton = elemento('formEmpresa').querySelector('button[type="submit"]');
   boton.disabled = activo;
   if (activo) {
     boton.dataset.texto = boton.textContent;
@@ -842,29 +896,25 @@ function avisar(mensajes) {
     mensajes.map(escapar).join('</li><li>') + '</li></ul></div>';
   elemento('avisoGeneral').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
-
 function limpiarAviso() { elemento('avisoGeneral').innerHTML = ''; }
 
 /* ---------- Confirmación ---------- */
-function mostrarConfirmacion(tipo, datos, idServidor) {
-  var esEmpresa = tipo === 'empresa';
-  var radicado = idServidor ||
-    ((esEmpresa ? 'EMP' : 'PER') + '-' + new Date().getFullYear() + '-' +
-     ('0000' + (++contador[tipo])).slice(-4));
+var contador = 0;
 
-  var repaso = esEmpresa
-    ? [['NIT', datos.nit + '  ·  DV ' + datos.dv],
-       ['Empresa', datos.nombreEmpresa],
-       ['Correo', datos.correoEmpresa],
-       ['Teléfono', telefonoLegible(datos.contacto)]]
-    : [['Nombre completo', datos.nombreCompleto],
-       ['Cédula', datos.cedula],
-       ['Correo', datos.correoPersona],
-       ['Empresa', etiquetaEmpresa(datos.empresa)]];
+function mostrarConfirmacion(datos, idServidor) {
+  var radicado = idServidor ||
+    ('EMP-' + new Date().getFullYear() + '-' + ('0000' + (++contador)).slice(-4));
+
+  var repaso = [
+    ['NIT', datos.nit + '  ·  DV ' + datos.dv],
+    ['Razón social', datos.nombreEmpresa],
+    ['Correo principal', datos.correoEmpresa],
+    ['Teléfono', telefonoLegible(datos.contacto)],
+    ['Diligenciado por', datos.correoRegistra]
+  ];
 
   limpiarAviso();
   elemento('formEmpresa').classList.add('oculto');
-  elemento('formPersona').classList.add('oculto');
 
   var caja = elemento('confirmacion');
   caja.classList.remove('oculto');
@@ -873,78 +923,32 @@ function mostrarConfirmacion(tipo, datos, idServidor) {
       '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">' +
         '<path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
       '</svg> ' + (idServidor ? 'Guardado en la base de datos' : 'Registro recibido') + '</div>' +
-    '<h2>' + escapar(esEmpresa ? datos.nombreEmpresa : datos.nombreCompleto) + '</h2>' +
+    '<h2>' + escapar(datos.nombreEmpresa) + '</h2>' +
     '<div class="radicado">' + escapar(radicado) + '</div>' +
     '<table class="repaso">' +
       repaso.map(function (f) {
         return '<tr><td>' + escapar(f[0]) + '</td><td>' + escapar(f[1]) + '</td></tr>';
       }).join('') +
     '</table>' +
-    '<button class="boton hueco" onclick="cambiar(\'' + tipo + '\'); limpiarFormulario(\'' + tipo + '\')">' +
-      (esEmpresa ? 'Registrar otra empresa' : 'Registrar otra persona') + '</button> ' +
-    (esEmpresa
-      ? '<button class="boton" onclick="cambiar(\'persona\')">Continuar con las personas</button>'
-      : '');
+    '<p class="copia-a">Le enviamos copia de este registro a <b>' +
+      escapar(datos.correoRegistra) + '</b>.</p>' +
+    '<button class="boton hueco" onclick="volverAEmpezar()">Registrar otra empresa</button>';
 
   caja.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-var contador = { empresa: 0, persona: 0 };
-
-function limpiarFormulario(tipo) {
-  var form = elemento(tipo === 'empresa' ? 'formEmpresa' : 'formPersona');
+function volverAEmpezar() {
+  var form = elemento('formEmpresa');
   form.reset();
-  CAMPOS[tipo].forEach(function (id) {
+  CAMPOS.forEach(function (id) {
     elemento(id).setAttribute('aria-invalid', 'false');
     elemento('error' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = '';
   });
   elemento('pistaDV').innerHTML = '';
-  elemento('nombreCompleto').value = '';
   limpiarAviso();
-  elemento(CAMPOS[tipo][0]).focus();
-}
-
-/* ---------- Lista de empresas del paso 2 ---------- */
-var empresas = [];
-
-/** Con servicio configurado, la lista sale de la hoja de cálculo. */
-function cargarEmpresas() {
-  if (!hayServicio()) return;
-  llamarApi({ accion: 'empresas' })
-    .then(function (r) {
-      if (r.ok) { empresas = r.empresas || []; pintarListaEmpresas(); }
-    })
-    .catch(function () {
-      /* Sin conexión el paso 2 queda sin lista, pero el paso 1 sigue sirviendo. */
-    });
-}
-
-/** Sin servicio, la lista se arma con lo registrado en esta pantalla. */
-function recordarEmpresaLocal(tipo, datos) {
-  if (tipo !== 'empresa') return;
-  empresas.push({ nit: datos.nit, nombre: datos.nombreEmpresa });
-  pintarListaEmpresas();
-}
-
-function pintarListaEmpresas() {
-  var select = elemento('empresa');
-  if (!empresas.length) {
-    select.innerHTML = '<option value="">Registre primero una empresa en el paso 1</option>';
-    return;
-  }
-  var actual = select.value;
-  select.innerHTML = '<option value="">Seleccione la empresa…</option>' +
-    empresas.map(function (e) {
-      return '<option value="' + escapar(e.nit) + '">' +
-             escapar(e.nombre) + ' — NIT ' + escapar(e.nit) + '</option>';
-    }).join('');
-  select.value = actual;
-}
-
-/** El registro guarda el NIT; en pantalla se muestra el nombre. */
-function etiquetaEmpresa(nit) {
-  var hallada = empresas.filter(function (e) { return e.nit === nit; })[0];
-  return hallada ? hallada.nombre + ' — NIT ' + hallada.nit : nit;
+  elemento('confirmacion').classList.add('oculto');
+  form.classList.remove('oculto');
+  elemento(CAMPOS[0]).focus();
 }
 
 /** +573001234567 → +57 300 123 4567 */
@@ -953,14 +957,82 @@ function telefonoLegible(e164) {
   return INDICATIVO + ' ' + d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6);
 }
 
+/* ---------- Ayuda guiada ---------- */
+var pasoAyuda = 0;
+
+function abrirAyuda(paso) {
+  pasoAyuda = Math.max(0, Math.min(paso || 0, AYUDA.length - 1));
+  pintarAyuda();
+}
+
+function pintarAyuda() {
+  var a = AYUDA[pasoAyuda];
+  var caja = elemento('ayuda');
+  caja.className = 'fondo-ayuda';
+  caja.innerHTML =
+    '<div class="ventana-ayuda" role="dialog" aria-modal="true" aria-label="Ayuda: ' + escapar(a.titulo) + '">' +
+      '<div class="ayuda-cima">' +
+        '<span class="ayuda-paso">Campo ' + (pasoAyuda + 1) + ' de ' + AYUDA.length + '</span>' +
+        '<button class="cerrar" type="button" onclick="cerrarAyuda()" aria-label="Cerrar la ayuda">&times;</button>' +
+      '</div>' +
+      '<div class="ayuda-cuerpo">' +
+        '<h3>' + escapar(a.titulo) + '</h3>' +
+        '<p>' + escapar(a.texto) + '</p>' +
+        '<div class="ejemplo"><span>Ejemplo:</span> <b>' + escapar(a.ejemplo) + '</b>' +
+          (a.nota ? '<br><span>' + escapar(a.nota) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="ayuda-pie">' +
+        (pasoAyuda > 0
+          ? '<button class="boton hueco" type="button" onclick="moverAyuda(-1)">Anterior</button>'
+          : '') +
+        '<div class="puntos relleno" aria-hidden="true">' +
+          AYUDA.map(function (_, i) {
+            return '<span class="punto' + (i === pasoAyuda ? ' activo' : '') + '"></span>';
+          }).join('') +
+        '</div>' +
+        (pasoAyuda < AYUDA.length - 1
+          ? '<button class="boton" type="button" onclick="moverAyuda(1)">Siguiente</button>'
+          : '<button class="boton" type="button" onclick="cerrarAyuda()">Entendido</button>') +
+      '</div>' +
+    '</div>';
+  destacar(a.campo);
+}
+
+function moverAyuda(salto) {
+  pasoAyuda += salto;
+  pintarAyuda();
+}
+
+function cerrarAyuda() {
+  elemento('ayuda').className = 'oculto';
+  elemento('ayuda').innerHTML = '';
+  destacar(null);
+  if (AYUDA[pasoAyuda]) elemento(AYUDA[pasoAyuda].campo).focus();
+}
+
+/** Resalta en el formulario el campo del que habla la ayuda. */
+function destacar(idCampo) {
+  CAMPOS.forEach(function (id) {
+    elemento('campo-' + id).classList.toggle('destacado', id === idCampo);
+  });
+  if (idCampo) {
+    elemento('campo-' + idCampo).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+document.addEventListener('keydown', function (e) {
+  if (elemento('ayuda').className === 'oculto') return;
+  if (e.key === 'Escape') cerrarAyuda();
+  if (e.key === 'ArrowRight' && pasoAyuda < AYUDA.length - 1) moverAyuda(1);
+  if (e.key === 'ArrowLeft' && pasoAyuda > 0) moverAyuda(-1);
+});
+
 function escapar(t) {
   return String(t).replace(/[&<>"]/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
   });
 }
-
-pintarListaEmpresas();
-cargarEmpresas();
 </script>
 <!--FIN-CONTENIDO-->
 </body>
