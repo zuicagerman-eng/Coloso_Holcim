@@ -12,9 +12,17 @@
  */
 
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('pagina')
+  var pagina = HtmlService.createHtmlOutputFromFile('pagina')
     .setTitle('Registro de empresas proveedoras — Holcim')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+
+  /* Ícono de la pestaña. Es lo único de la apariencia del navegador que
+     Apps Script deja cambiar: la dirección sigue siendo de Google.
+     Debe ser una imagen accesible sin iniciar sesión; si la dirección
+     falla, el navegador se queda con el ícono de siempre. */
+  if (CONFIG.URL_ICONO) pagina.setFaviconUrl(CONFIG.URL_ICONO);
+
+  return pagina;
 }
 
 /** Correo de quien está viendo la página. La página lo muestra en pantalla. */

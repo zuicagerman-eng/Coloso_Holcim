@@ -59,7 +59,7 @@ function asegurarEncabezados_(hoja, nombre) {
 /** Crea las hojas. Se ejecuta una vez al instalar. */
 function prepararHojas() {
   Object.keys(CONFIG.HOJAS).forEach(function (llave) { hoja_(CONFIG.HOJAS[llave]); });
-  if (String(CONFIG.ID_HOJA_HOLCIM || '').trim()) probarCopiaEnHolcim();
+  if (hayCopiaConfigurada_()) probarCopiaEnHolcim();
   return 'Hojas creadas o verificadas.';
 }
 
@@ -96,8 +96,26 @@ function libroDeHolcim_() {
   return SpreadsheetApp.openById(id);
 }
 
+/**
+ * ¿Está configurada una hoja de destino distinta de esta?
+ *
+ * El seguro del final importa: si ID_HOJA_HOLCIM apunta a esta misma hoja,
+ * cada registro se escribiría dos veces en el mismo archivo —una como
+ * registro y otra como copia— con el mismo radicado y el mismo segundo.
+ */
+function hayCopiaConfigurada_() {
+  var id = String(CONFIG.ID_HOJA_HOLCIM || '').trim();
+  if (!id) return false;
+  if (id === libro_().getId()) {
+    anotarError_('ID_HOJA_HOLCIM apunta a esta misma hoja. Se omitió la copia ' +
+                 'para no duplicar las filas. Déjelo vacío, o ponga el id de otro archivo.');
+    return false;
+  }
+  return true;
+}
+
 function copiarEnHolcim_(nombreHoja, fila) {
-  if (!String(CONFIG.ID_HOJA_HOLCIM || '').trim()) return;
+  if (!hayCopiaConfigurada_()) return;
   try {
     var hoja = hojaEn_(libroDeHolcim_(), nombreHoja);
     hoja.appendRow(enOrden_(nombreHoja, fila));
@@ -111,8 +129,11 @@ function copiarEnHolcim_(nombreHoja, fila) {
  * pestañas si faltan y devuelve su nombre. Ejecútela desde el editor.
  */
 function probarCopiaEnHolcim() {
-  if (!String(CONFIG.ID_HOJA_HOLCIM || '').trim()) {
-    return 'CONFIG.ID_HOJA_HOLCIM está vacío: no se está copiando nada.';
+  var id = String(CONFIG.ID_HOJA_HOLCIM || '').trim();
+  if (!id) return 'CONFIG.ID_HOJA_HOLCIM está vacío: no se está copiando nada.';
+  if (id === libro_().getId()) {
+    return 'CUIDADO: ID_HOJA_HOLCIM apunta a ESTA MISMA hoja, y por eso cada ' +
+           'registro aparecía dos veces. Déjelo vacío, o ponga el id de otro archivo.';
   }
   var libro = libroDeHolcim_();
   hojaEn_(libro, CONFIG.HOJAS.EMPRESAS);
