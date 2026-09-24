@@ -65,6 +65,8 @@ function cuerpoDelAviso_(titulo, sujeto, id, filas, fecha) {
         '</p>' +
         '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" ' +
                'style="border-collapse:collapse;font-size:14px;">' + celdas + '</table>' +
+        /* El proveedor recibe este mismo correo en copia, y el botón no es
+           para él: se rotula para que no lo intente. */
         '<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:24px;">' +
           '<tr><td style="background:#00457C;border-radius:5px;">' +
             '<a href="' + enlace + '" style="display:inline-block;padding:13px 26px;' +
@@ -72,6 +74,11 @@ function cuerpoDelAviso_(titulo, sujeto, id, filas, fecha) {
                'Abrir la base de datos</a>' +
           '</td></tr>' +
         '</table>' +
+        '<p style="margin:10px 0 0;color:#8A98A6;font-size:12px;line-height:1.5;">' +
+          'Solo para el equipo de Holcim.<br>' +
+          'Si usted recibió este correo <b style="color:#59697A;">en copia</b>, no necesita ' +
+          'abrir ese enlace: su registro ya quedó guardado y este mensaje es su constancia.' +
+        '</p>' +
       '</td></tr>' +
       '<tr><td style="background:#F7F9FC;padding:16px 24px;border-top:1px solid #DCE3EB;' +
                     'color:#9AA8B6;font-size:12px;">' +
