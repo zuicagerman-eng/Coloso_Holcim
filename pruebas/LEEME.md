@@ -54,3 +54,12 @@ existir; para corregir tiene que existir, o no habría nada que corregir. Sin
 esa distinción toda solicitud de edición se habría rechazado por duplicada.
 Comprueba las cuatro combinaciones y que la lista del desplegable traiga la
 última versión de cada NIT, no una entrada por corrección.
+
+
+---
+
+El buscador de empresas se prueba en el navegador, no desde node: vive en la
+página. `scratchpad/e2e/buscador.html` lo ejercita con datos de mentiras —
+buscar por nombre, por NIT, sin tildes, sin coincidencias, y elegir con las
+flechas del teclado— pero es un armado de la sesión, no un archivo del
+repositorio. Si se vuelve a tocar el buscador, vale la pena rehacerlo.

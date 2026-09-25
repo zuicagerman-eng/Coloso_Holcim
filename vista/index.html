@@ -327,6 +327,56 @@
     line-height: 1.3;
   }
 
+  /* Buscador de empresas: casilla de texto con la lista debajo */
+  .buscador { position: relative; }
+  .resultados {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    z-index: 10;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    max-height: 244px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line-fuerte);
+    border-radius: 6px;
+    box-shadow: var(--sombra-alta);
+  }
+  .resultados li {
+    padding: 9px 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14.5px;
+    line-height: 1.35;
+  }
+  .resultados li .nit {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .resultados li:hover,
+  .resultados li[aria-selected="true"] {
+    background: var(--accent-suave);
+  }
+  .resultados li[aria-selected="true"] { outline: 1px solid var(--accent); }
+  .resultados .sin-resultados {
+    cursor: default;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  .resultados .sin-resultados:hover { background: none; }
+
+  .elegida {
+    display: block;
+    margin-top: 7px;
+    font-size: 13px;
+    color: var(--verde);
+    font-weight: 600;
+  }
+
   .separador {
     border: none;
     border-top: 1px solid var(--line);
@@ -619,12 +669,16 @@
       </div>
 
       <div class="campo oculto" id="campo-empresaEditar">
-        <label for="empresaEditar">¿Cuál empresa va a corregir?
-          <span class="ayuda">Elíjala y le traemos sus datos actuales para que los ajuste.</span>
+        <label for="buscarEmpresa">¿Cuál empresa va a corregir?
+          <span class="ayuda">Escriba parte del nombre o del NIT. Al elegirla le traemos sus datos actuales.</span>
         </label>
-        <select id="empresaEditar" onchange="traerEmpresa()">
-          <option value="">Cargando empresas…</option>
-        </select>
+        <div class="buscador">
+          <input id="buscarEmpresa" type="text" autocomplete="off" placeholder="Buscar por nombre o NIT…"
+                 role="combobox" aria-expanded="false" aria-controls="listaEmpresas" aria-autocomplete="list"
+                 oninput="filtrarEmpresas()" onfocus="filtrarEmpresas()" onkeydown="teclasDelBuscador(event)">
+          <ul class="resultados oculto" id="listaEmpresas" role="listbox" aria-label="Empresas registradas"></ul>
+        </div>
+        <span class="elegida oculto" id="empresaElegida" role="status"></span>
       </div>
 
       <div class="campo" id="campo-nit">
@@ -839,7 +893,8 @@ var empresasPedidas = false;
 function alCambiarTipo() {
   var esEdicion = elemento('tipoSolicitud').value === 'Solicitud de edición';
   elemento('campo-empresaEditar').classList.toggle('oculto', !esEdicion);
-  if (esEdicion) cargarEmpresas();
+  if (esEdicion) { cargarEmpresas(); elemento('buscarEmpresa').focus(); }
+  else { elemento('buscarEmpresa').value = ''; elemento('empresaElegida').classList.add('oculto'); }
   revisar('tipoSolicitud');
 }
 
@@ -853,38 +908,116 @@ function cargarEmpresas() {
     })
     .catch(function () {
       empresasPedidas = false;
-      elemento('empresaEditar').innerHTML =
-        '<option value="">No se pudo cargar la lista; escriba el NIT abajo</option>';
+      elemento('listaEmpresas').innerHTML =
+        '<li class="sin-resultados">No se pudo cargar la lista. Escriba el NIT abajo.</li>';
     });
 }
 
 function pintarEmpresas() {
-  var select = elemento('empresaEditar');
+  if (elemento('buscarEmpresa') === document.activeElement) filtrarEmpresas();
+}
+
+/** Sin tildes y en minúscula: "Peña" encuentra "PENA" y al revés. */
+function normalizar(texto) {
+  return String(texto || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+var coincidencias = [];
+var activa = -1;
+
+function filtrarEmpresas() {
+  var buscado = normalizar(elemento('buscarEmpresa').value).trim();
+  coincidencias = empresas.filter(function (e) {
+    return !buscado ||
+           normalizar(e.nombre).indexOf(buscado) >= 0 ||
+           e.nit.indexOf(buscado) >= 0;
+  }).slice(0, 20);
+  activa = -1;
+  pintarResultados(buscado);
+}
+
+function pintarResultados(buscado) {
+  var lista = elemento('listaEmpresas');
+
   if (!empresas.length) {
-    select.innerHTML = '<option value="">No hay empresas registradas todavía</option>';
-    return;
-  }
-  select.innerHTML = '<option value="">Seleccione la empresa…</option>' +
-    empresas.map(function (e) {
-      return '<option value="' + escapar(e.nit) + '">' +
-             escapar(e.nombre) + ' — NIT ' + escapar(e.nit) + '</option>';
+    lista.innerHTML = '<li class="sin-resultados">No hay empresas registradas todavía.</li>';
+  } else if (!coincidencias.length) {
+    lista.innerHTML = '<li class="sin-resultados">Ninguna empresa coincide con “' +
+      escapar(buscado) + '”. Si es una empresa nueva, arriba elija ' +
+      '<b>Solicitud de creación</b>.</li>';
+  } else {
+    lista.innerHTML = coincidencias.map(function (e, i) {
+      return '<li role="option" id="empresa-' + i + '" aria-selected="false" ' +
+             'onmousedown="elegirEmpresa(\'' + escapar(e.nit) + '\')">' +
+             escapar(e.nombre) + '<span class="nit">NIT ' + escapar(e.nit) + '</span></li>';
     }).join('');
+  }
+
+  lista.classList.remove('oculto');
+  elemento('buscarEmpresa').setAttribute('aria-expanded', 'true');
+}
+
+function cerrarResultados() {
+  elemento('listaEmpresas').classList.add('oculto');
+  elemento('buscarEmpresa').setAttribute('aria-expanded', 'false');
+  activa = -1;
+}
+
+/** Flechas para recorrer, Enter para elegir, Escape para cerrar. */
+function teclasDelBuscador(evento) {
+  var abierta = !elemento('listaEmpresas').classList.contains('oculto');
+  if (evento.key === 'Escape') { cerrarResultados(); return; }
+  if (!abierta || !coincidencias.length) return;
+
+  if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+    evento.preventDefault();
+    activa += (evento.key === 'ArrowDown' ? 1 : -1);
+    if (activa < 0) activa = coincidencias.length - 1;
+    if (activa >= coincidencias.length) activa = 0;
+    resaltarActiva();
+  } else if (evento.key === 'Enter' && activa >= 0) {
+    evento.preventDefault();
+    elegirEmpresa(coincidencias[activa].nit);
+  }
+}
+
+function resaltarActiva() {
+  var opciones = elemento('listaEmpresas').querySelectorAll('li[role="option"]');
+  for (var i = 0; i < opciones.length; i++) {
+    opciones[i].setAttribute('aria-selected', String(i === activa));
+  }
+  if (activa >= 0) {
+    opciones[activa].scrollIntoView({ block: 'nearest' });
+    elemento('buscarEmpresa').setAttribute('aria-activedescendant', 'empresa-' + activa);
+  }
 }
 
 /** Al elegir una, se rellenan los campos con lo que hay hoy registrado. */
-function traerEmpresa() {
-  var nit = elemento('empresaEditar').value;
-  if (!nit) return;
+function elegirEmpresa(nit) {
   var e = empresas.filter(function (x) { return x.nit === nit; })[0];
   if (!e) return;
+
+  elemento('buscarEmpresa').value = e.nombre;
+  cerrarResultados();
 
   elemento('nit').value = e.nit;
   elemento('nombreEmpresa').value = e.nombre;
   elemento('correoEmpresa').value = e.correo || '';
   pintarDV();
   ['nit', 'nombreEmpresa', 'correoEmpresa'].forEach(revisar);
+
+  var aviso = elemento('empresaElegida');
+  aviso.textContent = 'Datos traídos. Corrija abajo lo que haga falta.';
+  aviso.classList.remove('oculto');
+
   elemento('nombreEmpresa').focus();
 }
+
+/* Al tocar por fuera, la lista se cierra. */
+document.addEventListener('click', function (evento) {
+  var caja = elemento('campo-empresaEditar');
+  if (caja && !caja.contains(evento.target)) cerrarResultados();
+});
 
 /* ---------- Envío ---------- */
 function enviar(evento) {
@@ -1032,6 +1165,8 @@ function volverAEmpezar() {
   });
   elemento('pistaDV').innerHTML = '';
   elemento('campo-empresaEditar').classList.add('oculto');
+  elemento('buscarEmpresa').value = '';
+  elemento('empresaElegida').classList.add('oculto');
   /* La lista se vuelve a pedir: puede haber cambiado con este registro. */
   empresasPedidas = false;
   limpiarAviso();
