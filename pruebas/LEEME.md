@@ -21,3 +21,14 @@ llegue idéntica a los dos, que si Holcim niega el acceso el registro principal
 **igual se guarde** y el fallo quede en `ERRORES`, y que el propio registro de
 errores no se copie — copiarlo llamaría otra vez a `agregarFila_` y se mordería
 la cola.
+
+
+---
+
+    node pruebas/columnas.js
+
+Comprueba que cambiar el modelo no descoloca las filas. Las filas se escriben
+por **nombre de columna**, leyendo los encabezados que tiene la hoja, no por la
+posición que ocupan en `CONFIG.ENCABEZADOS`. Sin eso, quitar un campo —el
+teléfono, por ejemplo— habría corrido un lugar todos los valores siguientes en
+los registros nuevos, y el desastre solo se vería comparando con filas viejas.

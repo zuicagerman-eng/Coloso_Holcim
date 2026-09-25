@@ -233,7 +233,7 @@
   .pista:hover { border-color: var(--accent); color: var(--accent); }
   .pista:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  input {
+  input, select {
     width: 100%;
     padding: 11px 12px;
     background: var(--surface);
@@ -249,7 +249,7 @@
   input::placeholder { color: var(--muted); opacity: .65; }
   /* El texto de ejemplo no se transforma: en mayúscula no cabía y se cortaba. */
   input.mayus::placeholder, input.minus::placeholder { text-transform: none; }
-  input:focus {
+  input:focus, select:focus {
     outline: none;
     border-color: var(--accent-fill);
     box-shadow: 0 0 0 3px var(--accent-suave);
@@ -588,7 +588,7 @@
   <div class="titular">
     <div>
       <h1>Registro de la empresa</h1>
-      <p id="bajada">Cinco datos. Si alguno no le queda claro, abra la ayuda: se los explicamos uno por uno.</p>
+      <p id="bajada">Cuatro datos. Si alguno no le queda claro, abra la ayuda: se los explicamos uno por uno.</p>
     </div>
     <button class="boton-ayuda" type="button" onclick="abrirAyuda(0)">
       <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -604,6 +604,19 @@
     <div id="avisoGeneral" role="alert"></div>
 
     <form id="formEmpresa" novalidate onsubmit="enviar(event)">
+
+      <div class="campo" id="campo-tipoSolicitud">
+        <label for="tipoSolicitud">Tipo de solicitud
+          <button class="pista" type="button" onclick="abrirAyuda(0)" aria-label="Ayuda sobre el tipo de solicitud">?</button>
+          <span class="ayuda">¿Es una empresa nueva o una corrección de una ya registrada?</span>
+        </label>
+        <select id="tipoSolicitud" name="tipoSolicitud" onblur="revisar('tipoSolicitud')" onchange="revisar('tipoSolicitud')">
+          <option value="">Seleccione…</option>
+          <option value="Solicitud de creación">Solicitud de creación</option>
+          <option value="Solicitud de edición">Solicitud de edición</option>
+        </select>
+        <span class="error" id="errorTipoSolicitud"></span>
+      </div>
 
       <div class="campo" id="campo-nit">
         <label for="nit">NIT de la empresa
@@ -636,21 +649,6 @@
         <span class="error" id="errorCorreoEmpresa"></span>
       </div>
 
-      <div class="campo" id="campo-contacto">
-        <label for="contacto">Teléfono de contacto
-          <button class="pista" type="button" onclick="abrirAyuda(3)" aria-label="Ayuda sobre el teléfono">?</button>
-          <span class="ayuda">10 dígitos, sin espacios. El +57 ya está puesto.</span>
-        </label>
-        <div class="con-prefijo">
-          <span class="prefijo" aria-hidden="true">+57</span>
-          <input id="contacto" name="contacto" class="mono" type="tel" inputmode="numeric" maxlength="10"
-                 autocomplete="tel-national" placeholder="3154421180" aria-describedby="prefijoPais"
-                 oninput="soloNumeros(this)" onblur="revisar('contacto')">
-        </div>
-        <span id="prefijoPais" class="solo-lectores">Indicativo de Colombia, más 57</span>
-        <span class="error" id="errorContacto"></span>
-      </div>
-
       <hr class="separador">
       <p class="rotulo-grupo">Quién está diligenciando</p>
 
@@ -665,16 +663,6 @@
             <span class="correo" id="correoSesion"></span>
           </span>
         </div>
-      </div>
-
-      <div class="campo" id="campo-correoRegistra">
-        <label for="correoRegistra">Su correo electrónico
-          <button class="pista" type="button" onclick="abrirAyuda(4)" aria-label="Ayuda sobre su correo">?</button>
-          <span class="ayuda">El de usted, la persona que llena el formulario. Le llegará copia.</span>
-        </label>
-        <input id="correoRegistra" name="correoRegistra" type="email" class="minus" autocomplete="email"
-               placeholder="juan.perez@empresa.com" onblur="revisar('correoRegistra')">
-        <span class="error" id="errorCorreoRegistra"></span>
       </div>
 
       <div class="barra-envio">
@@ -717,6 +705,15 @@ function hayServicio() { return dentroDeGoogle() || !!API.url; }
    ================================================================== */
 var AYUDA = [
   {
+    campo: 'tipoSolicitud',
+    titulo: 'Tipo de solicitud',
+    texto: 'Elija "Solicitud de creación" si la empresa nunca se ha registrado con ' +
+           'Holcim. Elija "Solicitud de edición" si ya está registrada y viene a ' +
+           'corregir o actualizar sus datos.',
+    ejemplo: 'Solicitud de creación',
+    nota: 'En la duda, creación: si ya existía, el sistema se lo avisa'
+  },
+  {
     campo: 'nit',
     titulo: 'NIT de la empresa',
     texto: 'Escríbalo solo con números. Sin puntos, sin el guion y sin el dígito de ' +
@@ -740,24 +737,6 @@ var AYUDA = [
            'comunicaciones de Holcim sobre el proceso de vinculación.',
     ejemplo: 'contratos@empresa.com',
     nota: 'Un correo al que alguien revise con frecuencia'
-  },
-  {
-    campo: 'contacto',
-    titulo: 'Teléfono de contacto',
-    texto: 'Diez dígitos, sin espacios ni guiones. El indicativo +57 ya está puesto en ' +
-           'el recuadro gris, no lo escriba otra vez. Sirve un celular o un fijo con su ' +
-           'indicativo de ciudad.',
-    ejemplo: '3154421180',
-    nota: 'Un fijo de Bogotá sería 6015551234'
-  },
-  {
-    campo: 'correoRegistra',
-    titulo: 'Su correo electrónico',
-    texto: 'El correo de usted, la persona que está llenando este formulario. Queda ' +
-           'registrado como responsable del diligenciamiento y le llegará una copia ' +
-           'del registro, para que tenga constancia de lo que envió.',
-    ejemplo: 'juan.perez@empresa.com',
-    nota: 'Puede ser el mismo de arriba si usted atiende ese buzón'
   }
 ];
 
@@ -787,13 +766,9 @@ var REGLAS = {
     return limpiar(v).length < 3 ? 'Escriba la razón social de la empresa.' : '';
   },
   correoEmpresa: function (v) { return revisarCorreo(v); },
-  contacto: function (v) {
-    if (!limpiar(v)) return 'Escriba el teléfono de contacto.';
-    var c = soloDigitos(v);
-    if (c.length !== 10) return 'El teléfono tiene exactamente 10 dígitos.';
-    return '';
-  },
-  correoRegistra: function (v) { return revisarCorreo(v); }
+  tipoSolicitud: function (v) {
+    return v ? '' : 'Elija si es una solicitud de creación o de edición.';
+  }
 };
 
 function revisarCorreo(v) {
@@ -803,15 +778,13 @@ function revisarCorreo(v) {
   return '';
 }
 
-/* Con sesión de Google el correo no se escribe: lo pone el servidor. */
+/* Quién diligencia no se escribe: lo pone el servidor con la sesión de
+   Google, si la hay. */
 var sesion = { correo: '' };
-var CAMPOS_BASE = ['nit', 'nombreEmpresa', 'correoEmpresa', 'contacto'];
-function campos() {
-  return sesion.correo ? CAMPOS_BASE : CAMPOS_BASE.concat('correoRegistra');
-}
+var CAMPOS = ['tipoSolicitud', 'nit', 'nombreEmpresa', 'correoEmpresa'];
+function campos() { return CAMPOS; }
 var MAYUSCULAS = ['nombreEmpresa'];
-var MINUSCULAS = ['correoEmpresa', 'correoRegistra'];
-var INDICATIVO = '+57';
+var MINUSCULAS = ['correoEmpresa'];
 
 /* ---------- Limpieza mientras se escribe ---------- */
 function soloNumeros(campo) {
@@ -873,7 +846,6 @@ function enviar(evento) {
   });
   datos.nit = soloDigitos(datos.nit);
   datos.dv = calcularDV(datos.nit);
-  datos.contacto = INDICATIVO + soloDigitos(datos.contacto);
 
   enviarAlServidor(datos);
 }
@@ -945,12 +917,12 @@ function mostrarConfirmacion(datos, idServidor) {
     ('EMP-' + new Date().getFullYear() + '-' + ('0000' + (++contador)).slice(-4));
 
   var repaso = [
+    ['Tipo de solicitud', datos.tipoSolicitud],
     ['NIT', datos.nit + '  ·  DV ' + datos.dv],
     ['Razón social', datos.nombreEmpresa],
-    ['Correo principal', datos.correoEmpresa],
-    ['Teléfono', telefonoLegible(datos.contacto)],
-    ['Diligenciado por', datos.correoRegistra]
+    ['Correo principal', datos.correoEmpresa]
   ];
+  if (datos.correoRegistra) repaso.push(['Diligenciado por', datos.correoRegistra]);
 
   limpiarAviso();
   elemento('formEmpresa').classList.add('oculto');
@@ -969,8 +941,10 @@ function mostrarConfirmacion(datos, idServidor) {
         return '<tr><td>' + escapar(f[0]) + '</td><td>' + escapar(f[1]) + '</td></tr>';
       }).join('') +
     '</table>' +
-    '<p class="copia-a">Le enviamos copia de este registro a <b>' +
-      escapar(datos.correoRegistra) + '</b>.</p>' +
+    (datos.correoRegistra
+      ? '<p class="copia-a">Le enviamos copia de este registro a <b>' +
+        escapar(datos.correoRegistra) + '</b>.</p>'
+      : '') +
     '<button class="boton hueco" onclick="volverAEmpezar()">Registrar otra empresa</button>';
 
   caja.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -990,11 +964,6 @@ function volverAEmpezar() {
   elemento(campos()[0]).focus();
 }
 
-/** +573001234567 → +57 300 123 4567 */
-function telefonoLegible(e164) {
-  var d = soloDigitos(e164).slice(-10);
-  return INDICATIVO + ' ' + d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6);
-}
 
 /* ---------- Ayuda guiada ---------- */
 var pasoAyuda = 0;
@@ -1090,12 +1059,6 @@ function reconocerCuenta() {
       elemento('correoSesion').textContent = r.correo;
       elemento('inicialCuenta').textContent = r.correo.charAt(0);
       elemento('franjaIdentidad').classList.remove('oculto');
-      elemento('campo-correoRegistra').classList.add('oculto');
-      /* La ayuda deja de hablar de un campo que ya no existe, y el
-         encabezado deja de prometer cinco datos cuando son cuatro. */
-      AYUDA = AYUDA.filter(function (a) { return a.campo !== 'correoRegistra'; });
-      elemento('bajada').textContent =
-        'Cuatro datos. Si alguno no le queda claro, abra la ayuda: se los explicamos uno por uno.';
     })
     .withFailureHandler(function () { /* se queda el campo escrito */ })
     .identidad();

@@ -32,6 +32,11 @@ function depurarEmpresa_(datos) {
   var errores = [];
   var d = {};
 
+  d.tipoSolicitud = limpiar_(datos.tipoSolicitud);
+  if (CONFIG.TIPOS_DE_SOLICITUD.indexOf(d.tipoSolicitud) < 0) {
+    errores.push('Elija el tipo de solicitud.');
+  }
+
   var nitCrudo = String(datos.nit || '');
   if (/[-.]/.test(nitCrudo)) {
     errores.push('El NIT no debe llevar puntos, guion ni dígito de verificación.');
@@ -48,18 +53,14 @@ function depurarEmpresa_(datos) {
   d.correoEmpresa = limpiar_(datos.correoEmpresa).toLowerCase();
   if (!esCorreo_(d.correoEmpresa)) errores.push('El correo de la empresa no es válido.');
 
-  /* El formulario manda el teléfono ya con el indicativo (+573001234567).
-     Hay que quitárselo antes de contar, o los 10 dígitos parecerían 12. */
-  var telefono = soloDigitos_(datos.contacto);
-  if (telefono.length === 12 && telefono.indexOf('57') === 0) telefono = telefono.substring(2);
-  if (telefono.length !== 10) errores.push('El teléfono debe tener exactamente 10 dígitos.');
-  d.telefono = '+57' + telefono;
-
-  /* Quién está llenando el formulario. Como la página se publica sin
-     inicio de sesión, Google no lo sabe: lo dice la propia persona. */
+  /* Quién diligencia lo pone el servicio del formulario, tomándolo de la
+     sesión de Google. Si la página se publica sin inicio de sesión no hay
+     de dónde sacarlo, y entonces queda vacío: es un dato que acompaña al
+     registro, no uno que el proveedor deba escribir. */
   d.correoRegistra = limpiar_(datos.correoRegistra).toLowerCase();
-  if (!esCorreo_(d.correoRegistra)) {
+  if (d.correoRegistra && !esCorreo_(d.correoRegistra)) {
     errores.push('El correo de quien diligencia no es válido.');
+    d.correoRegistra = '';
   }
 
   return { ok: errores.length === 0, errores: errores, datos: d };

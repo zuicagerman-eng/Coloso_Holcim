@@ -143,8 +143,14 @@ poner ahí esa misma hoja fue lo que duplicó las filas.
 
 ## Qué se guarda
 
-**EMPRESAS** — ID · Fecha · NIT · DV · Nombre empresa · Correo · Teléfono ·
-Diligenciado por
+**EMPRESAS** — ID · Fecha · Tipo de solicitud · NIT · DV · Nombre empresa ·
+Correo · Diligenciado por
+
+Las filas se escriben **por nombre de columna**, no por posición. Así, cuando el
+modelo cambia, una columna retirada queda vacía y una nueva se llena sola: nada
+se descoloca, ni siquiera en las filas que ya existían. La columna `Teléfono`
+sigue en la hoja con los datos viejos, y los registros nuevos simplemente la
+dejan en blanco.
 
 **ERRORES** — cualquier fallo del servicio, para no perderlo de vista.
 

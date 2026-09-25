@@ -66,7 +66,7 @@ function prepararHojas() {
 /** Agrega una fila respetando el orden de los encabezados. */
 function agregarFila_(nombreHoja, fila) {
   var hoja = hoja_(nombreHoja);
-  hoja.appendRow(enOrden_(nombreHoja, fila));
+  hoja.appendRow(enOrden_(hoja, nombreHoja, fila));
 
   /* La misma fila va a la hoja de Holcim, si está configurada.
      El registro de errores se excluye: copiarlo llamaría de nuevo a esta
@@ -76,9 +76,23 @@ function agregarFila_(nombreHoja, fila) {
   return hoja.getLastRow();
 }
 
-function enOrden_(nombreHoja, fila) {
-  return CONFIG.ENCABEZADOS[nombreHoja].map(function (columna) {
-    return fila[columna] !== undefined && fila[columna] !== null ? fila[columna] : '';
+/**
+ * Arma la fila siguiendo los encabezados QUE TIENE LA HOJA, no los de
+ * CONFIG.
+ *
+ * Es la diferencia entre que el modelo pueda cambiar y que no: si se
+ * armara por la lista de CONFIG y esa lista dejara de coincidir con las
+ * columnas ya existentes —al quitar un campo, por ejemplo— cada valor
+ * caería una columna corrida, y el error solo se vería revisando datos
+ * viejos. Por nombre, una columna retirada simplemente queda vacía y una
+ * nueva se llena; nada se desordena.
+ */
+function enOrden_(hoja, nombreHoja, fila) {
+  var ancho = Math.max(hoja.getLastColumn(), 1);
+  var encabezados = hoja.getRange(1, 1, 1, ancho).getValues()[0];
+  return encabezados.map(function (columna) {
+    var llave = String(columna).trim();
+    return fila[llave] !== undefined && fila[llave] !== null ? fila[llave] : '';
   });
 }
 
@@ -118,7 +132,7 @@ function copiarEnHolcim_(nombreHoja, fila) {
   if (!hayCopiaConfigurada_()) return;
   try {
     var hoja = hojaEn_(libroDeHolcim_(), nombreHoja);
-    hoja.appendRow(enOrden_(nombreHoja, fila));
+    hoja.appendRow(enOrden_(hoja, nombreHoja, fila));
   } catch (error) {
     anotarError_('No se pudo copiar a la hoja de Holcim (' + nombreHoja + '): ' + error.message);
   }

@@ -36,7 +36,7 @@ function avisar_(titulo, sujeto, id, filas, copiaA) {
 }
 
 function cuerpoDelAviso_(titulo, sujeto, id, filas, fecha) {
-  var enlace = libro_().getUrl();
+  var enlace = String(CONFIG.URL_BASE_DATOS || '').trim() || libro_().getUrl();
 
   var celdas = filas.map(function (f) {
     return '<tr>' +
@@ -103,11 +103,11 @@ function escaparHtml_(texto) {
 /** Prueba: manda el aviso a los correos configurados, sin tocar la hoja. */
 function pruebaDeCorreo() {
   var quien = 'quien.diligencia@empresadeprueba.com';
-  avisar_('Nueva empresa registrada', 'EMPRESA DE PRUEBA S.A.S.', 'EMP-PRUEBA-0000', [
+  avisar_('Solicitud de creación', 'EMPRESA DE PRUEBA S.A.S.', 'EMP-PRUEBA-0000', [
+    ['Tipo de solicitud', 'Solicitud de creación'],
     ['NIT', '900123456  ·  DV 8'],
     ['Razón social', 'EMPRESA DE PRUEBA S.A.S.'],
     ['Correo principal', 'contacto@empresadeprueba.com'],
-    ['Teléfono', '+573000000000'],
     ['Diligenciado por', quien]
   ], quien);
   return 'Aviso enviado a: ' + CONFIG.NOTIFICAR_A.join(', ') + ' — con copia a ' + quien;

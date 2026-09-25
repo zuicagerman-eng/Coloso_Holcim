@@ -84,20 +84,20 @@ function guardarEmpresa_(entrada) {
     agregarFila_(CONFIG.HOJAS.EMPRESAS, {
       'ID': id,
       'Fecha': new Date(),
+      'Tipo de solicitud': d.tipoSolicitud,
       'NIT': d.nit,
       'DV': d.dv,
       'Nombre empresa': d.nombreEmpresa,
       'Correo': d.correoEmpresa,
-      'Teléfono': d.telefono,
       'Diligenciado por': d.correoRegistra
     });
 
-    avisar_('Nueva empresa registrada', d.nombreEmpresa, id, [
+    avisar_(d.tipoSolicitud, d.nombreEmpresa, id, [
+      ['Tipo de solicitud', d.tipoSolicitud],
       ['NIT', d.nit + '  ·  DV ' + d.dv],
       ['Razón social', d.nombreEmpresa],
       ['Correo principal', d.correoEmpresa],
-      ['Teléfono', d.telefono],
-      ['Diligenciado por', d.correoRegistra]
+      ['Diligenciado por', d.correoRegistra || 'no identificado']
     ], d.correoRegistra);
 
     return { ok: true, id: id, mensaje: 'Empresa registrada con el radicado ' + id + '.' };
@@ -156,10 +156,10 @@ function guardarPersona_(entrada) {
 function pruebaDeEscritura() {
   prepararHojas();
   var resultado = guardarEmpresa_({
+    tipoSolicitud: 'Solicitud de creación',
     nit: '900123456',
     nombreEmpresa: 'Empresa de prueba S.A.S.',
     correoEmpresa: 'contacto@empresadeprueba.com',
-    contacto: '3000000000',
     correoRegistra: 'quien.diligencia@empresadeprueba.com'
   });
   console.log(JSON.stringify(resultado));

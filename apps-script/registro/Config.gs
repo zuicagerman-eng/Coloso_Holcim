@@ -36,6 +36,16 @@ var CONFIG = {
   /** Nombre que aparece como remitente del aviso. */
   NOMBRE_REMITENTE: 'Registros Holcim',
 
+  /**
+   * Enlace que abre el botón del correo de aviso. Vacío = la dirección
+   * de la hoja donde vive el script. Se llena para llevar a una pestaña
+   * concreta, o a otra hoja.
+   */
+  URL_BASE_DATOS: 'https://docs.google.com/spreadsheets/d/1FGByxCw4R-D7_15Y1NjmrttilkQO-tF1AHYF0YgR-I4/edit?gid=388689330#gid=388689330',
+
+  /** Opciones del primer campo del formulario. */
+  TIPOS_DE_SOLICITUD: ['Solicitud de creación', 'Solicitud de edición'],
+
   /* ------------------------------------------------------------------
      De aquí para abajo no hay nada que ajustar en el uso normal.
      ------------------------------------------------------------------ */
@@ -55,8 +65,8 @@ var CONFIG = {
 
   ENCABEZADOS: {
     EMPRESAS: [
-      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo', 'Teléfono',
-      'Diligenciado por'
+      'ID', 'Fecha', 'Tipo de solicitud', 'NIT', 'DV', 'Nombre empresa',
+      'Correo', 'Diligenciado por'
     ],
     PERSONAS: [
       'ID', 'Fecha', 'Nombres', 'Primer apellido', 'Segundo apellido',
