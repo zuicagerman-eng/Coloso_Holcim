@@ -191,6 +191,11 @@ function avisarDeRegistro_(datos, id) {
     ['Diligenciado por', d.correoRegistra || 'no identificado']
   ], d.correoRegistra);
 
+  /* Y su constancia al proveedor, al correo que él escribió. Va después
+     del aviso interno: si el correo del proveedor rebota, el equipo ya
+     quedó enterado igual. */
+  acuseAlProveedor_(d, id);
+
   return { ok: true };
 }
 

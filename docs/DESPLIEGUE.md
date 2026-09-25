@@ -86,6 +86,7 @@ Es un proyecto **nuevo y aparte**, que no va ligado a ninguna hoja.
 | Después de entrar | Sale el formulario, y donde iba el correo aparece *"Registrando con su cuenta de Google"* con su dirección |
 | Registrar una empresa | Fila en la hoja, con esa dirección en *Diligenciado por* |
 | El correo de aviso | Llega a `NOTIFICAR_A`, con copia a quien diligenció |
+| La constancia del proveedor | Llega al correo que se escribió en el formulario, sin el enlace a la base de datos |
 
 ### Cambiar entre correo automático y correo escrito
 
@@ -135,7 +136,9 @@ lo que hay que hacer**: no queda nada por configurar a mano.
 
 | Qué | Dónde está escrito |
 |---|---|
-| Correo que recibe el aviso | `registro/Config.gs` → `NOTIFICAR_A` |
+| Correos que reciben el aviso | `registro/Config.gs` → `NOTIFICAR_A` |
+| Correo del botón "Reportar un problema" | `registro/Config.gs` → `CORREO_SOPORTE` |
+| Qué lee el proveedor en su constancia | `registro/Config.gs` → `TEXTO_QUE_SIGUE` |
 | Dirección del servicio de registro | `formulario/Config.gs` → `URL_SERVICIO` |
 | Copia en otra hoja | `registro/Config.gs` → `ID_HOJA_HOLCIM`, **vacío a propósito** |
 
@@ -184,14 +187,27 @@ Para dejar de copiar, borre el identificador: `ID_HOJA_HOLCIM: ''`.
 
 ## Avisos por correo
 
-Cada registro manda un correo a `CONFIG.NOTIFICAR_A` diciendo qué se registró y
-quién lo hizo, **con copia a quien diligenció** como constancia. Para probarlo
-sin tocar la hoja, ejecute `pruebaDeCorreo` desde `Correo.gs` del registro.
+Cada registro manda **dos correos distintos**, y no salen mientras la persona
+espera: primero se guarda la fila y se le muestra el radicado, y el envío viaja
+después, en una llamada aparte.
 
-Para apagarlos, deje la lista vacía: `NOTIFICAR_A: []`.
+| Correo | A quién | Qué lleva |
+|---|---|---|
+| Aviso interno | `CONFIG.NOTIFICAR_A`, con copia a quien diligenció | Qué se registró, quién lo hizo y el botón que abre la base de datos |
+| Constancia | Al correo que **escribió la empresa** en el formulario | Lo que registró, su radicado y qué sigue — **sin** el enlace a la base de datos |
+
+Son dos mensajes aparte justamente por ese enlace: es del equipo, no del
+proveedor. Para probarlos sin tocar la hoja, ejecute `pruebaDeCorreo` y
+`pruebaDeAcuse` desde `Correo.gs` del registro.
+
+Para apagar el aviso interno, deje la lista vacía: `NOTIFICAR_A: []`. Para
+apagar la constancia del proveedor: `ACUSE_AL_PROVEEDOR: false`. Lo que el
+proveedor lee en «¿Qué sigue?» se cambia en `TEXTO_QUE_SIGUE` —y en
+`TEXTO_QUE_SIGUE_EDICION` cuando lo que pidió fue una corrección.
 
 Si el envío falla, el registro **igual queda guardado** y el fallo se anota en
-`ERRORES`. Cuota de una cuenta personal: 100 correos al día.
+`ERRORES`. Cuota de una cuenta personal: 100 correos al día — como ahora van
+dos por registro, dan para unos 50 registros diarios.
 
 ## Al cambiar el código
 

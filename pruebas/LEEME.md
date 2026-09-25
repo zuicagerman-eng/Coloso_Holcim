@@ -68,6 +68,11 @@ La prueba fija ese orden, que los dos responsables queden en el aviso, y que el
 botón de reportar un problema escriba solo a `CORREO_SOPORTE` —no a la lista de
 avisos— con el responder dirigido a quien reportó.
 
+También cubre la constancia que recibe el proveedor: que vaya al correo que él
+escribió, que repita lo que registró, que cuente qué sigue, que **no lleve el
+enlace a la base de datos** —ese es del equipo— y que, si ese correo rebota, el
+aviso interno salga igual y el registro no se caiga.
+
 
 ---
 

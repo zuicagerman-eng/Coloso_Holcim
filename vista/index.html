@@ -1221,10 +1221,12 @@ function mostrarConfirmacion(datos, idServidor) {
         return '<tr><td>' + escapar(f[0]) + '</td><td>' + escapar(f[1]) + '</td></tr>';
       }).join('') +
     '</table>' +
-    (datos.correoRegistra
-      ? '<p class="copia-a">Le enviamos copia de este registro a <b>' +
-        escapar(datos.correoRegistra) + '</b>.</p>'
-      : '') +
+    /* La constancia va al correo que escribió la empresa; si además hubo
+       cuenta de Google, esa recibe copia del aviso interno. */
+    '<p class="copia-a">Le enviamos esta constancia a <b>' +
+      escapar(datos.correoEmpresa) + '</b>' +
+      (datos.correoRegistra ? ', con copia a <b>' + escapar(datos.correoRegistra) + '</b>' : '') +
+      '. Si no aparece en unos minutos, revise el correo no deseado.</p>' +
     '<button class="boton hueco" onclick="volverAEmpezar()">' +
       (esEdicion ? 'Enviar otra solicitud' : 'Registrar otra empresa') + '</button>';
 

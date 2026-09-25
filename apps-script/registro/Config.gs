@@ -22,6 +22,29 @@ var CONFIG = {
    */
   CORREO_SOPORTE: 'german.zuica@holcim.com',
 
+  /**
+   * ► ACUSE PARA EL PROVEEDOR ◄
+   * Al correo que la empresa escribió en el formulario le llega su propia
+   * constancia: lo que registró y qué sigue. Es un correo aparte del aviso
+   * interno —el del equipo lleva el enlace a la base de datos y ese no es
+   * asunto del proveedor—. Ponga false para dejar de enviarlo.
+   */
+  ACUSE_AL_PROVEEDOR: true,
+
+  /**
+   * Qué sigue después de registrarse. Es el texto que el proveedor lee en
+   * su constancia; cámbielo cuando cambie el trámite.
+   */
+  TEXTO_QUE_SIGUE: 'Su empresa entra ahora en la revisión del equipo de ' +
+    'Abastecimiento. Si todo está en orden, será creada en el sistema de ' +
+    'proveedores de Holcim y le llegará, a este mismo correo, la invitación ' +
+    'para la capacitación de proveedores.',
+
+  /** Lo mismo, cuando lo que se pidió fue corregir una empresa ya registrada. */
+  TEXTO_QUE_SIGUE_EDICION: 'El equipo de Abastecimiento revisará el cambio y ' +
+    'actualizará los datos de su empresa en el sistema de proveedores de Holcim. ' +
+    'Si hace falta algún soporte, le escribiremos a este mismo correo.',
+
   /** Copia oculta, si alguien más debe quedar enterado sin figurar. */
   CON_COPIA_OCULTA: [],
 
