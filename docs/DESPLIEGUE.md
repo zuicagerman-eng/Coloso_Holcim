@@ -215,6 +215,17 @@ dos por registro, dan para unos 50 registros diarios.
 Así la URL no cambia. "Nueva implementación" crea otra distinta, con otra
 dirección, y deja la anterior viva sirviendo el código viejo.
 
+### Cómo saber si lo publicado ya es lo último
+
+Al pie del formulario, debajo del botón de reportar, dice **Versión** con una
+fecha. Es el sello que trae `pagina.html`: si la página abierta no muestra la
+fecha del archivo que acaba de pegar, **lo que está sirviendo es la versión
+anterior** — casi siempre porque se guardó con Ctrl+S pero no se implementó.
+Ctrl+S guarda; quien publica es la implementación nueva.
+
+Si la fecha sigue vieja después de implementar, recargue la página con Ctrl+F5,
+o ábrala en una ventana de incógnito: el navegador guarda la anterior un rato.
+
 Recuerde que son dos proyectos: mire cuál de los dos tocó.
 
 ## En qué cuenta vive todo esto
