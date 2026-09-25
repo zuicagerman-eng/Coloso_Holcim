@@ -44,25 +44,24 @@ function correoDelVisitante_() {
  * El correo de quien diligencia se pone AQUÍ, tomado de la sesión, y pisa
  * cualquier valor que llegue de la página: así nadie puede registrar a
  * nombre de otro manipulando el navegador.
+ *
+ * Si no hay sesión —porque la aplicación se publicó abierta, sin pedir
+ * cuenta de Google— el registro pasa igual y ese dato queda vacío. No es
+ * un requisito del trámite: es información que lo acompaña cuando se
+ * puede saber. Bloquear aquí dejaría el formulario inservible en el modo
+ * abierto, que es justamente el que no pide sesión.
  */
 function atender(cuerpo) {
   cuerpo = cuerpo || {};
 
   var correo = correoDelVisitante_();
-  if (!correo) {
-    return {
-      ok: false,
-      errores: ['No pudimos identificar su cuenta de Google. Cierre esta pestaña, ' +
-                'vuelva a abrir el enlace e inicie sesión.']
-    };
-  }
 
   if (!CONFIG.URL_SERVICIO) {
     return { ok: false, errores: ['Falta configurar URL_SERVICIO en Config.gs.'] };
   }
 
   cuerpo.datos = cuerpo.datos || {};
-  cuerpo.datos.correoRegistra = correo;
+  cuerpo.datos.correoRegistra = correo;   /* vacío si no hay sesión */
   cuerpo.token = CONFIG.TOKEN;
 
   try {

@@ -95,14 +95,16 @@ implementación del FORMULARIO:
 | Ejecutar como | Quién tiene acceso | Resultado |
 |---|---|---|
 | Usuario que accede | Cualquier usuario con cuenta de Google | El correo sale de la sesión. Sale la pantalla de "no verificada". |
-| **Yo** | **Cualquier usuario** | Sin inicio de sesión ni pantalla de aviso. La página muestra sola el campo para escribir el correo. |
+| **Yo** | **Cualquier usuario** | Sin inicio de sesión ni pantalla de aviso. La columna *Diligenciado por* queda vacía y nadie recibe copia. |
 
 Para cambiar: **Administrar implementaciones → ✏️**, mueva los dos desplegables,
 **Versión: Nueva**. Nada más. La página pregunta al servidor si hay sesión; si
 no la hay, saca el campo.
 
-Lo que se pierde al escribirlo: el correo lo pone la persona y podría poner
-otro. Con sesión lo pone el servidor y no se puede alterar desde el navegador.
+Lo que se pierde en el modo abierto: no se sabe quién diligenció, y esa
+persona no recibe copia del registro. El trámite funciona igual; lo que falta
+es la trazabilidad. Con sesión, el correo lo pone el servidor y no se puede
+alterar desde el navegador.
 
 ### La pantalla de "aplicación no verificada"
 

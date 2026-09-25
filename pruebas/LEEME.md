@@ -32,3 +32,14 @@ por **nombre de columna**, leyendo los encabezados que tiene la hoja, no por la
 posición que ocupan en `CONFIG.ENCABEZADOS`. Sin eso, quitar un campo —el
 teléfono, por ejemplo— habría corrido un lugar todos los valores siguientes en
 los registros nuevos, y el desastre solo se vería comparando con filas viejas.
+
+
+---
+
+    node pruebas/modos.js
+
+Comprueba `atender()` en los dos modos de publicación: con cuenta de Google el
+correo de quien diligencia sale de la sesión; publicado abierto queda vacío y el
+registro pasa igual. Nació de un bloqueo real: al quitar el campo donde ese
+correo se escribía a mano quedó un guardia que exigía la sesión, y en modo
+abierto no dejaba registrar nada.
