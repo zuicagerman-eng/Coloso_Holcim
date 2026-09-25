@@ -43,3 +43,14 @@ correo de quien diligencia sale de la sesión; publicado abierto queda vacío y 
 registro pasa igual. Nació de un bloqueo real: al quitar el campo donde ese
 correo se escribía a mano quedó un guardia que exigía la sesión, y en modo
 abierto no dejaba registrar nada.
+
+
+---
+
+    node pruebas/creacion-edicion.js
+
+Creación y edición tienen la regla **inversa** sobre el NIT: para crear no puede
+existir; para corregir tiene que existir, o no habría nada que corregir. Sin
+esa distinción toda solicitud de edición se habría rechazado por duplicada.
+Comprueba las cuatro combinaciones y que la lista del desplegable traiga la
+última versión de cada NIT, no una entrada por corrección.

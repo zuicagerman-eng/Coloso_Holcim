@@ -610,12 +610,21 @@
           <button class="pista" type="button" onclick="abrirAyuda(0)" aria-label="Ayuda sobre el tipo de solicitud">?</button>
           <span class="ayuda">¿Es una empresa nueva o una corrección de una ya registrada?</span>
         </label>
-        <select id="tipoSolicitud" name="tipoSolicitud" onblur="revisar('tipoSolicitud')" onchange="revisar('tipoSolicitud')">
+        <select id="tipoSolicitud" name="tipoSolicitud" onblur="revisar('tipoSolicitud')" onchange="alCambiarTipo()">
           <option value="">Seleccione…</option>
           <option value="Solicitud de creación">Solicitud de creación</option>
           <option value="Solicitud de edición">Solicitud de edición</option>
         </select>
         <span class="error" id="errorTipoSolicitud"></span>
+      </div>
+
+      <div class="campo oculto" id="campo-empresaEditar">
+        <label for="empresaEditar">¿Cuál empresa va a corregir?
+          <span class="ayuda">Elíjala y le traemos sus datos actuales para que los ajuste.</span>
+        </label>
+        <select id="empresaEditar" onchange="traerEmpresa()">
+          <option value="">Cargando empresas…</option>
+        </select>
       </div>
 
       <div class="campo" id="campo-nit">
@@ -711,7 +720,8 @@ var AYUDA = [
            'Holcim. Elija "Solicitud de edición" si ya está registrada y viene a ' +
            'corregir o actualizar sus datos.',
     ejemplo: 'Solicitud de creación',
-    nota: 'En la duda, creación: si ya existía, el sistema se lo avisa'
+    nota: 'Al elegir edición aparece una lista con las empresas ya registradas: ' +
+          'escoja la suya y le traemos sus datos actuales para que los ajuste'
   },
   {
     campo: 'nit',
@@ -821,6 +831,61 @@ function pintarDV() {
   pista.innerHTML = 'Se registra <b>' + nit + '</b> · dígito de verificación <b>' + calcularDV(nit) + '</b>';
 }
 
+/* ---------- Solicitud de edición: traer los datos actuales ---------- */
+var empresas = [];
+var empresasPedidas = false;
+
+/** El desplegable solo aparece, y solo se pide la lista, al elegir edición. */
+function alCambiarTipo() {
+  var esEdicion = elemento('tipoSolicitud').value === 'Solicitud de edición';
+  elemento('campo-empresaEditar').classList.toggle('oculto', !esEdicion);
+  if (esEdicion) cargarEmpresas();
+  revisar('tipoSolicitud');
+}
+
+function cargarEmpresas() {
+  if (empresasPedidas || !hayServicio()) return;
+  empresasPedidas = true;
+  llamarApi({ accion: 'empresas' })
+    .then(function (r) {
+      empresas = (r && r.ok && r.empresas) || [];
+      pintarEmpresas();
+    })
+    .catch(function () {
+      empresasPedidas = false;
+      elemento('empresaEditar').innerHTML =
+        '<option value="">No se pudo cargar la lista; escriba el NIT abajo</option>';
+    });
+}
+
+function pintarEmpresas() {
+  var select = elemento('empresaEditar');
+  if (!empresas.length) {
+    select.innerHTML = '<option value="">No hay empresas registradas todavía</option>';
+    return;
+  }
+  select.innerHTML = '<option value="">Seleccione la empresa…</option>' +
+    empresas.map(function (e) {
+      return '<option value="' + escapar(e.nit) + '">' +
+             escapar(e.nombre) + ' — NIT ' + escapar(e.nit) + '</option>';
+    }).join('');
+}
+
+/** Al elegir una, se rellenan los campos con lo que hay hoy registrado. */
+function traerEmpresa() {
+  var nit = elemento('empresaEditar').value;
+  if (!nit) return;
+  var e = empresas.filter(function (x) { return x.nit === nit; })[0];
+  if (!e) return;
+
+  elemento('nit').value = e.nit;
+  elemento('nombreEmpresa').value = e.nombre;
+  elemento('correoEmpresa').value = e.correo || '';
+  pintarDV();
+  ['nit', 'nombreEmpresa', 'correoEmpresa'].forEach(revisar);
+  elemento('nombreEmpresa').focus();
+}
+
 /* ---------- Envío ---------- */
 function enviar(evento) {
   evento.preventDefault();
@@ -913,6 +978,7 @@ function limpiarAviso() { elemento('avisoGeneral').innerHTML = ''; }
 var contador = 0;
 
 function mostrarConfirmacion(datos, idServidor) {
+  var esEdicion = datos.tipoSolicitud === 'Solicitud de edición';
   var radicado = idServidor ||
     ('EMP-' + new Date().getFullYear() + '-' + ('0000' + (++contador)).slice(-4));
 
@@ -933,8 +999,14 @@ function mostrarConfirmacion(datos, idServidor) {
     '<div class="sello">' +
       '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">' +
         '<path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '</svg> ' + (idServidor ? 'Guardado en la base de datos' : 'Registro recibido') + '</div>' +
+      '</svg> ' + (esEdicion
+        ? 'Solicitud de corrección recibida'
+        : (idServidor ? 'Guardada en la base de datos' : 'Solicitud recibida')) + '</div>' +
     '<h2>' + escapar(datos.nombreEmpresa) + '</h2>' +
+    (esEdicion
+      ? '<p style="margin:6px 0 0;color:var(--muted);font-size:13.5px;">Un área de Holcim ' +
+        'revisará el cambio solicitado.</p>'
+      : '') +
     '<div class="radicado">' + escapar(radicado) + '</div>' +
     '<table class="repaso">' +
       repaso.map(function (f) {
@@ -945,7 +1017,8 @@ function mostrarConfirmacion(datos, idServidor) {
       ? '<p class="copia-a">Le enviamos copia de este registro a <b>' +
         escapar(datos.correoRegistra) + '</b>.</p>'
       : '') +
-    '<button class="boton hueco" onclick="volverAEmpezar()">Registrar otra empresa</button>';
+    '<button class="boton hueco" onclick="volverAEmpezar()">' +
+      (esEdicion ? 'Enviar otra solicitud' : 'Registrar otra empresa') + '</button>';
 
   caja.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -958,6 +1031,9 @@ function volverAEmpezar() {
     elemento('error' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = '';
   });
   elemento('pistaDV').innerHTML = '';
+  elemento('campo-empresaEditar').classList.add('oculto');
+  /* La lista se vuelve a pedir: puede haber cambiado con este registro. */
+  empresasPedidas = false;
   limpiarAviso();
   elemento('confirmacion').classList.add('oculto');
   form.classList.remove('oculto');

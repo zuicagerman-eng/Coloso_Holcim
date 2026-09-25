@@ -218,19 +218,36 @@ function siguienteId_(prefijo, nombreHoja) {
   return prefijo + '-' + new Date().getFullYear() + '-' + ('0000' + (cuantas + 1)).slice(-4);
 }
 
-/** Empresas registradas, para la lista desplegable del formulario. */
+/**
+ * Empresas registradas, para la lista de "Solicitud de edición".
+ *
+ * Se lee por nombre de columna, igual que se escribe. Y se queda con la
+ * ÚLTIMA versión de cada NIT: una empresa corregida varias veces tiene
+ * varias filas, y la que vale es la más reciente.
+ */
 function empresasRegistradas_() {
   var hoja = hoja_(CONFIG.HOJAS.EMPRESAS);
   if (hoja.getLastRow() < 2) return [];
-  var encabezados = CONFIG.ENCABEZADOS.EMPRESAS;
-  var colNit = encabezados.indexOf('NIT');
-  var colNombre = encabezados.indexOf('Nombre empresa');
-  return hoja.getRange(2, 1, hoja.getLastRow() - 1, encabezados.length)
-    .getValues()
-    .map(function (fila) {
-      return { nit: String(fila[colNit]).trim(), nombre: String(fila[colNombre]).trim() };
-    })
-    .filter(function (e) { return e.nit && e.nombre; })
+
+  var ancho = hoja.getLastColumn();
+  var filas = hoja.getRange(1, 1, hoja.getLastRow(), ancho).getValues();
+  var encabezados = filas.shift().map(function (c) { return String(c).trim(); });
+  var col = function (nombre) { return encabezados.indexOf(nombre); };
+
+  var porNit = {};
+  filas.forEach(function (fila) {
+    var nit = String(fila[col('NIT')]).trim();
+    var nombre = String(fila[col('Nombre empresa')]).trim();
+    if (!nit || !nombre) return;
+    porNit[nit] = {
+      nit: nit,
+      nombre: nombre,
+      correo: String(fila[col('Correo')]).trim()
+    };
+  });
+
+  return Object.keys(porNit)
+    .map(function (nit) { return porNit[nit]; })
     .sort(function (a, b) { return a.nombre.localeCompare(b.nombre); });
 }
 

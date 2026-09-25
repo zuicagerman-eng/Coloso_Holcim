@@ -76,8 +76,23 @@ function guardarEmpresa_(entrada) {
   var candado = LockService.getScriptLock();
   candado.waitLock(20000);
   try {
-    if (existe_(CONFIG.HOJAS.EMPRESAS, 'NIT', d.nit)) {
-      return { ok: false, errores: ['Ya hay una empresa registrada con el NIT ' + d.nit + '.'] };
+    /* La regla depende del tipo de solicitud, y es la inversa en cada uno:
+       para crear, el NIT no puede existir; para corregir, tiene que existir,
+       o no habría nada que corregir. Sin esto, toda solicitud de edición
+       sería rechazada por duplicada. */
+    var yaEstaba = existe_(CONFIG.HOJAS.EMPRESAS, 'NIT', d.nit);
+
+    if (d.tipoSolicitud === 'Solicitud de creación' && yaEstaba) {
+      return { ok: false, errores: [
+        'El NIT ' + d.nit + ' ya está registrado. Si viene a corregir sus datos, ' +
+        'elija arriba "Solicitud de edición".'
+      ] };
+    }
+    if (d.tipoSolicitud === 'Solicitud de edición' && !yaEstaba) {
+      return { ok: false, errores: [
+        'El NIT ' + d.nit + ' no está registrado, así que no hay nada que corregir. ' +
+        'Si es una empresa nueva, elija arriba "Solicitud de creación".'
+      ] };
     }
 
     var id = siguienteId_('EMP', CONFIG.HOJAS.EMPRESAS);
@@ -100,7 +115,13 @@ function guardarEmpresa_(entrada) {
       ['Diligenciado por', d.correoRegistra || 'no identificado']
     ], d.correoRegistra);
 
-    return { ok: true, id: id, mensaje: 'Empresa registrada con el radicado ' + id + '.' };
+    return {
+      ok: true,
+      id: id,
+      mensaje: (d.tipoSolicitud === 'Solicitud de edición'
+        ? 'Solicitud de corrección recibida con el radicado '
+        : 'Empresa registrada con el radicado ') + id + '.'
+    };
   } finally {
     candado.releaseLock();
   }
