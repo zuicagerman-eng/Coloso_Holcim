@@ -37,15 +37,23 @@
     --danger-suave: #FBEAE8;
     --sombra: 0 1px 2px rgba(15, 36, 56, .05), 0 12px 32px -22px rgba(15, 36, 56, .5);
     --sombra-alta: 0 24px 60px -24px rgba(15, 36, 56, .45);
+    /* Fondo de las casillas, color del texto de ejemplo y aro de foco.
+       Van aparte porque en modo oscuro no pueden salir de --surface. */
+    --campo: #FFFFFF;
+    --placeholder: #7A8B9D;
+    --foco: var(--accent-suave);
+    --velo: rgba(9, 22, 35, .55);
+    --placa-logo: #FFFFFF;
     --r: 6px;
+    color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --marca: #FFFFFF;
-      --ground: #0A1520;
-      --surface: #10202E;
-      --surface-2: #16293A;
-      --line: #22384C;
+      --ground: #070F17;
+      --surface: #132434;
+      --surface-2: #1B3043;
+      --line: #2A4257;
       --line-fuerte: #375069;
       --ink: #E2ECF4;
       --muted: #8CA1B4;
@@ -61,14 +69,23 @@
       --danger-suave: #2E1A18;
       --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -22px rgba(0, 0, 0, .9);
       --sombra-alta: 0 24px 60px -24px rgba(0, 0, 0, .95);
+      /* La casilla va MÁS oscura que la tarjeta: se ve hundida y se distingue
+         del fondo, que es justo lo que no se notaba en celular. */
+      --campo: #0B1B27;
+      --placeholder: #93A9BD;
+      --foco: rgba(92, 189, 238, .32);
+      --velo: rgba(3, 9, 15, .72);
+      /* Placa del logotipo: blanco roto, para que no encandile de noche. */
+      --placa-logo: #F1F5F9;
+      color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --marca: #FFFFFF;
-    --ground: #0A1520;
-    --surface: #10202E;
-    --surface-2: #16293A;
-    --line: #22384C;
+    --ground: #070F17;
+    --surface: #132434;
+    --surface-2: #1B3043;
+    --line: #2A4257;
     --line-fuerte: #375069;
     --ink: #E2ECF4;
     --muted: #8CA1B4;
@@ -84,6 +101,15 @@
     --danger-suave: #2E1A18;
     --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -22px rgba(0, 0, 0, .9);
     --sombra-alta: 0 24px 60px -24px rgba(0, 0, 0, .95);
+    /* La casilla va MÁS oscura que la tarjeta: se ve hundida y se distingue
+       del fondo, que es justo lo que no se notaba en celular. */
+    --campo: #0B1B27;
+    --placeholder: #93A9BD;
+    --foco: rgba(92, 189, 238, .32);
+    --velo: rgba(3, 9, 15, .72);
+    /* Placa del logotipo: blanco roto, para que no encandile de noche. */
+    --placa-logo: #F1F5F9;
+    color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
@@ -119,7 +145,7 @@
      blanca, como lo pide cualquier manual de marca, en vez de desteñirlo. */
   :root:not([data-theme="light"]) .logotipo,
   :root[data-theme="dark"] .logotipo {
-    background: #FFFFFF;
+    background: var(--placa-logo);
     padding: 6px 10px;
     border-radius: 6px;
     height: 44px;
@@ -241,7 +267,7 @@
   input, select {
     width: 100%;
     padding: 11px 12px;
-    background: var(--surface);
+    background: var(--campo);
     border: 1px solid var(--line-fuerte);
     border-radius: 4px;
     color: var(--ink);
@@ -251,13 +277,13 @@
   input.mono { font-family: "IBM Plex Mono", monospace; letter-spacing: .05em; }
   input.mayus { text-transform: uppercase; }
   input.minus { text-transform: lowercase; }
-  input::placeholder { color: var(--muted); opacity: .65; }
+  input::placeholder, textarea::placeholder { color: var(--placeholder); opacity: 1; }
   /* El texto de ejemplo no se transforma: en mayúscula no cabía y se cortaba. */
   input.mayus::placeholder, input.minus::placeholder { text-transform: none; }
   input:focus, select:focus {
     outline: none;
-    border-color: var(--accent-fill);
-    box-shadow: 0 0 0 3px var(--accent-suave);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--foco);
   }
   input[aria-invalid="true"] { border-color: var(--danger); }
   input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--danger-suave); }
@@ -300,7 +326,7 @@
   .con-prefijo input { border-radius: 0 4px 4px 0; }
   .con-prefijo:focus-within .prefijo { border-color: var(--accent-fill); color: var(--ink); }
   .con-prefijo:focus-within input { box-shadow: none; }
-  .con-prefijo:focus-within { border-radius: 4px; box-shadow: 0 0 0 3px var(--accent-suave); }
+  .con-prefijo:focus-within { border-radius: 4px; box-shadow: 0 0 0 3px var(--foco); }
 
   /* Franja que dice con qué cuenta entró la persona */
   .identidad {
@@ -344,7 +370,9 @@
     list-style: none;
     max-height: 244px;
     overflow-y: auto;
-    background: var(--surface);
+    /* Va sobre la tarjeta, así que lleva otro tono: si no, en modo
+       oscuro la lista se confundía con el fondo de la tarjeta. */
+    background: var(--surface-2);
     border: 1px solid var(--line-fuerte);
     border-radius: 6px;
     box-shadow: var(--sombra-alta);
@@ -443,7 +471,7 @@
   .fondo-ayuda {
     position: fixed;
     inset: 0;
-    background: rgba(9, 22, 35, .55);
+    background: var(--velo);
     display: grid;
     place-items: end center;
     padding: 18px;
@@ -549,6 +577,39 @@
   }
 
   .nota-pie { margin: 22px 0 0; color: var(--muted); font-size: 12.5px; text-align: center; }
+  .enlace-reportar {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 8px 4px;
+    margin-top: 2px;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .enlace-reportar:hover { color: var(--accent-hover); }
+  .enlace-reportar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ayuda-cuerpo textarea {
+    width: 100%;
+    min-height: 110px;
+    padding: 11px 12px;
+    background: var(--campo);
+    border: 1px solid var(--line-fuerte);
+    border-radius: 4px;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+    resize: vertical;
+  }
+  .ayuda-cuerpo textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--foco);
+  }
+  .ayuda-cuerpo .campo { margin-bottom: 14px; }
   .oculto { display: none !important; }
   .solo-lectores {
     position: absolute; width: 1px; height: 1px;
@@ -675,12 +736,13 @@
 
       <div class="campo oculto" id="campo-empresaEditar">
         <label for="buscarEmpresa">¿Cuál empresa va a corregir?
-          <span class="ayuda">Escriba parte del nombre o del NIT. Al elegirla le traemos sus datos actuales.</span>
+          <span class="ayuda">Escriba parte del nombre, del NIT o del correo. Al elegirla le traemos sus datos actuales.</span>
         </label>
         <div class="buscador">
-          <input id="buscarEmpresa" type="text" autocomplete="off" placeholder="Buscar por nombre o NIT…"
+          <input id="buscarEmpresa" type="text" autocomplete="off"
                  role="combobox" aria-expanded="false" aria-controls="listaEmpresas" aria-autocomplete="list"
-                 oninput="filtrarEmpresas()" onfocus="filtrarEmpresas()" onkeydown="teclasDelBuscador(event)">
+                 oninput="filtrarEmpresas()" onfocus="filtrarEmpresas()" onkeydown="teclasDelBuscador(event)"
+                 placeholder="Buscar por nombre, NIT o correo…">
           <ul class="resultados oculto" id="listaEmpresas" role="listbox" aria-label="Empresas registradas"></ul>
         </div>
         <span class="elegida oculto" id="empresaElegida" role="status"></span>
@@ -717,8 +779,10 @@
         <span class="error" id="errorCorreoEmpresa"></span>
       </div>
 
-      <hr class="separador">
-      <p class="rotulo-grupo">Quién está diligenciando</p>
+      <!-- El rótulo y la línea sólo aparecen si hay cuenta que mostrar:
+           en el formulario abierto quedaba un título con nada debajo. -->
+      <hr class="separador oculto" id="separadorIdentidad">
+      <p class="rotulo-grupo oculto" id="rotuloIdentidad">Quién está diligenciando</p>
 
       <!-- Si el servicio reconoce la cuenta de Google, aquí se muestra y el
            campo de abajo no aparece: el dato no se escribe, se toma de la
@@ -742,7 +806,11 @@
     <div id="confirmacion" class="confirmacion oculto"></div>
   </div>
 
-  <p class="nota-pie">Los datos quedan bajo custodia de Holcim y se usan solo para el trámite de vinculación.</p>
+  <p class="nota-pie">
+    Los datos quedan bajo custodia de Holcim y se usan solo para el trámite de vinculación.
+    <br>
+    <button class="enlace-reportar" type="button" onclick="abrirReporte()">¿Algo no funciona? Repórtelo</button>
+  </p>
 </main>
 
 <div id="ayuda" class="oculto"></div>
@@ -932,10 +1000,11 @@ var activa = -1;
 
 function filtrarEmpresas() {
   var buscado = normalizar(elemento('buscarEmpresa').value).trim();
+  /* Busca en todo lo que se sabe de la empresa: nombre, NIT y correo.
+     Quien registra a veces recuerda el correo y no la razón social. */
   coincidencias = empresas.filter(function (e) {
-    return !buscado ||
-           normalizar(e.nombre).indexOf(buscado) >= 0 ||
-           e.nit.indexOf(buscado) >= 0;
+    if (!buscado) return true;
+    return normalizar(e.nombre + ' ' + e.nit + ' ' + (e.correo || '')).indexOf(buscado) >= 0;
   }).slice(0, 20);
   activa = -1;
   pintarResultados(buscado);
@@ -1061,7 +1130,13 @@ function enviarAlServidor(datos) {
     .then(function (respuesta) {
       ocupado(false);
       if (!respuesta.ok) return avisar(respuesta.errores || ['No se pudo guardar.']);
+
+      /* Se confirma apenas la fila queda guardada. El aviso por correo se
+         pide después y nadie lo espera: tarda uno a tres segundos y no
+         cambia en nada lo que la persona ya terminó de hacer. */
       mostrarConfirmacion(datos, respuesta.id);
+      llamarApi({ accion: 'avisar', datos: datos, id: respuesta.id })
+        .catch(function () { /* la fila está guardada; el aviso se reintenta a mano */ });
     })
     .catch(function (error) {
       ocupado(false);
@@ -1229,10 +1304,13 @@ function moverAyuda(salto) {
 }
 
 function cerrarAyuda() {
+  var eraAyudaDeCampos = !!elemento('ayuda').querySelector('.puntos');
   elemento('ayuda').className = 'oculto';
   elemento('ayuda').innerHTML = '';
   destacar(null);
-  if (AYUDA[pasoAyuda]) elemento(AYUDA[pasoAyuda].campo).focus();
+  /* Al cerrar la ayuda se vuelve al campo del que hablaba; al cerrar el
+     reporte no hay campo al que volver. */
+  if (eraAyudaDeCampos && AYUDA[pasoAyuda]) elemento(AYUDA[pasoAyuda].campo).focus();
 }
 
 /** Resalta en el formulario el campo del que habla la ayuda. */
@@ -1248,10 +1326,97 @@ function destacar(idCampo) {
 
 document.addEventListener('keydown', function (e) {
   if (elemento('ayuda').className === 'oculto') return;
-  if (e.key === 'Escape') cerrarAyuda();
+  if (e.key === 'Escape') { cerrarAyuda(); return; }
+  if (!elemento('ayuda').querySelector('.puntos')) return;   /* es el reporte */
   if (e.key === 'ArrowRight' && pasoAyuda < AYUDA.length - 1) moverAyuda(1);
   if (e.key === 'ArrowLeft' && pasoAyuda > 0) moverAyuda(-1);
 });
+
+/* ---------- Reportar un problema ---------- */
+function abrirReporte() {
+  var caja = elemento('ayuda');
+  caja.className = 'fondo-ayuda';
+  caja.innerHTML =
+    '<div class="ventana-ayuda" role="dialog" aria-modal="true" aria-label="Reportar un problema">' +
+      '<div class="ayuda-cima">' +
+        '<span class="ayuda-paso">Reportar un problema</span>' +
+        '<button class="cerrar" type="button" onclick="cerrarAyuda()" aria-label="Cerrar">&times;</button>' +
+      '</div>' +
+      '<div class="ayuda-cuerpo">' +
+        '<h3>¿Qué pasó?</h3>' +
+        '<p>Cuéntenos qué intentó hacer y qué vio en pantalla. Entre más concreto, ' +
+        'más rápido lo resolvemos.</p>' +
+        '<div id="avisoReporte" style="margin-top:14px"></div>' +
+        '<div class="campo" style="margin-top:14px">' +
+          '<label for="mensajeReporte" class="solo-lectores">Descripción del problema</label>' +
+          '<textarea id="mensajeReporte" placeholder="Al darle Registrar empresa no pasa nada…"></textarea>' +
+        '</div>' +
+        '<div class="campo">' +
+          '<label for="correoReporte">Su correo, si quiere que le respondamos' +
+            '<span class="ayuda">Opcional.</span>' +
+          '</label>' +
+          '<input id="correoReporte" type="email" class="minus" placeholder="usted@empresa.com">' +
+        '</div>' +
+      '</div>' +
+      '<div class="ayuda-pie">' +
+        '<button class="boton hueco" type="button" onclick="cerrarAyuda()">Cancelar</button>' +
+        '<span class="relleno"></span>' +
+        '<button class="boton" type="button" id="btnReporte" onclick="enviarReporte()">Enviar</button>' +
+      '</div>' +
+    '</div>';
+  destacar(null);
+  elemento('mensajeReporte').focus();
+}
+
+function enviarReporte() {
+  var mensaje = elemento('mensajeReporte').value;
+  var correo = elemento('correoReporte').value;
+  var aviso = elemento('avisoReporte');
+
+  if (limpiar(mensaje).length < 10) {
+    aviso.innerHTML = '<div class="aviso aviso-error" style="margin:0">' +
+      'Cuéntenos un poco más de lo que pasó.</div>';
+    elemento('mensajeReporte').focus();
+    return;
+  }
+  if (!hayServicio()) {
+    aviso.innerHTML = '<div class="aviso aviso-error" style="margin:0">' +
+      'El formulario no está conectado; no se puede enviar el reporte.</div>';
+    return;
+  }
+
+  var boton = elemento('btnReporte');
+  boton.disabled = true;
+  boton.textContent = 'Enviando…';
+
+  llamarApi({ accion: 'reportar', datos: { mensaje: mensaje, correo: correo } })
+    .then(function (r) {
+      if (r && r.ok) {
+        elemento('ayuda').innerHTML =
+          '<div class="ventana-ayuda" role="dialog" aria-modal="true">' +
+            '<div class="ayuda-cuerpo" style="padding-bottom:20px">' +
+              '<div class="sello"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">' +
+              '<path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+              'stroke-linecap="round" stroke-linejoin="round"/></svg> Reporte enviado</div>' +
+              '<p>Gracias. Ya avisamos al equipo que administra el formulario.</p>' +
+            '</div>' +
+            '<div class="ayuda-pie"><span class="relleno"></span>' +
+              '<button class="boton" type="button" onclick="cerrarAyuda()">Cerrar</button></div>' +
+          '</div>';
+        return;
+      }
+      boton.disabled = false;
+      boton.textContent = 'Enviar';
+      aviso.innerHTML = '<div class="aviso aviso-error" style="margin:0">' +
+        escapar((r && r.errores && r.errores[0]) || 'No se pudo enviar.') + '</div>';
+    })
+    .catch(function (e) {
+      boton.disabled = false;
+      boton.textContent = 'Enviar';
+      aviso.innerHTML = '<div class="aviso aviso-error" style="margin:0">' +
+        escapar('No se pudo enviar: ' + e.message) + '</div>';
+    });
+}
 
 function escapar(t) {
   return String(t).replace(/[&<>"]/g, function (c) {
@@ -1274,6 +1439,8 @@ function reconocerCuenta() {
       sesion.correo = r.correo;
       elemento('correoSesion').textContent = r.correo;
       elemento('inicialCuenta').textContent = r.correo.charAt(0);
+      elemento('separadorIdentidad').classList.remove('oculto');
+      elemento('rotuloIdentidad').classList.remove('oculto');
       elemento('franjaIdentidad').classList.remove('oculto');
     })
     .withFailureHandler(function () { /* se queda el campo escrito */ })

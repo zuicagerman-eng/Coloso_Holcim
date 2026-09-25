@@ -20,7 +20,8 @@ const hoja = {
   getRange: (f,c,nf,nc) => ({ getValues: () => filas.slice(f-1, f-1+nf).map(x => x.slice(c-1, c-1+nc)),
     setValues(){return this;}, setFontWeight(){return this;}, setBackground(){return this;},
     setFontColor(){return this;}, setValue(){return this;} }),
-  setFrozenRows(){}, autoResizeColumns(){}
+  setFrozenRows(){}, autoResizeColumns(){},
+  getName: () => 'EMPRESAS', getSheetId: () => 'EMPRESAS', getParent: () => libro
 };
 const libro = { getId: () => 'A', getName: () => 'x', getUrl: () => 'x',
                 getSheetByName: n => n === 'EMPRESAS' ? hoja : null, insertSheet: () => hoja };

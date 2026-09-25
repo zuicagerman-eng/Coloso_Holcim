@@ -4,6 +4,7 @@ function libroFalso(nombre) {
   const hojas = {};
   return {
     nombre, hojas,
+    getId: () => nombre,
     getName: () => nombre,
     getUrl: () => 'https://docs.google.com/…/' + nombre,
     getSheetByName: n => hojas[n] || null,
@@ -15,7 +16,9 @@ function libroFalso(nombre) {
       getRange(){ const h=this; return { getValues:()=>[h.filas[0]||[]],
         setValues(v){ if (h.filas.length) h.filas[0]=v[0]; else h.filas.push(v[0]); return this; },
         setFontWeight(){return this;}, setBackground(){return this;}, setFontColor(){return this;}, setValue(){return this;} }; },
-      setFrozenRows(){}, autoResizeColumns(){}
+      setFrozenRows(){}, autoResizeColumns(){},
+      /* Una hoja de verdad sabe quién es y en qué libro vive */
+      getName: () => n, getSheetId: () => n, getParent: () => ({ getId: () => nombre })
     })
   };
 }

@@ -48,6 +48,10 @@ function manejar_(cuerpo) {
         return { ok: true, empresas: empresasRegistradas_() };
       case 'registrarEmpresa':
         return guardarEmpresa_(cuerpo.datos || {});
+      case 'avisar':
+        return avisarDeRegistro_(cuerpo.datos || {}, cuerpo.id || '');
+      case 'reportar':
+        return reportarProblema_(cuerpo.datos || {});
       case 'registrarPersona':
         return guardarPersona_(cuerpo.datos || {});
       default:
@@ -107,13 +111,10 @@ function guardarEmpresa_(entrada) {
       'Diligenciado por': d.correoRegistra
     });
 
-    avisar_(d.tipoSolicitud, d.nombreEmpresa, id, [
-      ['Tipo de solicitud', d.tipoSolicitud],
-      ['NIT', d.nit + '  ·  DV ' + d.dv],
-      ['Razón social', d.nombreEmpresa],
-      ['Correo principal', d.correoEmpresa],
-      ['Diligenciado por', d.correoRegistra || 'no identificado']
-    ], d.correoRegistra);
+    /* El correo NO se manda aquí. Enviarlo toma uno a tres segundos y la
+       persona los estaría esperando frente a la pantalla para algo que ya
+       quedó guardado. La página confirma de inmediato y pide el aviso
+       aparte, sin esperarlo. */
 
     return {
       ok: true,
@@ -170,6 +171,62 @@ function guardarPersona_(entrada) {
     return { ok: true, id: id, mensaje: 'Persona registrada con el radicado ' + id + '.' };
   } finally {
     candado.releaseLock();
+  }
+}
+
+/**
+ * Manda el aviso de un registro que ya quedó guardado. Lo pide la página
+ * después de confirmarle a la persona, así que nadie espera por esto.
+ */
+function avisarDeRegistro_(datos, id) {
+  var revision = depurarEmpresa_(datos);
+  if (!revision.ok) return { ok: false, errores: revision.errores };
+  var d = revision.datos;
+
+  avisar_(d.tipoSolicitud, d.nombreEmpresa, id, [
+    ['Tipo de solicitud', d.tipoSolicitud],
+    ['NIT', d.nit + '  ·  DV ' + d.dv],
+    ['Razón social', d.nombreEmpresa],
+    ['Correo principal', d.correoEmpresa],
+    ['Diligenciado por', d.correoRegistra || 'no identificado']
+  ], d.correoRegistra);
+
+  return { ok: true };
+}
+
+/**
+ * Reporte de un problema con el formulario. Va solo a quien administra
+ * esto, no a la lista de avisos: es un asunto técnico, no un registro.
+ */
+function reportarProblema_(datos) {
+  var mensaje = limpiar_(datos.mensaje);
+  if (mensaje.length < 10) {
+    return { ok: false, errores: ['Cuéntenos un poco más de lo que pasó (mínimo 10 caracteres).'] };
+  }
+  var quien = limpiar_(datos.correo).toLowerCase();
+  if (quien && !esCorreo_(quien)) {
+    return { ok: false, errores: ['Ese correo no tiene un formato válido.'] };
+  }
+
+  var destino = String(CONFIG.CORREO_SOPORTE || '').trim();
+  if (!destino) return { ok: false, errores: ['No hay un correo de soporte configurado.'] };
+
+  try {
+    MailApp.sendEmail(destino, '[Formulario de proveedores] Problema reportado', '', {
+      name: CONFIG.NOMBRE_REMITENTE,
+      replyTo: quien || undefined,
+      htmlBody:
+        '<p style="font-family:Arial,sans-serif;">Alguien reportó un problema desde el ' +
+        'formulario de registro de proveedores.</p>' +
+        '<p style="font-family:Arial,sans-serif;"><b>Quién:</b> ' +
+        (quien ? escaparHtml_(quien) : 'no dejó correo') + '</p>' +
+        '<div style="font-family:Arial,sans-serif;white-space:pre-wrap;background:#F7F9FC;' +
+        'border-left:3px solid #00457C;padding:12px 14px;">' + escaparHtml_(mensaje) + '</div>'
+    });
+    return { ok: true, mensaje: 'Gracias. Ya avisamos al equipo.' };
+  } catch (error) {
+    anotarError_('Reporte no enviado: ' + error.message);
+    return { ok: false, errores: ['No se pudo enviar el reporte. Intente más tarde.'] };
   }
 }
 

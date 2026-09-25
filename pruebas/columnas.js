@@ -10,7 +10,9 @@ function libroFalso(id, columnas) {
       getValues:()=>[h.filas[0].slice(col-1, col-1+nc)],
       setValues(v){ for(let i=0;i<v[0].length;i++) h.filas[0][col-1+i]=v[0][i]; return this;},
       setFontWeight(){return this;},setBackground(){return this;},setFontColor(){return this;},setValue(){return this;}};},
-    setFrozenRows(){},autoResizeColumns(){}});
+    setFrozenRows(){},autoResizeColumns(){},
+    /* Una hoja de verdad sabe quién es y en qué libro vive */
+    getName:()=>n, getSheetId:()=>n, getParent:()=>({getId:()=>id})});
   return { getId:()=>id, getName:()=>'x', getUrl:()=>'x', getSheetByName:n=>hojas[n]||null, insertSheet:crear, hojas };
 }
 // La hoja YA tiene la columna Teléfono, de antes

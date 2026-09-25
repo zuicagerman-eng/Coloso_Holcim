@@ -58,6 +58,19 @@ Comprueba las cuatro combinaciones y que la lista del desplegable traiga la
 
 ---
 
+    node pruebas/avisos.js
+
+Comprueba que **guardar no manda correo**. Enviar un correo con `MailApp` tarda
+uno o dos segundos, y mientras tanto la persona miraba el botón «Guardando…».
+Ahora la fila se escribe y se responde de una vez; el aviso sale después, en
+una llamada aparte (`avisar`), y si esa falla la fila ya está guardada igual.
+La prueba fija ese orden, que los dos responsables queden en el aviso, y que el
+botón de reportar un problema escriba solo a `CORREO_SOPORTE` —no a la lista de
+avisos— con el responder dirigido a quien reportó.
+
+
+---
+
 El buscador de empresas se prueba en el navegador, no desde node: vive en la
 página. `scratchpad/e2e/buscador.html` lo ejercita con datos de mentiras —
 buscar por nombre, por NIT, sin tildes, sin coincidencias, y elegir con las

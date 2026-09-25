@@ -35,6 +35,30 @@ function hojaEn_(libro, nombre) {
   return hoja;
 }
 
+/** Encabezados de la hoja, en memoria: se leen una vez por ejecución. */
+var _encabezados = {};
+
+/**
+ * Llave del caché. Lleva el libro además de la hoja: el id de hoja solo
+ * es único dentro de un libro, y aquí se trabaja con dos —el propio y el
+ * de Holcim—, que pueden tener hojas con el mismo id y distintas columnas.
+ */
+function llaveDeHoja_(hoja) {
+  var libro = hoja.getParent ? hoja.getParent().getId() : '';
+  var propia = hoja.getSheetId ? hoja.getSheetId() : hoja.getName();
+  return libro + '/' + propia;
+}
+
+function encabezadosDe_(hoja) {
+  var llave = llaveDeHoja_(hoja);
+  if (!_encabezados[llave]) {
+    var ancho = Math.max(hoja.getLastColumn(), 1);
+    _encabezados[llave] = hoja.getRange(1, 1, 1, ancho).getValues()[0]
+      .map(function (c) { return String(c).trim(); });
+  }
+  return _encabezados[llave];
+}
+
 /**
  * Si la hoja ya existía de una versión anterior, le agrega las columnas
  * que le falten. Así no hay que borrar nada al ampliar el modelo.
@@ -43,8 +67,8 @@ function asegurarEncabezados_(hoja, nombre) {
   var esperados = CONFIG.ENCABEZADOS[nombre] || [];
   if (!esperados.length) return hoja;
 
-  var ancho = Math.max(hoja.getLastColumn(), 1);
-  var actuales = hoja.getRange(1, 1, 1, ancho).getValues()[0].map(String);
+  var actuales = encabezadosDe_(hoja);
+  var ancho = actuales.length;
   var faltantes = esperados.filter(function (c) { return actuales.indexOf(c) < 0; });
   if (!faltantes.length) return hoja;
 
@@ -53,6 +77,7 @@ function asegurarEncabezados_(hoja, nombre) {
     .setFontWeight('bold')
     .setBackground('#00457C')
     .setFontColor('#FFFFFF');
+  delete _encabezados[llaveDeHoja_(hoja)];  /* cambiaron: hay que releerlos */
   return hoja;
 }
 
@@ -66,7 +91,9 @@ function prepararHojas() {
 /** Agrega una fila respetando el orden de los encabezados. */
 function agregarFila_(nombreHoja, fila) {
   var hoja = hoja_(nombreHoja);
-  hoja.appendRow(enOrden_(hoja, nombreHoja, fila));
+  /* hoja_ acaba de leer los encabezados para verificarlos; se reutilizan
+     en vez de volver a pedirlos. Cada lectura es un viaje a la hoja. */
+  hoja.appendRow(enOrden_(encabezadosDe_(hoja), fila));
 
   /* La misma fila va a la hoja de Holcim, si está configurada.
      El registro de errores se excluye: copiarlo llamaría de nuevo a esta
@@ -87,9 +114,7 @@ function agregarFila_(nombreHoja, fila) {
  * viejos. Por nombre, una columna retirada simplemente queda vacía y una
  * nueva se llena; nada se desordena.
  */
-function enOrden_(hoja, nombreHoja, fila) {
-  var ancho = Math.max(hoja.getLastColumn(), 1);
-  var encabezados = hoja.getRange(1, 1, 1, ancho).getValues()[0];
+function enOrden_(encabezados, fila) {
   return encabezados.map(function (columna) {
     var llave = String(columna).trim();
     return fila[llave] !== undefined && fila[llave] !== null ? fila[llave] : '';
@@ -132,7 +157,7 @@ function copiarEnHolcim_(nombreHoja, fila) {
   if (!hayCopiaConfigurada_()) return;
   try {
     var hoja = hojaEn_(libroDeHolcim_(), nombreHoja);
-    hoja.appendRow(enOrden_(hoja, nombreHoja, fila));
+    hoja.appendRow(enOrden_(encabezadosDe_(hoja), fila));
   } catch (error) {
     anotarError_('No se pudo copiar a la hoja de Holcim (' + nombreHoja + '): ' + error.message);
   }
@@ -229,8 +254,7 @@ function empresasRegistradas_() {
   var hoja = hoja_(CONFIG.HOJAS.EMPRESAS);
   if (hoja.getLastRow() < 2) return [];
 
-  var ancho = hoja.getLastColumn();
-  var filas = hoja.getRange(1, 1, hoja.getLastRow(), ancho).getValues();
+  var filas = hoja.getRange(1, 1, hoja.getLastRow(), hoja.getLastColumn()).getValues();
   var encabezados = filas.shift().map(function (c) { return String(c).trim(); });
   var col = function (nombre) { return encabezados.indexOf(nombre); };
 

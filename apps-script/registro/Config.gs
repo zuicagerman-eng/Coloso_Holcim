@@ -11,8 +11,16 @@ var CONFIG = {
    * Ponga uno o varios, separados por coma. Vacío = no se envía nada.
    */
   NOTIFICAR_A: [
-    'german.zuica@holcim.com'
+    'german.zuica@holcim.com',
+    'juan.narvaezsalazar@holcim.com'
   ],
+
+  /**
+   * ► REPORTES DE PROBLEMAS ◄
+   * El botón "Reportar un problema" del formulario escribe solo aquí.
+   * Es un asunto técnico, no un registro: no va a la lista de avisos.
+   */
+  CORREO_SOPORTE: 'german.zuica@holcim.com',
 
   /** Copia oculta, si alguien más debe quedar enterado sin figurar. */
   CON_COPIA_OCULTA: [],
