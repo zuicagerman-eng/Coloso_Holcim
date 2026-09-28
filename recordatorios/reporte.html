@@ -959,6 +959,19 @@ const GRUPOS_SOL = <?!= typeof gruposSolicitud !== "undefined" ? gruposSolicitud
 /* El estándar es del curso, no de la persona: viaja como tabla de 62 entradas
    en vez de repetirse en cada registro, así el filtro no pesa en el enlace. */
 const EST_DE_CURSO = <?!= typeof estandaresJson !== "undefined" ? estandaresJson : "{}" ?>;
+/* { curso: [categoría, grupo] }. Dependen del curso, no de la persona, así que
+   no viajan en cada registro -serían los mismos sesenta y dos valores
+   repetidos miles de veces- sino en esta tabla, y se reponen al recibirlos. */
+const CURSO_INFO = <?!= typeof cursosJson !== "undefined" ? cursosJson : "{}" ?>;
+function reponer(filas){
+  filas.forEach(d=>{
+    const i = CURSO_INFO[d.curso];
+    d.cat   = i ? i[0] : "Interna / formación";
+    d.grupo = i ? i[1] : "interna";
+  });
+  return filas;
+}
+reponer(DATA);
 /* Cursos que se hacen en línea. Viene la tabla, no el enlace ya resuelto en
    cada registro: así cambiar una URL se ve en cuanto se publica, sin esperar a
    que venza la caché de los registros. */
@@ -1040,7 +1053,7 @@ function pedirPlanta(p){
   return new Promise((ok, mal) => {
     google.script.run
       .withSuccessHandler(rs => {
-        ((rs && rs.r) || []).forEach(r => DATA.push(r));
+        reponer((rs && rs.r) || []).forEach(r => DATA.push(r));
         ((rs && rs.g) || []).forEach(g => GESTIONADAS.push(g));
         cargadas.add(p); ok();
       })

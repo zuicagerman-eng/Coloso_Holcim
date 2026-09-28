@@ -156,6 +156,24 @@ exista, que no sea pasada, que el año sea razonable— y si no cuadra la ignora
 silencio en vez de tumbar la solicitud. Cuando viene, sale destacada en el correo
 y en el asunto.
 
+**`PLANTAS_SIN_ENVIO` apaga el correo de una planta sin borrarla.** Sigue
+teniendo enlace, aparece en el selector, se pueden solicitar sus
+capacitaciones y cuenta en «todas las plantas». Lo único que no pasa es que le
+llegue el correo del martes. Quitarla de `CORREOS_PLANTA` sería otra cosa:
+desaparecería del reporte y su gente dejaría de contar en ningún lado.
+
+**Lo que abre el enlace es la caché, no la matriz.** Con `CACHE_MINUTOS` en 15,
+cada cuarto de hora el primero que entraba pagaba la lectura completa —medio
+minuto— y los siguientes entraban en dos segundos. Ahora son 90 minutos, y con
+un activador horario sobre `calentarCache()` no le toca a nadie: el reporte
+está siempre recién leído.
+
+**Lo que depende del curso no viaja en cada registro.** `cat` y `grupo` son los
+mismos sesenta y dos valores repetidos en miles de filas. `aligerar()` los
+quita al serializar para el navegador y `infoDeCursos()` manda la tabla; el
+tablero los repone al recibir. El servidor los conserva, que el correo del
+martes los necesita.
+
 **`ENSAYO.correo` hace el envío de verdad, pero a una sola dirección.** El
 mismo enlace, la misma tabla, el mismo Excel y el mismo recorrido por las
 dieciséis plantas; lo único que cambia es a quién llega.

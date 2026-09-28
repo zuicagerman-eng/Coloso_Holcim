@@ -77,6 +77,22 @@ const ENSAYO = {
   maxPlantas: 3
 };
 
+/**
+ * Plantas que NO reciben el correo del martes.
+ *
+ * Siguen existiendo en todo lo demás: su enlace funciona, aparecen en el
+ * selector, se pueden solicitar sus capacitaciones y salen al mirar "todas
+ * las plantas". Lo único que no pasa es que les llegue el correo.
+ *
+ * Quitarlas de CORREOS_PLANTA sería otra cosa: desaparecerían del reporte y
+ * su gente dejaría de contar en ningún lado.
+ */
+const PLANTAS_SIN_ENVIO = [
+  "HC-NOBSA CEMENTO",
+  "HC-NOBSA CONCRETO",
+  "HC-TUNJA"
+];
+
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
 const CORREOS_PLANTA = {
   "AF-NOBSA":           "carlos.vargash@holcim.com, maria.diazp@holcim.com, leidy.rodriguez@holcim.com, german.zuica@holcim.com",
@@ -214,7 +230,7 @@ const CORREO_TABLA = {
  * Más minutos = abre más rápido, pero una corrección en la matriz tarda más en
  * verse. limpiarCache() lo fuerza cuando hace falta verlo ya.
  */
-const CACHE_MINUTOS = 15;
+const CACHE_MINUTOS = 90;
 
 /**
  * Minutos que se permite el envío semanal antes de parar por su cuenta.
@@ -929,7 +945,8 @@ function doGet(e) {
   }
 
   const plantilla = HtmlService.createTemplateFromFile("reporte");
-  plantilla.datosJson       = JSON.stringify(datos.r || []);
+  plantilla.datosJson       = JSON.stringify((datos.r || []).map(aligerar));
+  plantilla.cursosJson      = JSON.stringify(infoDeCursos());
   plantilla.gestionadasJson = JSON.stringify(datos.g || []);
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
@@ -1023,6 +1040,35 @@ function cacheLeer(clave) {
  * dieciséis plantas de golpe. Antes cada planta pagaba su propia lectura
  * completa, así que la misma matriz se leía dieciséis veces por ciclo.
  */
+/**
+ * El registro sin lo que el navegador puede deducir.
+ *
+ * `cat` y `grupo` dependen del curso, no de la persona, así que repetirlos en
+ * cada uno de los miles de registros es peso puro: los mismos sesenta y dos
+ * valores una y otra vez. Viajan aparte, en una tabla, y el tablero los
+ * repone al recibirlos. El servidor sí los conserva: el correo del martes los
+ * necesita.
+ */
+function aligerar(r) {
+  return {
+    planta: r.planta, nombre: r.nombre, id: r.id, pos: r.pos,
+    curso:  r.curso,  fecha:  r.fecha,  dias: r.dias, urg: r.urg
+  };
+}
+
+/** { curso: [categoría, grupo] } para que el tablero los reponga. */
+function infoDeCursos() {
+  const mapa = {};
+  const anotar = function (curso) {
+    if (mapa[curso]) return;
+    const cat = categoriaDe(curso);
+    mapa[curso] = [cat ? cat[0] : CATEGORIA_POR_DEFECTO, grupoDeCurso(curso)];
+  };
+  Object.keys(mapaEstandares()).forEach(anotar);
+  Object.keys(CATEGORIA_CURSO).forEach(anotar);
+  return mapa;
+}
+
 function registrosDePlanta(planta) {
   const guardado = cacheLeer(claveDeCache(planta));
   if (guardado) {
@@ -1089,7 +1135,8 @@ function registrosDeOtraPlanta(pedida) {
   if (!planta) {
     throw new Error("No reconozco la planta «" + String(pedida == null ? "" : pedida).slice(0, 40) + "».");
   }
-  return registrosDePlanta(planta);
+  const datos = registrosDePlanta(planta);
+  return { r: (datos.r || []).map(aligerar), g: datos.g || [] };
 }
 
 /**
@@ -1609,7 +1656,7 @@ function enviarEnlacesSemanales() {
   const enEnsayo = String((ENSAYO && ENSAYO.correo) || "").trim();
   const tope     = enEnsayo ? (ENSAYO.maxPlantas || 0) : 0;
 
-  const linea = [], pendientes = [], repetidas = [];
+  const linea = [], pendientes = [], repetidas = [], apagadas = [];
   let hechas = 0;
 
   if (enEnsayo) {
@@ -1629,6 +1676,8 @@ function enviarEnlacesSemanales() {
                  CORREOS_PLANTA[planta] + "\n          " + enlace);
       return;
     }
+
+    if (PLANTAS_SIN_ENVIO.indexOf(planta) !== -1) { apagadas.push(planta); return; }
 
     if (enEnsayo) {
       if (tope && hechas >= tope) return;
@@ -1667,6 +1716,11 @@ function enviarEnlacesSemanales() {
     linea.push("enviado  " + planta + "  " + registros.length + " registros -> " + CORREOS_PLANTA[planta]);
   });
 
+  if (apagadas.length) {
+    linea.push("");
+    linea.push("SIN CORREO por configuración (PLANTAS_SIN_ENVIO): " + apagadas.join(", "));
+    linea.push("  Su enlace sigue funcionando; simplemente no se les manda.");
+  }
   if (repetidas.length) {
     linea.push("");
     linea.push("OMITIDAS porque ya salieron hoy: " + repetidas.join(", "));
@@ -2158,7 +2212,8 @@ function descargarHtmlCompleto(sinPendientes) {
   }
 
   const plantilla = HtmlService.createTemplateFromFile("reporte");
-  plantilla.datosJson     = JSON.stringify(registros);
+  plantilla.datosJson     = JSON.stringify(registros.map(aligerar));
+  plantilla.cursosJson    = JSON.stringify(infoDeCursos());
   plantilla.corteTxt      = Utilities.formatDate(new Date(), CFG.ZONA, "d MMM yyyy · HH:mm");
   plantilla.corteIso      = Utilities.formatDate(new Date(), CFG.ZONA, "yyyy-MM-dd");
   plantilla.logo          = logoIncrustado();
