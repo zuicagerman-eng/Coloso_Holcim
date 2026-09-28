@@ -47,11 +47,13 @@ const URL_APP = "https://script.google.com/a/macros/holcim.com/s/AKfycbx40AQr3aB
  * aviso de hoy vuelve a salir el martes que viene, cuando ya no significa
  * nada. enviarEnlacesSemanales() lo recuerda en el registro cada vez que
  * envía con un aviso puesto.
+ *
+ * Por eso mismo viene vacío: un aviso de hoy repetido dentro de una semana
+ * dice algo que ya no es cierto.
  */
 const AVISO_CORREO = {
-  texto: "Este informe <b>reemplaza al que les llegó esta mañana</b>: el enlace que " +
-         "llevaba no abría. Ya está corregido y verificado. Una disculpa por el inconveniente.",
-  prefijoAsunto: "Corrección · "
+  texto:         "",
+  prefijoAsunto: ""
 };
 
 /**
@@ -71,9 +73,14 @@ const AVISO_CORREO = {
  * hacer el envío real sin tener que borrar ninguna marca.
  *
  * maxPlantas: 0 son todas. Poner 2 o 3 si no quiere dieciséis correos.
+ *
+ * VIENE VACÍO A PROPÓSITO. Un ensayo olvidado no da error: el activador corre,
+ * el registro dice "ENSAYO TERMINADO" y ninguna planta recibe nada. Eso no se
+ * nota hasta el reclamo, así que el archivo nunca sale con esto puesto: se
+ * llena para ensayar y se vuelve a vaciar al terminar.
  */
 const ENSAYO = {
-  correo:     "german.zuica@holcim.com",
+  correo:     "",
   maxPlantas: 3
 };
 

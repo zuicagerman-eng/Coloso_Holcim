@@ -174,6 +174,14 @@ quita al serializar para el navegador y `infoDeCursos()` manda la tabla; el
 tablero los repone al recibir. El servidor los conserva, que el correo del
 martes los necesita.
 
+**`ENSAYO.correo` y `AVISO_CORREO.texto` van vacíos en el archivo, siempre.**
+Se llenan para usarlos y se vacían al terminar. Un ensayo olvidado no da error:
+el activador corre, el registro dice «ENSAYO TERMINADO» y ninguna planta recibe
+nada, cosa que no se nota hasta el reclamo. Y un aviso olvidado vuelve a salir
+el martes siguiente diciendo algo que ya no es cierto. Por eso el archivo no
+sale nunca con ninguno de los dos puesto, aunque eso obligue a escribirlos cada
+vez. `URL_APP` es distinto: ahí el valor puesto es lo seguro.
+
 **`ENSAYO.correo` hace el envío de verdad, pero a una sola dirección.** El
 mismo enlace, la misma tabla, el mismo Excel y el mismo recorrido por las
 dieciséis plantas; lo único que cambia es a quién llega.
