@@ -1591,7 +1591,7 @@ function armarCorreoDePlanta(planta, registros, enlace, fecha) {
     "</div>";
 
   return {
-    asunto: (AVISO_CORREO.prefijoAsunto || "") + "Informe semanal de capacitaciones · " + planta,
+    asunto: (avisoConfig().prefijoAsunto || "") + "Informe semanal de capacitaciones · " + planta,
     cuerpo: cuerpo
   };
 }
@@ -1606,9 +1606,30 @@ function avisoDeEnsayo(planta) {
          "</p>";
 }
 
+/**
+ * Los dos ajustes opcionales, tolerando que no estén.
+ *
+ * Son los únicos que se vacían a mano cada vez, y vaciar a veces se hace
+ * borrando la constante entera. Eso tumbaba el correo con un
+ * "AVISO_CORREO is not defined" que no dice nada a quien lo ve. Borrarlos es
+ * una forma legítima de apagarlos, así que el código lo admite.
+ */
+function avisoConfig() {
+  return (typeof AVISO_CORREO === "undefined" || !AVISO_CORREO)
+    ? { texto: "", prefijoAsunto: "" } : AVISO_CORREO;
+}
+function ensayoConfig() {
+  return (typeof ENSAYO === "undefined" || !ENSAYO)
+    ? { correo: "", maxPlantas: 0 } : ENSAYO;
+}
+function plantasSinEnvio() {
+  return (typeof PLANTAS_SIN_ENVIO === "undefined" || !PLANTAS_SIN_ENVIO)
+    ? [] : PLANTAS_SIN_ENVIO;
+}
+
 /** El recuadro del aviso puntual, o nada si no hay aviso puesto. */
 function avisoDelCorreo() {
-  const texto = String((AVISO_CORREO && AVISO_CORREO.texto) || "").trim();
+  const texto = String(avisoConfig().texto || "").trim();
   if (!texto) return "";
   // El texto lo escribe quien configura el script, no llega de fuera, así que
   // se deja pasar el HTML: hace falta para poner una negrita o un enlace.
@@ -1660,8 +1681,8 @@ function enviarEnlacesSemanales() {
   const clave   = claveDeEnviosDeHoy();
   const yaSalio = leerEnviadas(props, clave);
 
-  const enEnsayo = String((ENSAYO && ENSAYO.correo) || "").trim();
-  const tope     = enEnsayo ? (ENSAYO.maxPlantas || 0) : 0;
+  const enEnsayo = String(ensayoConfig().correo || "").trim();
+  const tope     = enEnsayo ? (ensayoConfig().maxPlantas || 0) : 0;
 
   const linea = [], pendientes = [], repetidas = [], apagadas = [];
   let hechas = 0;
@@ -1684,7 +1705,7 @@ function enviarEnlacesSemanales() {
       return;
     }
 
-    if (PLANTAS_SIN_ENVIO.indexOf(planta) !== -1) { apagadas.push(planta); return; }
+    if (plantasSinEnvio().indexOf(planta) !== -1) { apagadas.push(planta); return; }
 
     if (enEnsayo) {
       if (tope && hechas >= tope) return;
@@ -1740,11 +1761,11 @@ function enviarEnlacesSemanales() {
     linea.push("  las ya enviadas no se repiten.");
   }
 
-  if (String((AVISO_CORREO && AVISO_CORREO.texto) || "").trim()) {
+  if (String(avisoConfig().texto || "").trim()) {
     linea.push("");
     linea.push("AVISO PUESTO EN EL CORREO — acuérdese de vaciar AVISO_CORREO.");
     linea.push("  Si se queda, este mismo aviso vuelve a salir el martes que viene.");
-    linea.push("  texto: " + AVISO_CORREO.texto.replace(/<[^>]+>/g, "").slice(0, 90) + "…");
+    linea.push("  texto: " + avisoConfig().texto.replace(/<[^>]+>/g, "").slice(0, 90) + "…");
   }
 
   if (enEnsayo) {

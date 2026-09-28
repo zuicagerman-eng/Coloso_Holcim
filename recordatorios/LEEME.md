@@ -174,6 +174,12 @@ quita al serializar para el navegador y `infoDeCursos()` manda la tabla; el
 tablero los repone al recibir. El servidor los conserva, que el correo del
 martes los necesita.
 
+**Borrar un ajuste opcional es una forma legítima de apagarlo.** `AVISO_CORREO`,
+`ENSAYO` y `PLANTAS_SIN_ENVIO` se leen por `avisoConfig()`, `ensayoConfig()` y
+`plantasSinEnvio()`, que devuelven un valor vacío si la constante no está. Antes
+borrarla tumbaba el correo entero con un «AVISO_CORREO is not defined» que no
+le dice nada a quien lo ve.
+
 **`ENSAYO.correo` y `AVISO_CORREO.texto` van vacíos en el archivo, siempre.**
 Se llenan para usarlos y se vacían al terminar. Un ensayo olvidado no da error:
 el activador corre, el registro dice «ENSAYO TERMINADO» y ninguna planta recibe
