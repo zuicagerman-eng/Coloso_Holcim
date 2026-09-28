@@ -10,7 +10,7 @@ var CONFIG = {
    * lo que está corriendo es la versión anterior: se guardó con Ctrl+S
    * pero faltó Administrar implementaciones → ✏️ → Versión: Nueva.
    */
-  VERSION: '2026-09-28 · 5',
+  VERSION: '2026-09-28 · 6',
 
   /**
    * ► CORREOS QUE RECIBEN EL AVISO ◄

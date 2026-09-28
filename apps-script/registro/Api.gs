@@ -248,3 +248,124 @@ function pruebaDeEscritura() {
   console.log(JSON.stringify(resultado));
   return resultado;
 }
+
+/* ====================================================================
+   PRUEBA DE VERDAD, SIN MOLESTAR A NADIE
+
+   Hace el recorrido completo —guarda la fila, manda el aviso y manda la
+   constancia— pero los dos correos salen SOLO a CONFIG.CORREO_SOPORTE.
+   Nadie más recibe nada: ni la lista de avisos ni ningún proveedor.
+
+   La fila queda en la hoja para poder verla dentro de la tabla, con su
+   fórmula y su chip. Cuando termine de mirarla, `borrarFilaDePrueba`
+   la quita: no hay que borrar nada a mano.
+   ==================================================================== */
+
+var MARCA_DE_PRUEBA = 'PRUEBA DEL SISTEMA — BORRAR';
+
+function pruebaCompleta() {
+  var destino = String(CONFIG.CORREO_SOPORTE || '').trim();
+  if (!destino) return 'Falta CORREO_SOPORTE en Config.gs: sin eso no sé a quién mandarle la prueba.';
+
+  /* Un NIT que no se repite: los segundos del reloj. Así la prueba se
+     puede repetir sin chocar con la regla de "ese NIT ya está registrado". */
+  var nit = String(Math.floor(new Date().getTime() / 1000)).slice(-9);
+  var datos = {
+    tipoSolicitud: 'Solicitud de creación',
+    nit: nit,
+    nombreEmpresa: MARCA_DE_PRUEBA,
+    correoEmpresa: destino,      /* la constancia del "proveedor" también llega aquí */
+    correoRegistra: ''
+  };
+
+  /* Mientras dura la prueba, la lista de avisos es una sola dirección.
+     Se devuelve como estaba pase lo que pase. */
+  var listaReal = CONFIG.NOTIFICAR_A;
+  var ocultaReal = CONFIG.CON_COPIA_OCULTA;
+  CONFIG.NOTIFICAR_A = [destino];
+  CONFIG.CON_COPIA_OCULTA = [];
+
+  var guardado;
+  try {
+    guardado = guardarEmpresa_(datos);
+    if (!guardado.ok) return 'No se pudo registrar la prueba: ' + (guardado.errores || []).join(' ');
+    avisarDeRegistro_(datos, guardado.id);
+  } finally {
+    CONFIG.NOTIFICAR_A = listaReal;
+    CONFIG.CON_COPIA_OCULTA = ocultaReal;
+  }
+
+  var informe = informeDePrueba_(guardado.id, destino, listaReal);
+  console.log(informe);
+  return informe;
+}
+
+/** Los de la lista de avisos que NO recibieron la prueba. */
+function quedaronFuera_(listaReal, destino) {
+  return (listaReal || []).filter(function (c) {
+    return c && String(c).toLowerCase() !== String(destino).toLowerCase();
+  }).join(', ');
+}
+
+function informeDePrueba_(id, destino, listaReal) {
+  var hoja = hoja_(CONFIG.HOJAS.EMPRESAS);
+  var fila = hoja.getLastRow();
+  var encabezados = encabezadosDe_(hoja);
+
+  var lineas = [
+    'PRUEBA COMPLETA — versión ' + (CONFIG.VERSION || '(sin marcar)'),
+    '',
+    'Radicado:  ' + id + '   (fila ' + fila + ' de la hoja)',
+    'Correos:   los dos salieron SOLO a ' + destino,
+    '             · el aviso al equipo',
+    '             · la constancia, como si usted fuera el proveedor',
+    'NO recibió nada: ' + (quedaronFuera_(listaReal, destino) || 'nadie más, la lista era solo usted'),
+    ''
+  ];
+
+  /* Qué le quedó a la fila en las columnas que no llena el formulario */
+  var propias = ['ID', 'Fecha', 'Tipo de solicitud', 'NIT', 'DV', 'Nombre empresa', 'Correo'];
+  lineas.push('Columnas de la tabla en esa fila:');
+  encabezados.forEach(function (columna, i) {
+    var llave = String(columna).trim();
+    if (!llave || propias.indexOf(llave) >= 0) return;
+    var celda = hoja.getRange(fila, i + 1);
+    var tiene = [];
+    if (celda.getFormula()) tiene.push('fórmula');
+    if (celda.getDataValidation && celda.getDataValidation()) tiene.push('lista');
+    if (String(celda.getDisplayValue()).trim()) tiene.push('muestra "' + celda.getDisplayValue() + '"');
+    lineas.push('  ' + llave + ': ' + (tiene.length ? tiene.join(', ') : 'vacía, sin fórmula ni lista'));
+  });
+
+  lineas.push('');
+  lineas.push('Ahora abra la hoja y mire la fila ' + fila + ': tiene que verse DENTRO');
+  lineas.push('de la tabla, con sus chips de colores como las de arriba.');
+  lineas.push('');
+  lineas.push('Cuando termine de mirar, ejecute   borrarFilaDePrueba');
+  lineas.push('(en la hoja CORREOS quedan dos renglones de la prueba; se');
+  lineas.push('reconocen por el nombre ' + MARCA_DE_PRUEBA + ').');
+  return lineas.join('\n');
+}
+
+/** Quita la fila que dejó `pruebaCompleta`. No toca ninguna otra. */
+function borrarFilaDePrueba() {
+  var hoja = hoja_(CONFIG.HOJAS.EMPRESAS);
+  if (hoja.getLastRow() < 2) return 'La hoja no tiene filas de datos.';
+
+  var encabezados = encabezadosDe_(hoja);
+  var columnaNombre = encabezados.indexOf('Nombre empresa') + 1;
+  var columnaId = encabezados.indexOf('ID') + 1;
+  if (!columnaNombre) return 'No encuentro la columna "Nombre empresa".';
+
+  /* De abajo hacia arriba: la de prueba es la última que se registró. */
+  for (var fila = hoja.getLastRow(); fila >= 2; fila--) {
+    var nombre = String(hoja.getRange(fila, columnaNombre).getValue()).trim().toUpperCase();
+    if (nombre !== MARCA_DE_PRUEBA.toUpperCase()) continue;
+    var id = columnaId ? String(hoja.getRange(fila, columnaId).getValue()).trim() : '';
+    hoja.deleteRow(fila);
+    return 'Borré la fila ' + fila + ' (' + id + ', ' + MARCA_DE_PRUEBA + '). ' +
+           'Las demás quedaron como estaban.';
+  }
+  return 'No encontré ninguna fila de prueba. Si ve una, es que le cambiaron el ' +
+         'nombre: bórrela a mano.';
+}

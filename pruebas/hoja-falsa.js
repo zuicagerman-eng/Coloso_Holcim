@@ -63,6 +63,9 @@ function hojaFalsa(nombre, libro, encabezados) {
           return this;
         },
         setValue: function (v) { en(fila, col).valor = v; return this; },
+        getValue: function () { return en(fila, col).valor; },
+        getDisplayValue: function () { return String(en(fila, col).valor); },
+        getDataValidation: function () { return en(fila, col).validacion || null; },
         getFormula: function () { return en(fila, col).formula; },
         setFormula: function (f) { en(fila, col).formula = f; return this; },
         setValidacion: function (v) { en(fila, col).validacion = v; return this; },
@@ -94,6 +97,7 @@ function hojaFalsa(nombre, libro, encabezados) {
     },
 
     setFrozenRows: function () {}, autoResizeColumns: function () {},
+    deleteRow: function (n) { celdas.splice(n - 1, 1); },
 
     /* Ayudas para las pruebas, no para el código */
     fila: function (n) { return (celdas[n - 1] || []).map(function (c) { return c.formula || c.valor; }); },

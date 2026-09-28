@@ -252,6 +252,27 @@ nada, ejecute `diagnostico` desde `Hoja.gs`.
 Si algún día se agrega una columna a la tabla, no hay nada que tocar en el
 código: mientras la fila de arriba la tenga puesta, la nueva la hereda.
 
+## Probar de verdad, sin molestar a nadie
+
+En el proyecto de REGISTRO, archivo `Api.gs`:
+
+    pruebaCompleta()
+
+Hace el recorrido completo contra la hoja de verdad —guarda la fila, manda el
+aviso y manda la constancia—, pero **los dos correos salen solo a
+`CORREO_SOPORTE`**. Ni la lista de avisos ni ningún proveedor reciben nada. El
+registro de ejecución dice a quién le llegó, qué le quedó a la fila en las
+columnas de la tabla y en qué fila mirar.
+
+La fila queda puesta para poder verla dentro de la tabla. Cuando termine:
+
+    borrarFilaDePrueba()
+
+Quita esa fila y solo esa —la reconoce por el nombre *PRUEBA DEL SISTEMA —
+BORRAR*—, así que no hay que borrar nada a mano ni arriesgarse a llevarse por
+delante un registro de verdad. En la hoja CORREOS quedan los dos renglones de
+la prueba, con ese mismo nombre.
+
 ## Saber si un correo salió
 
 La hoja **CORREOS** anota cada envío: fecha, radicado, tipo —aviso al equipo o

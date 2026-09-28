@@ -98,6 +98,21 @@ fórmulas, como la hoja de verdad—.
 
 ---
 
+    node pruebas/prueba-real.js
+
+`pruebaCompleta` hace el recorrido entero contra la hoja de verdad: guarda la
+fila, manda el aviso y manda la constancia. Lo que no puede hacer, ni una vez,
+es escribirle a la lista de avisos o a un proveedor: la prueba es para ver que
+todo funciona, no para molestar a nadie.
+
+Comprueba que los dos correos salen **solo** a `CORREO_SOPORTE`, que la lista
+de avisos queda intacta después —se cambia durante la prueba y se devuelve en
+un `finally`, así que ni un error la deja mal—, que la fila de prueba hereda
+las columnas de la tabla, y que `borrarFilaDePrueba` quita esa y solo esa.
+
+
+---
+
 El buscador de empresas se prueba en el navegador, no desde node: vive en la
 página. `scratchpad/e2e/buscador.html` lo ejercita con datos de mentiras —
 buscar por nombre, por NIT, sin tildes, sin coincidencias, y elegir con las
