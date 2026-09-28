@@ -36,6 +36,30 @@ razón muchos rechazarían. Separados, solo le pide **ver su dirección de corre
 
 ---
 
+## Cuál es cuál
+
+Abiertos los dos en el editor se parecen. Se distinguen sin equivocarse por la
+lista de archivos de la izquierda:
+
+| | REGISTRO | FORMULARIO |
+|---|---|---|
+| **Archivos** | `Config.gs` · `Api.gs` · `Hoja.gs` · `Correo.gs` · `Validaciones.gs` | `Config.gs` · `Codigo.gs` · **`pagina.html`** |
+| **Se reconoce por** | Son **cinco** archivos y ninguno es HTML | Es el único que tiene **`pagina.html`** |
+| **Cómo se abre** | Desde la hoja: *Extensiones → Apps Script* | Desde script.google.com, o su propia pestaña |
+| **Qué hace** | Escribe en la hoja y manda los correos | Entrega la página que ve el proveedor |
+| **Qué se toca ahí** | Correos de aviso, textos de la constancia, columnas, copia a otra hoja | Nada, salvo pegar `pagina.html` cuando cambia el diseño |
+
+Los dos tienen un archivo llamado `Config.gs`, y **no son el mismo**: el del
+registro lleva los correos y las columnas; el del formulario lleva la dirección
+del servicio de registro. Pegar uno donde va el otro es el error fácil de
+cometer — si pasa, el editor se queja de que `CONFIG.HOJAS` no existe.
+
+Después de pegar archivos en cualquiera de los dos: **Ctrl+S**, y luego
+*Implementar → Administrar implementaciones → ✏️ → Versión: Nueva*. Cada
+proyecto se implementa por su cuenta; implementar uno no publica el otro.
+
+---
+
 ## 1. Servicio de REGISTRO
 
 Es el que ya está montado, ligado a la hoja de cálculo.
