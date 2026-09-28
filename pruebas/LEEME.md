@@ -113,6 +113,19 @@ las columnas de la tabla, y que `borrarFilaDePrueba` quita esa y solo esa.
 
 ---
 
+    node pruebas/radicados.js
+
+El radicado es lo único que tiene la empresa para preguntar por su solicitud,
+así que no puede repetirse. Salía de **contar filas**, y eso lo repetía: al
+borrar una fila, el siguiente registro reusaba un número que ya estaba en la
+hoja —la prueba del 28 de septiembre entró como `EMP-2026-0003` cuando esa
+empresa ya existía—. Ahora sale del número más alto escrito en la columna ID,
+así que no choca con ninguna fila viva; el número de una fila borrada sí queda
+libre otra vez, que es lo que se quiere para las pruebas y los errores.
+
+
+---
+
 El buscador de empresas se prueba en el navegador, no desde node: vive en la
 página. `scratchpad/e2e/buscador.html` lo ejercita con datos de mentiras —
 buscar por nombre, por NIT, sin tildes, sin coincidencias, y elegir con las

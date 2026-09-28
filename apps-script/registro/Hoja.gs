@@ -316,11 +316,33 @@ function existe_(nombreHoja, nombreColumna, valor) {
   return columna_(nombreHoja, nombreColumna).indexOf(objetivo) >= 0;
 }
 
-/** Consecutivo por año: EMP-2026-0007 */
+/**
+ * Consecutivo por año: EMP-2026-0007.
+ *
+ * Sale del número MÁS ALTO que ya esté escrito en la columna ID, no de
+ * cuántas filas hay. Contando filas, borrar una hacía que el siguiente
+ * registro repitiera un radicado que ya se le había dado a una empresa
+ * —y el radicado es justo lo que ella tiene para preguntar por su
+ * solicitud—. Así los números nunca van para atrás, aunque se borren
+ * filas o se agreguen a mano.
+ */
 function siguienteId_(prefijo, nombreHoja) {
   var hoja = hoja_(nombreHoja);
-  var cuantas = Math.max(0, hoja.getLastRow() - 1);
-  return prefijo + '-' + new Date().getFullYear() + '-' + ('0000' + (cuantas + 1)).slice(-4);
+  var anio = new Date().getFullYear();
+  var mayor = 0;
+
+  if (hoja.getLastRow() >= 2) {
+    var columnaId = encabezadosDe_(hoja).indexOf('ID') + 1;
+    if (columnaId) {
+      var patron = new RegExp('^' + prefijo + '-' + anio + '-(\\d+)$', 'i');
+      hoja.getRange(2, columnaId, hoja.getLastRow() - 1, 1).getValues().forEach(function (f) {
+        var encontrado = patron.exec(String(f[0]).trim());
+        if (encontrado) mayor = Math.max(mayor, Number(encontrado[1]));
+      });
+    }
+  }
+
+  return prefijo + '-' + anio + '-' + ('0000' + (mayor + 1)).slice(-4);
 }
 
 /**
