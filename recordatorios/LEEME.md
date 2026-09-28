@@ -182,6 +182,15 @@ quita al serializar para el navegador y `infoDeCursos()` manda la tabla; el
 tablero los repone al recibir. El servidor los conserva, que el correo del
 martes los necesita.
 
+**Ningún carácter especial suelto dentro del código.** El espacio duro de
+Sheets, las tildes de las expresiones regulares y los guiones largos van
+escritos como `\u00a0`, `\u00c1`, `\u2014`. El espacio duro era el peligroso:
+puesto tal cual es **invisible** en el editor, y al copiar y pegar el archivo
+—que es como se instala esto— se convierte en otra cosa y el script deja de
+compilar con un «Invalid or unexpected token» que señala una línea que se ve
+perfectamente bien. Los comentarios sí llevan tildes: si uno se estropea, no
+pasa nada.
+
 **Borrar un ajuste opcional es una forma legítima de apagarlo.** `AVISO_CORREO`,
 `ENSAYO` y `PLANTAS_SIN_ENVIO` se leen por `avisoConfig()`, `ensayoConfig()` y
 `plantasSinEnvio()`, que devuelven un valor vacío si la constante no está. Antes

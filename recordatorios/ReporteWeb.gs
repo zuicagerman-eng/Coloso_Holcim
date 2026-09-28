@@ -447,11 +447,15 @@ const CATEGORIA_POR_DEFECTO = "Interna / formación";
 
 /**
  * Texto comparable: sin espacio duro, sin espacios de sobra, en mayúscula.
- * El espacio duro ( ) viene de Sheets y rompe las comparaciones sin que se vea.
+ * El espacio duro (U+00A0) viene de Sheets y rompe las comparaciones sin que
+ * se vea. Se escribe \u00a0 y no el carácter suelto: puesto tal cual es
+ * invisible en el editor, y al copiar y pegar el archivo se convierte en otra
+ * cosa y el script deja de compilar con un "Invalid or unexpected token" que
+ * señala una línea que se ve perfectamente bien.
  */
 function normalizar(valor) {
   return String(valor == null ? "" : valor)
-    .replace(/ /g, " ")
+    .replace(/\u00a0/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .toUpperCase();
@@ -459,7 +463,7 @@ function normalizar(valor) {
 
 /** Los nombres de curso en la fila 6 traen espacios al inicio; hay que limpiarlos. */
 function limpiarCurso(valor) {
-  return String(valor == null ? "" : valor).replace(/ /g, " ").replace(/\s+/g, " ").trim();
+  return String(valor == null ? "" : valor).replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function urgenciaPorDias(dias) {
@@ -492,7 +496,7 @@ function categoriaDeCalculada(curso) {
 function categoriaDelEstandar(curso) {
   const est = mapaEstandares()[curso];
   if (!est) return "";
-  const limpio = String(est).replace(/^[A-ZÁÉÍÓÚÑ]{2,6}[\s._-]*\d{1,4}[\s.:-]*/i, "").trim();
+  const limpio = String(est).replace(/^[A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00d1]{2,6}[\s._-]*\d{1,4}[\s.:-]*/i, "").trim();
   return limpio || String(est).trim();
 }
 
@@ -614,7 +618,7 @@ function leerEstandares(encabezados, bloques) {
       if (!v) return;
       conValor++;
       distintos[v] = true;
-      if (/^[A-ZÁÉÍÓÚÑ]{2,6}[\s._-]*\d{1,3}\b/.test(v)) codigos++;
+      if (/^[A-Z\u00c1\u00c9\u00cd\u00d3\u00da\u00d1]{2,6}[\s._-]*\d{1,3}\b/.test(v)) codigos++;
       if (/^[\d.,\s]+$/.test(v)) numeros++;
     });
 
@@ -746,7 +750,7 @@ function limpiarEstandar(valor) {
 
   // 3. Hasta un guión o dos puntos que separen una aclaración. Se exige el
   //    espacio a ambos lados para no partir "HSE-001" ni "Vigía/Entrante".
-  t = t.split(/\s+[-–—]\s+/)[0];
+  t = t.split(/\s+[-\u2013\u2014]\s+/)[0];
   t = t.split(/\s+[:;]\s+/)[0];
 
   // 4. Y hasta un arranque de aclaración reconocible, por si no trae ninguna
@@ -763,15 +767,15 @@ function limpiarEstandar(valor) {
   // Se limpia la puntuación que quede colgando, pero NO los paréntesis de
   // cierre: "(SGAS)" es parte del nombre. Si el corte dejó uno abierto sin
   // cerrar, se quita desde ahí.
-  t = t.replace(/[\s.,;:·*\-–—]+$/, "").trim();
+  t = t.replace(/[\s.,;:\u00b7*\-\u2013\u2014]+$/, "").trim();
   const abre = (t.match(/\(/g) || []).length, cierra = (t.match(/\)/g) || []).length;
-  if (abre > cierra) t = t.slice(0, t.lastIndexOf("(")).replace(/[\s.,;:·*\-–—]+$/, "").trim();
+  if (abre > cierra) t = t.slice(0, t.lastIndexOf("(")).replace(/[\s.,;:\u00b7*\-\u2013\u2014]+$/, "").trim();
 
   if (t.length <= ESTANDAR_MAX) return t;
   // Cortar en la última palabra completa que quepa, no a mitad de palabra
   const corte = t.slice(0, ESTANDAR_MAX);
   const esp = corte.lastIndexOf(" ");
-  return (esp > ESTANDAR_MAX * 0.6 ? corte.slice(0, esp) : corte).replace(/[\s.,;:·-]+$/, "") + "…";
+  return (esp > ESTANDAR_MAX * 0.6 ? corte.slice(0, esp) : corte).replace(/[\s.,;:\u00b7-]+$/, "") + "\u2026";
 }
 
 /** Largo máximo del nombre de un estándar. Más allá no cabe en ningún sitio. */
