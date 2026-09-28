@@ -156,6 +156,14 @@ exista, que no sea pasada, que el año sea razonable— y si no cuadra la ignora
 silencio en vez de tumbar la solicitud. Cuando viene, sale destacada en el correo
 y en el asunto.
 
+**`PLANTAS_SIN_ENVIO` compara por trozo del nombre, no por igualdad.** «NOBSA»
+apaga AF-NOBSA, CJ-NOBSA, HC-NOBSA CEMENTO y HC-NOBSA CONCRETO de una vez, y
+cubre la que se cree mañana. Listarlas a mano era la forma de dejarse dos
+fuera: cuando alguien dice «la planta de Nobsa» habla de la sede, no de cada
+unidad de negocio por separado. `probar()` y el registro del envío escriben
+cuáles quedaron apagadas de verdad, para que un trozo demasiado corto no apague
+algo sin querer.
+
 **`PLANTAS_SIN_ENVIO` apaga el correo de una planta sin borrarla.** Sigue
 teniendo enlace, aparece en el selector, se pueden solicitar sus
 capacitaciones y cuenta en «todas las plantas». Lo único que no pasa es que le

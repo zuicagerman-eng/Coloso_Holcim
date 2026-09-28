@@ -93,11 +93,18 @@ const ENSAYO = {
  *
  * Quitarlas de CORREOS_PLANTA sería otra cosa: desaparecerían del reporte y
  * su gente dejaría de contar en ningún lado.
+ *
+ * Basta un trozo del nombre: "NOBSA" apaga AF-NOBSA, CJ-NOBSA, HC-NOBSA
+ * CEMENTO y HC-NOBSA CONCRETO de una vez, y cubre la que se cree mañana. Es
+ * lo que se quiere decir con "toda la planta": la sede, no cada unidad de
+ * negocio por separado, que era lo que se me escapaba al listarlas a mano.
+ *
+ * probar() y el registro del envío escriben cuáles quedaron apagadas de
+ * verdad, para que un trozo demasiado corto no apague algo sin querer.
  */
 const PLANTAS_SIN_ENVIO = [
-  "HC-NOBSA CEMENTO",
-  "HC-NOBSA CONCRETO",
-  "HC-TUNJA"
+  "NOBSA",     // AF-NOBSA, CJ-NOBSA, HC-NOBSA CEMENTO, HC-NOBSA CONCRETO
+  "TUNJA"      // HC-TUNJA
 ];
 
 /** Destinatarios por planta. La llave es el nombre EXACTO de la división. */
@@ -1448,8 +1455,22 @@ function probar() {
   linea.push("POR PLANTA");
   Object.keys(CORREOS_PLANTA).sort().forEach(function (p) {
     const n = porPlanta[p] || 0;
-    linea.push("  " + (n === 0 ? "(sin novedades) " : "                ") + p + ": " + n);
+    linea.push("  " + (n === 0 ? "(sin novedades) " : "                ") + p + ": " + n +
+               (sinEnvio(p) ? "   <- SIN CORREO" : ""));
   });
+  linea.push("");
+
+  const apagadas = plantasApagadas();
+  linea.push("PLANTAS SIN CORREO  (PLANTAS_SIN_ENVIO = " +
+             plantasSinEnvio().map(function (t) { return '"' + t + '"'; }).join(", ") + ")");
+  if (apagadas.length) {
+    apagadas.forEach(function (p) { linea.push("  " + p); });
+    linea.push("  Siguen con enlace y en el selector; solo no reciben el correo.");
+  } else {
+    linea.push("  ninguna — todas reciben");
+  }
+  linea.push("  RECIBEN (" + (Object.keys(CORREOS_PLANTA).length - apagadas.length) + "): " +
+             Object.keys(CORREOS_PLANTA).filter(function (p) { return !sinEnvio(p); }).join(", "));
   linea.push("");
 
   linea.push("AVISOS");
@@ -1627,6 +1648,22 @@ function plantasSinEnvio() {
     ? [] : PLANTAS_SIN_ENVIO;
 }
 
+/** ¿Esta planta está apagada? Compara por trozo del nombre, no por igualdad. */
+function sinEnvio(planta) {
+  const nombre = normalizar(planta);
+  const lista  = plantasSinEnvio();
+  for (let i = 0; i < lista.length; i++) {
+    const trozo = normalizar(lista[i]);
+    if (trozo && nombre.indexOf(trozo) !== -1) return true;
+  }
+  return false;
+}
+
+/** Las plantas que hoy quedan sin correo, ya resueltas. Para poder mirarlas. */
+function plantasApagadas() {
+  return Object.keys(CORREOS_PLANTA).filter(sinEnvio);
+}
+
 /** El recuadro del aviso puntual, o nada si no hay aviso puesto. */
 function avisoDelCorreo() {
   const texto = String(avisoConfig().texto || "").trim();
@@ -1705,7 +1742,7 @@ function enviarEnlacesSemanales() {
       return;
     }
 
-    if (plantasSinEnvio().indexOf(planta) !== -1) { apagadas.push(planta); return; }
+    if (sinEnvio(planta)) { apagadas.push(planta); return; }
 
     if (enEnsayo) {
       if (tope && hechas >= tope) return;
