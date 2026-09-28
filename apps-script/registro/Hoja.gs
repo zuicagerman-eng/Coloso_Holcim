@@ -93,14 +93,69 @@ function agregarFila_(nombreHoja, fila) {
   var hoja = hoja_(nombreHoja);
   /* hoja_ acaba de leer los encabezados para verificarlos; se reutilizan
      en vez de volver a pedirlos. Cada lectura es un viaje a la hoja. */
-  hoja.appendRow(enOrden_(encabezadosDe_(hoja), fila));
+  var destino = escribirFilaNueva_(hoja, encabezadosDe_(hoja), fila);
 
-  /* La misma fila va a la hoja de Holcim, si está configurada.
-     El registro de errores se excluye: copiarlo llamaría de nuevo a esta
-     función y se mordería la cola. */
-  if (nombreHoja !== CONFIG.HOJAS.ERRORES) copiarEnHolcim_(nombreHoja, fila);
+  /* La misma fila va a la hoja de Holcim, si está configurada. Las hojas
+     internas se excluyen: copiarlas llamaría de nuevo a esta función y se
+     mordería la cola. */
+  if (!esHojaInterna_(nombreHoja)) copiarEnHolcim_(nombreHoja, fila);
 
-  return hoja.getLastRow();
+  return destino;
+}
+
+function esHojaInterna_(nombreHoja) {
+  return nombreHoja === CONFIG.HOJAS.ERRORES || nombreHoja === CONFIG.HOJAS.CORREOS;
+}
+
+/**
+ * Escribe la fila justo debajo de la última y le deja lo que el formulario
+ * no escribe —fórmulas, listas desplegables, formato— igual que en la fila
+ * de arriba.
+ *
+ * Es lo que hace falta desde que la hoja es una TABLA con columnas propias
+ * de Holcim: "Plazo para creación" es una fórmula y "Estado de solicitud"
+ * una lista. Escribir solo los datos del formulario dejaba esas dos celdas
+ * en blanco y la fila nueva se veía rota, fuera de la tabla.
+ */
+function escribirFilaNueva_(hoja, encabezados, fila) {
+  var fuente = hoja.getLastRow();      /* última fila con algo: la anterior */
+  var destino = fuente + 1;
+
+  hoja.getRange(destino, 1, 1, encabezados.length)
+      .setValues([enOrden_(encabezados, fila)]);
+
+  heredarDeLaFilaAnterior_(hoja, encabezados, fila, fuente, destino);
+  return destino;
+}
+
+function heredarDeLaFilaAnterior_(hoja, encabezados, fila, fuente, destino) {
+  /* fuente 1 es el encabezado: la hoja está recién creada y no hay de dónde
+     copiar. La primera fila de datos no hereda nada, y está bien. */
+  if (fuente < 2) return;
+
+  var ancho = encabezados.length;
+  hoja.getRange(fuente, 1, 1, ancho).copyTo(
+    hoja.getRange(destino, 1, 1, ancho), SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+
+  encabezados.forEach(function (columna, i) {
+    var llave = String(columna).trim();
+    /* Las columnas que llena el formulario ya quedaron escritas arriba:
+       copiarles nada más encima les borraría el dato. */
+    if (fila[llave] !== undefined && fila[llave] !== null) return;
+
+    var desde = hoja.getRange(fuente, i + 1);
+    var hasta = hoja.getRange(destino, i + 1);
+    /* La lista desplegable, para que la celda se pueda elegir igual que
+       en las filas de arriba. */
+    desde.copyTo(hasta, SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
+    /* Y la fórmula, si la columna es calculada. copyTo corre las
+       referencias solo: lo que en la fila 3 mira B3, en la 4 mira B4.
+       Si la celda de arriba tiene un valor escrito a mano —el estado de
+       la solicitud, por ejemplo— NO se copia: esa la llena su equipo. */
+    if (desde.getFormula()) {
+      desde.copyTo(hasta, SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
+    }
+  });
 }
 
 /**
@@ -157,7 +212,7 @@ function copiarEnHolcim_(nombreHoja, fila) {
   if (!hayCopiaConfigurada_()) return;
   try {
     var hoja = hojaEn_(libroDeHolcim_(), nombreHoja);
-    hoja.appendRow(enOrden_(encabezadosDe_(hoja), fila));
+    escribirFilaNueva_(hoja, encabezadosDe_(hoja), fila);
   } catch (error) {
     anotarError_('No se pudo copiar a la hoja de Holcim (' + nombreHoja + '): ' + error.message);
   }
@@ -180,8 +235,31 @@ function diagnostico() {
     '',
     'Filas de datos en EMPRESAS: ' + Math.max(0, hoja.getLastRow() - 1),
     'Avisos a:                   ' + (CONFIG.NOTIFICAR_A || []).join(', '),
+    'Constancia al proveedor:    ' + (CONFIG.ACUSE_AL_PROVEEDOR === false ? 'apagada' : 'activa'),
     ''
   ];
+
+  /* Qué va a heredar la próxima fila de la última que hay. Es la forma de
+     ver, sin registrar nada, si las columnas de la tabla —la fórmula del
+     plazo, la lista del estado— van a quedar puestas. */
+  var ultima = hoja.getLastRow();
+  if (ultima >= 2) {
+    var encabezados = encabezadosDe_(hoja);
+    var propias = CONFIG.ENCABEZADOS.EMPRESAS || [];
+    var heredadas = [];
+    encabezados.forEach(function (columna, i) {
+      var llave = String(columna).trim();
+      if (!llave) return;
+      var celda = hoja.getRange(ultima, i + 1);
+      var tiene = [];
+      if (celda.getFormula()) tiene.push('fórmula');
+      if (celda.getDataValidation && celda.getDataValidation()) tiene.push('lista');
+      if (tiene.length) heredadas.push('  ' + llave + ': ' + tiene.join(' y '));
+    });
+    lineas.push('La próxima fila va a heredar de la fila ' + ultima + ':');
+    lineas = lineas.concat(heredadas.length ? heredadas : ['  (nada: esa fila no tiene fórmulas ni listas)']);
+    lineas.push('');
+  }
 
   if (!idCopia) {
     lineas.push('CORRECTO: no se copia a ninguna otra hoja, cada registro se');
@@ -278,6 +356,58 @@ function empresasRegistradas_() {
 function nombreDeEmpresa_(nit) {
   var encontrada = empresasRegistradas_().filter(function (e) { return e.nit === String(nit); })[0];
   return encontrada ? encontrada.nombre : '';
+}
+
+/**
+ * Deja constancia de cada correo que se manda. Sirve para responder, sin
+ * adivinar, la pregunta de siempre: ¿al proveedor le llegó su correo?
+ *
+ * "Enviado" quiere decir que Google lo aceptó y lo despachó. Si después
+ * rebota —una dirección mal escrita— eso ya no vuelve aquí; llega al buzón
+ * de la cuenta que ejecuta el script.
+ */
+function anotarCorreo_(radicado, tipo, para, estado, detalle) {
+  try {
+    agregarFila_(CONFIG.HOJAS.CORREOS, {
+      'Fecha': new Date(),
+      'Radicado': String(radicado || ''),
+      'Tipo': String(tipo || ''),
+      'Para': String(para || ''),
+      'Estado': String(estado || ''),
+      'Detalle': String(detalle || '')
+    });
+  } catch (e) {
+    console.error('No se pudo anotar el correo: ' + e.message);
+  }
+}
+
+/** Busca una empresa por su radicado. Devuelve null si no está. */
+function empresaPorRadicado_(radicado) {
+  var hoja = hoja_(CONFIG.HOJAS.EMPRESAS);
+  if (hoja.getLastRow() < 2) return null;
+
+  var filas = hoja.getRange(1, 1, hoja.getLastRow(), hoja.getLastColumn()).getValues();
+  var encabezados = filas.shift().map(function (c) { return String(c).trim(); });
+  var col = function (nombre) { return encabezados.indexOf(nombre); };
+
+  var buscado = String(radicado).trim().toUpperCase();
+  var fila = filas.filter(function (f) {
+    return String(f[col('ID')]).trim().toUpperCase() === buscado;
+  })[0];
+  if (!fila) return null;
+
+  var dato = function (nombre) {
+    var i = col(nombre);
+    return i < 0 ? '' : String(fila[i]).trim();
+  };
+  return {
+    id: dato('ID'),
+    tipoSolicitud: dato('Tipo de solicitud'),
+    nit: dato('NIT'),
+    dv: dato('DV'),
+    nombreEmpresa: dato('Nombre empresa'),
+    correoEmpresa: dato('Correo')
+  };
 }
 
 function anotarError_(detalle) {

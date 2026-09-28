@@ -76,6 +76,28 @@ aviso interno salga igual y el registro no se caiga.
 
 ---
 
+    node pruebas/tabla.js
+
+La hoja dejó de ser una lista suelta: ahora es una **tabla** con dos columnas
+que no salen del formulario —«Plazo para creación», que es una fórmula, y
+«Estado de solicitud», que es una lista para elegir—. Escribiendo solo los
+datos del formulario, esas dos celdas quedaban en blanco y la fila nueva se
+veía rota, fuera de la tabla.
+
+Comprueba que la fila nueva hereda de la de arriba la fórmula —con las
+referencias corridas a su propia fila, `B2` → `B3`— y la lista, que **no**
+hereda el valor escrito a mano en el estado (esa la llena el equipo), que la
+herencia no pisa lo que sí escribe el formulario, y que en una hoja recién
+creada, sin fila de la cual copiar, no se cae.
+
+`pruebas/hoja-falsa.js` es el doble de `SpreadsheetApp` que usan estas
+pruebas. No imita toda la API: solo lo que toca `Hoja.gs`, pero con el
+suficiente detalle para que sirva —`copyTo` corre las referencias de las
+fórmulas, como la hoja de verdad—.
+
+
+---
+
 El buscador de empresas se prueba en el navegador, no desde node: vive en la
 página. `scratchpad/e2e/buscador.html` lo ejercita con datos de mentiras —
 buscar por nombre, por NIT, sin tildes, sin coincidencias, y elegir con las

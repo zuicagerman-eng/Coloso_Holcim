@@ -2,12 +2,14 @@
    y el aviso viaja después, en una llamada aparte. Aquí se comprueba eso,
    y que el reporte de problemas llegue solo a soporte. */
 const fs = require('fs');
+const { libroFalso, CopyPasteType } = require('./hoja-falsa.js');
 
 const CONFIG = {
   TIPOS_DE_SOLICITUD: ['Solicitud de creación', 'Solicitud de edición'],
-  HOJAS: { EMPRESAS: 'EMPRESAS', ERRORES: 'ERRORES' },
+  HOJAS: { EMPRESAS: 'EMPRESAS', ERRORES: 'ERRORES', CORREOS: 'CORREOS' },
   ENCABEZADOS: { EMPRESAS: ['ID','Fecha','Tipo de solicitud','NIT','DV','Nombre empresa','Correo','Diligenciado por'],
-                 ERRORES: ['Fecha','Detalle'] },
+                 ERRORES: ['Fecha','Detalle'],
+                 CORREOS: ['Fecha','Radicado','Tipo','Para','Estado','Detalle'] },
   ID_HOJA_HOLCIM: '',
   NOTIFICAR_A: ['german.zuica@holcim.com', 'juan.narvaezsalazar@holcim.com'],
   CORREO_SOPORTE: 'german.zuica@holcim.com',
@@ -18,21 +20,12 @@ const CONFIG = {
   TEXTO_QUE_SIGUE_EDICION: 'Actualizaremos los datos de su empresa.'
 };
 
-const filas = [CONFIG.ENCABEZADOS.EMPRESAS.slice()];
-const hoja = {
-  getLastRow: () => filas.length, getLastColumn: () => filas[0].length,
-  appendRow: f => filas.push(f),
-  getRange: (f,c,nf,nc) => ({ getValues: () => filas.slice(f-1, f-1+nf).map(x => x.slice(c-1, c-1+nc)),
-    setValues(){return this;}, setFontWeight(){return this;}, setBackground(){return this;},
-    setFontColor(){return this;}, setValue(){return this;} }),
-  setFrozenRows(){}, autoResizeColumns(){},
-  getName: () => 'EMPRESAS', getSheetId: () => 'EMPRESAS', getParent: () => libro
-};
-const libro = { getId: () => 'A', getName: () => 'Registro', getUrl: () => 'https://…',
-                getSheetByName: n => n === 'EMPRESAS' ? hoja : null, insertSheet: () => hoja };
+const libro = libroFalso('A', { EMPRESAS: CONFIG.ENCABEZADOS.EMPRESAS });
+const hoja = libro.hojas.EMPRESAS;
+const filas = { get length() { return hoja.getLastRow(); } };
 
 const correosEnviados = [];
-const SpreadsheetApp = { getActive: () => libro, openById: () => libro };
+const SpreadsheetApp = { getActive: () => libro, openById: () => libro, CopyPasteType };
 const LockService = { getScriptLock: () => ({ waitLock(){}, releaseLock(){} }) };
 const ContentService = { createTextOutput: t => ({ setMimeType: () => t }), MimeType: { JSON: 1 } };
 const HtmlService = {};
@@ -51,7 +44,7 @@ const datos = { tipoSolicitud: 'Solicitud de creación', nit: '900617448',
 console.log('--- guardar ---');
 const guardado = guardarEmpresa_(JSON.parse(JSON.stringify(datos)));
 console.log('  respuesta:', JSON.stringify(guardado));
-console.log('  la fila quedó escrita:', filas.length === 2);
+console.log('  la fila quedó escrita:', hoja.getLastRow() === 2);
 console.log('  guardar NO envía correo:', correosEnviados.length === 0, '← el aviso ya no frena la respuesta');
 
 console.log('\n--- avisar (la llamada que sale después) ---');
@@ -75,7 +68,7 @@ console.log('  el del equipo sí lo lleva:', correosEnviados[0].op.htmlBody.inde
 
 console.log('\n--- constancia cuando es una corrección ---');
 correosEnviados.length = 0;
-const filas0 = filas.length;
+const filas0 = libro.hojas.ERRORES ? libro.hojas.ERRORES.getLastRow() : 0;
 avisarDeRegistro_({ ...datos, tipoSolicitud: 'Solicitud de edición' }, 'EMP-2026-0002');
 const acuseEd = correosEnviados[1];
 console.log('  habla de corrección, no de empresa nueva:',
@@ -93,7 +86,7 @@ const conFallo = avisarDeRegistro_(JSON.parse(JSON.stringify(datos)), 'EMP-2026-
 MailApp.sendEmail = original;
 console.log('  el aviso al equipo salió igual:', correosEnviados.length === 1);
 console.log('  la respuesta sigue siendo ok:', conFallo.ok === true);
-console.log('  quedó anotado en ERRORES:', filas.length > filas0);
+console.log('  quedó anotado en ERRORES:', libro.hojas.ERRORES.getLastRow() > filas0);
 
 console.log('\n--- reportar un problema ---');
 correosEnviados.length = 0;
@@ -109,3 +102,21 @@ console.log('  reporte válido → acepta:', rep.ok);
 console.log('  destino:', correosEnviados[0].para, '← solo soporte');
 console.log('  no va a la lista de avisos:', correosEnviados[0].para.indexOf('juan.narvaezsalazar') < 0);
 console.log('  responder le llega a quien reportó:', correosEnviados[0].op.replyTo === 'proveedor@empresa.com');
+
+console.log('\n--- el registro de correos (hoja CORREOS) ---');
+const correos = libro.hojas.CORREOS;
+console.log('  se anotó cada envío:', correos.getLastRow() - 1, 'renglones');
+console.log('  ' + correos.fila(2).slice(1, 5).join(' | '));
+console.log('  ' + correos.fila(3).slice(1, 5).join(' | '));
+const anotados = [correos.fila(2), correos.fila(3)];
+console.log('  dice a quién le salió cada uno:',
+  anotados.some(f => f[2] === 'Aviso al equipo' && String(f[3]).indexOf('german.zuica') >= 0) &&
+  anotados.some(f => f[2] === 'Constancia al proveedor' && f[3] === 'compras@aceros.com'));
+console.log('  y cuál falló:',
+  correos.fila(correos.getLastRow()).slice(2, 6).join(' | '));
+
+console.log('\n--- reenviar la constancia de un registro viejo ---');
+correosEnviados.length = 0;
+console.log('  ' + reenviarConstancia('EMP-2026-0001'));
+console.log('  salió al correo de esa empresa:', correosEnviados[0].para === 'compras@aceros.com');
+console.log('  radicado que no existe:', reenviarConstancia('EMP-9999-0000'));

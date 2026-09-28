@@ -91,18 +91,31 @@ var CONFIG = {
   HOJAS: {
     EMPRESAS: 'EMPRESAS',
     PERSONAS: 'PERSONAS',
-    ERRORES: 'ERRORES'
+    ERRORES: 'ERRORES',
+    CORREOS: 'CORREOS'
   },
 
   ENCABEZADOS: {
+    /* En el mismo orden que la tabla de Holcim. Las filas se escriben por
+       NOMBRE de columna, así que este orden solo manda cuando la hoja se
+       crea desde cero; en una hoja que ya existe, el que manda es el suyo.
+
+       Las dos últimas las llena la hoja, no el formulario: "Plazo para
+       creación" es una fórmula y "Estado de solicitud" una lista para
+       elegir. Cada fila nueva las hereda de la fila de arriba.
+
+       "Diligenciado por" ya no está: con el formulario abierto —sin cuenta
+       de Google— siempre salía vacía. Si algún día se vuelve a pedir la
+       cuenta, basta con agregar la columna a mano y se llena sola. */
     EMPRESAS: [
-      'ID', 'Fecha', 'Tipo de solicitud', 'NIT', 'DV', 'Nombre empresa',
-      'Correo', 'Diligenciado por'
+      'ID', 'Fecha', 'NIT', 'DV', 'Nombre empresa', 'Correo',
+      'Tipo de solicitud', 'Plazo para creación', 'Estado de solicitud'
     ],
     PERSONAS: [
       'ID', 'Fecha', 'Nombres', 'Primer apellido', 'Segundo apellido',
       'Nombre completo', 'Cédula', 'Correo', 'NIT empresa', 'Nombre empresa'
     ],
-    ERRORES: ['Fecha', 'Detalle']
+    ERRORES: ['Fecha', 'Detalle'],
+    CORREOS: ['Fecha', 'Radicado', 'Tipo', 'Para', 'Estado', 'Detalle']
   }
 };

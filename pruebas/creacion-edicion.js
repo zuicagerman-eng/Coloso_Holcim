@@ -2,6 +2,7 @@
    puede existir, para corregir tiene que existir. Sin esto, toda solicitud
    de edición se rechazaría por duplicada. */
 const fs = require('fs');
+const { libroFalso, CopyPasteType } = require('./hoja-falsa.js');
 
 const CONFIG = {
   TIPOS_DE_SOLICITUD: ['Solicitud de creación', 'Solicitud de edición'],
@@ -10,22 +11,16 @@ const CONFIG = {
                  ERRORES: ['Fecha','Detalle'] },
   ID_HOJA_HOLCIM: '', NOTIFICAR_A: []
 };
+CONFIG.HOJAS.CORREOS = 'CORREOS';
+CONFIG.ENCABEZADOS.CORREOS = ['Fecha','Radicado','Tipo','Para','Estado','Detalle'];
 
 /* Hoja simulada con una empresa ya registrada */
-const filas = [CONFIG.ENCABEZADOS.EMPRESAS.slice(),
-               ['EMP-2026-0001','ayer','Solicitud de creación','900617448',1,'PRENSA','viejo@empresa.com','']];
-const hoja = {
-  getLastRow: () => filas.length, getLastColumn: () => filas[0].length,
-  appendRow: f => filas.push(f),
-  getRange: (f,c,nf,nc) => ({ getValues: () => filas.slice(f-1, f-1+nf).map(x => x.slice(c-1, c-1+nc)),
-    setValues(){return this;}, setFontWeight(){return this;}, setBackground(){return this;},
-    setFontColor(){return this;}, setValue(){return this;} }),
-  setFrozenRows(){}, autoResizeColumns(){},
-  getName: () => 'EMPRESAS', getSheetId: () => 'EMPRESAS', getParent: () => libro
-};
-const libro = { getId: () => 'A', getName: () => 'x', getUrl: () => 'x',
-                getSheetByName: n => n === 'EMPRESAS' ? hoja : null, insertSheet: () => hoja };
-const SpreadsheetApp = { getActive: () => libro, openById: () => libro };
+const libro = libroFalso('A', { EMPRESAS: CONFIG.ENCABEZADOS.EMPRESAS });
+const hoja = libro.hojas.EMPRESAS;
+hoja.getRange(2, 1, 1, CONFIG.ENCABEZADOS.EMPRESAS.length).setValues([
+  ['EMP-2026-0001','ayer','Solicitud de creación','900617448',1,'PRENSA','viejo@empresa.com','']
+]);
+const SpreadsheetApp = { getActive: () => libro, openById: () => libro, CopyPasteType };
 const LockService = { getScriptLock: () => ({ waitLock(){}, releaseLock(){} }) };
 const ContentService = { createTextOutput: t => ({ setMimeType: () => t }), MimeType: { JSON: 1 } };
 const HtmlService = {};

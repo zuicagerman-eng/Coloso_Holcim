@@ -209,6 +209,41 @@ Si el envío falla, el registro **igual queda guardado** y el fallo se anota en
 `ERRORES`. Cuota de una cuenta personal: 100 correos al día — como ahora van
 dos por registro, dan para unos 50 registros diarios.
 
+## La hoja es una tabla
+
+Las columnas **«Plazo para creación»** y **«Estado de solicitud»** no salen del
+formulario: la primera es una fórmula y la segunda una lista para elegir. Cada
+fila nueva las **hereda de la fila de arriba** —la fórmula con sus referencias
+ya corridas a la fila que le toca, y la lista para que se pueda elegir igual
+que en las demás—.
+
+El valor del estado **no** se hereda: la fila nueva llega en blanco, que es lo
+que la fórmula del plazo espera para empezar a contar los dos días.
+
+Por eso importa que la **última fila de la hoja esté bien**: es el molde de la
+siguiente. Si alguien le borra la fórmula a la última fila, la que venga
+después tampoco la tendrá. Para ver qué va a heredar la próxima sin registrar
+nada, ejecute `diagnostico` desde `Hoja.gs`.
+
+Si algún día se agrega una columna a la tabla, no hay nada que tocar en el
+código: mientras la fila de arriba la tenga puesta, la nueva la hereda.
+
+## Saber si un correo salió
+
+La hoja **CORREOS** anota cada envío: fecha, radicado, tipo —aviso al equipo o
+constancia al proveedor—, a qué dirección salió y si quedó *Enviado* o *Falló*.
+Se crea sola con el primer registro.
+
+*Enviado* quiere decir que Google lo aceptó y lo despachó. Si después rebota
+—una dirección mal escrita—, ese rebote llega al buzón de la cuenta que ejecuta
+el script, no a la hoja.
+
+Para mandarle la constancia a una empresa que se registró **antes** de que este
+correo existiera, o a la que se le corrigió la dirección, ejecute desde
+`Correo.gs`:
+
+    reenviarConstancia('EMP-2026-0003')
+
 ## Al cambiar el código
 
 **Implementar → Administrar implementaciones → ✏️ → Versión: Nueva.**

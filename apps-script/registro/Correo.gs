@@ -29,9 +29,12 @@ function avisar_(titulo, sujeto, id, filas, copiaA) {
       textoPlano_(titulo, sujeto, id, filas),
       opciones
     );
+    anotarCorreo_(id, 'Aviso al equipo', destinatarios.join(', '), 'Enviado',
+                  opciones.cc ? 'Con copia a ' + opciones.cc : '');
   } catch (error) {
     // Un fallo del correo nunca debe tumbar un registro que ya se guardó.
     anotarError_('Aviso no enviado (' + id + '): ' + error.message);
+    anotarCorreo_(id, 'Aviso al equipo', destinatarios.join(', '), 'Falló', error.message);
   }
 }
 
@@ -123,10 +126,12 @@ function acuseAlProveedor_(datos, id) {
         name: CONFIG.NOMBRE_REMITENTE,
         htmlBody: cuerpoDelAcuse_(titulo, id, filas, fecha, esEdicion)
       });
+    anotarCorreo_(id, 'Constancia al proveedor', destino, 'Enviado', datos.nombreEmpresa);
   } catch (error) {
     /* Igual que el aviso: el registro ya está guardado y no se cae por
        un correo que no salió. Queda anotado para poder reenviarlo. */
     anotarError_('Acuse al proveedor no enviado (' + id + ' → ' + destino + '): ' + error.message);
+    anotarCorreo_(id, 'Constancia al proveedor', destino, 'Falló', error.message);
   }
 }
 
@@ -212,6 +217,24 @@ function pruebaDeCorreo() {
     ['Diligenciado por', quien]
   ], quien);
   return 'Aviso enviado a: ' + CONFIG.NOTIFICAR_A.join(', ') + ' — con copia a ' + quien;
+}
+
+/**
+ * Reenvía la constancia de un registro que ya está en la hoja. Es para las
+ * empresas que se registraron ANTES de que existiera este correo, o cuando
+ * hubo que corregirles la dirección.
+ *
+ * Se ejecuta a mano desde el editor: escriba el radicado entre comillas.
+ *     reenviarConstancia('EMP-2026-0003')
+ */
+function reenviarConstancia(radicado) {
+  var empresa = empresaPorRadicado_(radicado);
+  if (!empresa) return 'No encontré el radicado ' + radicado + ' en la hoja.';
+  if (!empresa.correoEmpresa) return empresa.id + ' no tiene correo en la columna Correo.';
+
+  acuseAlProveedor_(empresa, empresa.id);
+  return 'Constancia de ' + empresa.id + ' (' + empresa.nombreEmpresa + ') enviada a ' +
+         empresa.correoEmpresa + '.';
 }
 
 /** Prueba: manda al correo que se le indique la constancia del proveedor. */
