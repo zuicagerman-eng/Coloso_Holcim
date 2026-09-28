@@ -5,6 +5,14 @@
 var CONFIG = {
 
   /**
+   * ► VERSIÓN ◄
+   * La imprime `diagnostico`. Si al ejecutarlo no sale esta misma fecha,
+   * lo que está corriendo es la versión anterior: se guardó con Ctrl+S
+   * pero faltó Administrar implementaciones → ✏️ → Versión: Nueva.
+   */
+  VERSION: '2026-09-28 · 5',
+
+  /**
    * ► CORREOS QUE RECIBEN EL AVISO ◄
    * Cada vez que alguien registre una empresa o una persona, llega un
    * correo a estas direcciones diciendo quién lo hizo y qué registró.

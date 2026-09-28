@@ -229,6 +229,8 @@ function diagnostico() {
   var hoja = hoja_(CONFIG.HOJAS.EMPRESAS);
 
   var lineas = [
+    'Versión del código:        ' + (CONFIG.VERSION || '(sin marcar)'),
+    '',
     'Hoja donde vive el script: ' + libro.getName(),
     '  su identificador:        ' + idActivo,
     'ID_HOJA_HOLCIM:            ' + (idCopia || '(vacío)'),

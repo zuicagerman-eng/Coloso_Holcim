@@ -252,6 +252,12 @@ dirección, y deja la anterior viva sirviendo el código viejo.
 
 ### Cómo saber si lo publicado ya es lo último
 
+En el **registro**, ejecute `diagnostico` desde `Hoja.gs`: la primera línea del
+registro de ejecución dice la versión. Si no es la del `Config.gs` que acaba de
+pegar, lo que corre es el código anterior.
+
+En el **formulario**:
+
 Al pie del formulario, debajo del botón de reportar, dice **Versión** con una
 fecha. Es el sello que trae `pagina.html`: si la página abierta no muestra la
 fecha del archivo que acaba de pegar, **lo que está sirviendo es la versión
