@@ -100,7 +100,7 @@ function guardarEmpresa_(entrada) {
     }
 
     var id = siguienteId_('EMP', CONFIG.HOJAS.EMPRESAS);
-    agregarFila_(CONFIG.HOJAS.EMPRESAS, {
+    var fila = {
       'ID': id,
       'Fecha': new Date(),
       'Tipo de solicitud': d.tipoSolicitud,
@@ -109,7 +109,15 @@ function guardarEmpresa_(entrada) {
       'Nombre empresa': d.nombreEmpresa,
       'Correo': d.correoEmpresa,
       'Diligenciado por': d.correoRegistra
-    });
+    };
+
+    /* Toda solicitud nace en proceso: es lo que el plazo de la hoja cuenta.
+       Si se deja vacío en Config.gs, la celda no se toca y la fila hereda
+       lo que tenga la columna. Si la columna no existe, no pasa nada: las
+       filas se escriben por nombre. */
+    if (CONFIG.ESTADO_INICIAL) fila['Estado de solicitud'] = CONFIG.ESTADO_INICIAL;
+
+    agregarFila_(CONFIG.HOJAS.EMPRESAS, fila);
 
     /* El correo NO se manda aquí. Enviarlo toma uno a tres segundos y la
        persona los estaría esperando frente a la pantalla para algo que ya
@@ -183,13 +191,18 @@ function avisarDeRegistro_(datos, id) {
   if (!revision.ok) return { ok: false, errores: revision.errores };
   var d = revision.datos;
 
-  avisar_(d.tipoSolicitud, d.nombreEmpresa, id, [
+  var detalle = [
     ['Tipo de solicitud', d.tipoSolicitud],
     ['NIT', d.nit + '  ·  DV ' + d.dv],
     ['Razón social', d.nombreEmpresa],
-    ['Correo principal', d.correoEmpresa],
-    ['Diligenciado por', d.correoRegistra || 'no identificado']
-  ], d.correoRegistra);
+    ['Correo principal', d.correoEmpresa]
+  ];
+  /* Quién diligenció solo se nombra si Google lo identificó. Con el
+     formulario abierto nunca lo hay, y el renglón "no identificado" era
+     ruido en todos los avisos. */
+  if (d.correoRegistra) detalle.push(['Diligenciado por', d.correoRegistra]);
+
+  avisar_(d.tipoSolicitud, d.nombreEmpresa, id, detalle, d.correoRegistra);
 
   /* Y su constancia al proveedor, al correo que él escribió. Va después
      del aviso interno: si el correo del proveedor rebota, el equipo ya

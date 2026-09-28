@@ -38,8 +38,25 @@ function avisar_(titulo, sujeto, id, filas, copiaA) {
   }
 }
 
+/**
+ * La misma hoja, pero abierta para LEER: /preview en vez de /edit. Quien
+ * la abra desde el correo entra a mirar, no a editar sin querer.
+ *
+ * Ojo: esto es cómo se abre, no quién puede qué. El permiso de verdad se
+ * da en Compartir, poniendo a cada quien como Lector o como Editor.
+ */
+function enlaceDeLectura_(url) {
+  var texto = String(url || '').trim();
+  var partes = /\/spreadsheets\/d\/([A-Za-z0-9_-]+)/.exec(texto);
+  if (!partes) return texto;
+
+  var gid = /[?#&]gid=(\d+)/.exec(texto);
+  return 'https://docs.google.com/spreadsheets/d/' + partes[1] + '/preview' +
+         (gid ? '#gid=' + gid[1] : '');
+}
+
 function cuerpoDelAviso_(titulo, sujeto, id, filas, fecha) {
-  var enlace = String(CONFIG.URL_BASE_DATOS || '').trim() || libro_().getUrl();
+  var enlace = enlaceDeLectura_(String(CONFIG.URL_BASE_DATOS || '').trim() || libro_().getUrl());
 
   var celdas = filas.map(function (f) {
     return '<tr>' +
@@ -80,7 +97,7 @@ function cuerpoDelAviso_(titulo, sujeto, id, filas, fecha) {
           '</td></tr>' +
         '</table>' +
         '<p style="margin:10px 0 0;color:#8A98A6;font-size:12px;line-height:1.5;">' +
-          'Solo para el equipo de Holcim.<br>' +
+          'Solo para el equipo de Holcim. Se abre en modo lectura.<br>' +
           'Si usted recibió este correo <b style="color:#59697A;">en copia</b>, no necesita ' +
           'abrir ese enlace: su registro ya quedó guardado y este mensaje es su constancia.' +
         '</p>' +
@@ -151,8 +168,8 @@ function cuerpoDelAcuse_(titulo, id, filas, fecha, esEdicion) {
   }).join('');
 
   var saludo = esEdicion
-    ? 'Recibimos su solicitud de corrección. Estos son los datos que nos envió:'
-    : 'Su empresa quedó registrada con éxito. Estos son los datos que nos envió:';
+    ? 'Recibimos su solicitud de corrección.'
+    : 'Su empresa quedó registrada con éxito.';
 
   return '' +
   '<div style="margin:0;padding:24px 12px;background:#F1F4F8;font-family:Arial,Helvetica,sans-serif;">' +
@@ -168,18 +185,21 @@ function cuerpoDelAcuse_(titulo, id, filas, fecha, esEdicion) {
       '<tr><td style="padding:24px;">' +
         '<p style="margin:0 0 16px;color:#0F2438;font-size:15px;line-height:1.55;">' +
           escaparHtml_(saludo) + '</p>' +
-        '<p style="margin:0 0 20px;color:#59697A;font-size:13px;">' +
-          'Radicado <b style="color:#00457C;">' + escaparHtml_(id) + '</b> · ' +
+        /* Lo primero que tiene que leer el proveedor es el plazo: es lo
+           que vino a saber. Los datos que envió van después. */
+        '<div style="margin:0 0 22px;padding:16px 18px;background:#F3FAF5;' +
+                    'border-left:4px solid #00A94F;">' +
+          '<p style="margin:0 0 6px;color:#0F2438;font-size:15px;"><b>¿Qué sigue?</b></p>' +
+          '<p style="margin:0;color:#23313F;font-size:15px;line-height:1.6;">' +
+            escaparHtml_(queSigue_(esEdicion)) + '</p>' +
+        '</div>' +
+        '<p style="margin:0 0 10px;color:#59697A;font-size:13px;">' +
+          'Estos son los datos que nos envió. Radicado ' +
+          '<b style="color:#00457C;">' + escaparHtml_(id) + '</b> · ' +
           escaparHtml_(fecha) +
         '</p>' +
         '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" ' +
                'style="border-collapse:collapse;font-size:14px;">' + celdas + '</table>' +
-        '<div style="margin-top:22px;padding:14px 16px;background:#F3FAF5;' +
-                    'border-left:3px solid #00A94F;">' +
-          '<p style="margin:0 0 6px;color:#0F2438;font-size:14px;"><b>¿Qué sigue?</b></p>' +
-          '<p style="margin:0;color:#3C4C5C;font-size:14px;line-height:1.6;">' +
-            escaparHtml_(queSigue_(esEdicion)) + '</p>' +
-        '</div>' +
         '<p style="margin:18px 0 0;color:#8A98A6;font-size:12px;line-height:1.5;">' +
           'Guarde este correo: el radicado <b style="color:#59697A;">' + escaparHtml_(id) +
           '</b> identifica su solicitud si necesita preguntar por ella.' +

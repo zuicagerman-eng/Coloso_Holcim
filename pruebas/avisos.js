@@ -16,7 +16,7 @@ const CONFIG = {
   NOMBRE_REMITENTE: 'Registro de proveedores',
   URL_BASE_DATOS: 'https://docs.google.com/spreadsheets/d/XXX/edit',
   ACUSE_AL_PROVEEDOR: true,
-  TEXTO_QUE_SIGUE: 'Será creada en el sistema de proveedores y le llegará la invitación a la capacitación.',
+  TEXTO_QUE_SIGUE: 'Su gestión de creación será procesada en un plazo de DOS DÍAS HÁBILES.',
   TEXTO_QUE_SIGUE_EDICION: 'Actualizaremos los datos de su empresa.'
 };
 
@@ -120,3 +120,23 @@ correosEnviados.length = 0;
 console.log('  ' + reenviarConstancia('EMP-2026-0001'));
 console.log('  salió al correo de esa empresa:', correosEnviados[0].para === 'compras@aceros.com');
 console.log('  radicado que no existe:', reenviarConstancia('EMP-9999-0000'));
+
+console.log('\n--- el enlace del aviso abre en modo lectura ---');
+console.log('  ' + enlaceDeLectura_('https://docs.google.com/spreadsheets/d/1FGByxCw/edit?gid=388689330#gid=388689330'));
+console.log('  ya no dice /edit:',
+  enlaceDeLectura_(CONFIG.URL_BASE_DATOS).indexOf('/edit') < 0);
+console.log('  conserva la pestaña:',
+  enlaceDeLectura_('https://docs.google.com/spreadsheets/d/AAA/edit?gid=42#gid=42') ===
+  'https://docs.google.com/spreadsheets/d/AAA/preview#gid=42');
+console.log('  una dirección rara se deja como está:',
+  enlaceDeLectura_('otra cosa') === 'otra cosa');
+
+console.log('\n--- en la constancia, el plazo va primero ---');
+correosEnviados.length = 0;
+avisarDeRegistro_(JSON.parse(JSON.stringify(datos)), 'EMP-2026-0009');
+const cuerpo = correosEnviados[1].op.htmlBody;
+console.log('  ¿Qué sigue? aparece antes que los datos:',
+  cuerpo.indexOf('¿Qué sigue?') < cuerpo.indexOf('Estos son los datos'));
+console.log('  dice el plazo:', /DOS DÍAS HÁBILES/.test(cuerpo));
+console.log('  el aviso interno NO manda al proveedor a la base de datos:',
+  correosEnviados[1].op.htmlBody.indexOf('spreadsheets') < 0);

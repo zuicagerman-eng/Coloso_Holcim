@@ -217,7 +217,7 @@ después, en una llamada aparte.
 
 | Correo | A quién | Qué lleva |
 |---|---|---|
-| Aviso interno | `CONFIG.NOTIFICAR_A`, con copia a quien diligenció | Qué se registró, quién lo hizo y el botón que abre la base de datos |
+| Aviso interno | `CONFIG.NOTIFICAR_A`, con copia a quien diligenció | Qué se registró y el botón que abre la base de datos **en modo lectura** |
 | Constancia | Al correo que **escribió la empresa** en el formulario | Lo que registró, su radicado y qué sigue — **sin** el enlace a la base de datos |
 
 Son dos mensajes aparte justamente por ese enlace: es del equipo, no del
@@ -241,8 +241,10 @@ fila nueva las **hereda de la fila de arriba** —la fórmula con sus referencia
 ya corridas a la fila que le toca, y la lista para que se pueda elegir igual
 que en las demás—.
 
-El valor del estado **no** se hereda: la fila nueva llega en blanco, que es lo
-que la fórmula del plazo espera para empezar a contar los dos días.
+El estado no se hereda de la fila de arriba: cada solicitud nace con el valor
+de `ESTADO_INICIAL` —hoy **En proceso**—, que es lo que la fórmula del plazo
+espera para empezar a contar los dos días. Ese valor tiene que ser una de las
+opciones de la lista en la hoja, o la celda saldrá marcada como inválida.
 
 Por eso importa que la **última fila de la hoja esté bien**: es el molde de la
 siguiente. Si alguien le borra la fórmula a la última fila, la que venga
@@ -272,6 +274,14 @@ Quita esa fila y solo esa —la reconoce por el nombre *PRUEBA DEL SISTEMA —
 BORRAR*—, así que no hay que borrar nada a mano ni arriesgarse a llevarse por
 delante un registro de verdad. En la hoja CORREOS quedan los dos renglones de
 la prueba, con ese mismo nombre.
+
+### El enlace del aviso abre para leer
+
+El botón del correo interno lleva a la hoja con `/preview` en vez de `/edit`:
+se abre para mirar, no para editar sin querer. Eso es **cómo se abre**, no
+quién puede qué: el permiso de verdad se da en *Compartir*, poniendo a cada
+quien como **Lector** o como **Editor**. Si alguien es editor de la hoja,
+desde esa vista puede pasarse a editar.
 
 ## Saber si un correo salió
 

@@ -10,7 +10,7 @@ var CONFIG = {
    * lo que está corriendo es la versión anterior: se guardó con Ctrl+S
    * pero faltó Administrar implementaciones → ✏️ → Versión: Nueva.
    */
-  VERSION: '2026-09-28 · 7',
+  VERSION: '2026-09-28 · 8',
 
   /**
    * ► CORREOS QUE RECIBEN EL AVISO ◄
@@ -43,15 +43,16 @@ var CONFIG = {
    * Qué sigue después de registrarse. Es el texto que el proveedor lee en
    * su constancia; cámbielo cuando cambie el trámite.
    */
-  TEXTO_QUE_SIGUE: 'Su empresa entra ahora en la revisión del equipo de ' +
-    'Abastecimiento. Si todo está en orden, será creada en el sistema de ' +
-    'proveedores de Holcim y le llegará, a este mismo correo, la invitación ' +
-    'para la capacitación de proveedores.',
+  TEXTO_QUE_SIGUE: 'Su gestión de creación será procesada en un plazo de ' +
+    'DOS DÍAS HÁBILES. Si todo está en orden, su empresa quedará creada en el ' +
+    'sistema de proveedores de Holcim y le llegará, a este mismo correo, la ' +
+    'invitación para la capacitación de proveedores.',
 
   /** Lo mismo, cuando lo que se pidió fue corregir una empresa ya registrada. */
-  TEXTO_QUE_SIGUE_EDICION: 'El equipo de Abastecimiento revisará el cambio y ' +
-    'actualizará los datos de su empresa en el sistema de proveedores de Holcim. ' +
-    'Si hace falta algún soporte, le escribiremos a este mismo correo.',
+  TEXTO_QUE_SIGUE_EDICION: 'Su solicitud de corrección será procesada en un ' +
+    'plazo de DOS DÍAS HÁBILES. Actualizaremos los datos de su empresa en el ' +
+    'sistema de proveedores de Holcim y, si hace falta algún soporte, le ' +
+    'escribiremos a este mismo correo.',
 
   /** Copia oculta, si alguien más debe quedar enterado sin figurar. */
   CON_COPIA_OCULTA: [],
@@ -81,6 +82,15 @@ var CONFIG = {
    * concreta, o a otra hoja.
    */
   URL_BASE_DATOS: 'https://docs.google.com/spreadsheets/d/1FGByxCw4R-D7_15Y1NjmrttilkQO-tF1AHYF0YgR-I4/edit?gid=388689330#gid=388689330',
+
+  /**
+   * ► ESTADO CON EL QUE NACE CADA SOLICITUD ◄
+   * Se escribe en la columna "Estado de solicitud" de cada fila nueva.
+   * Tiene que ser una de las opciones de esa lista en la hoja —hoy son
+   * "Creada" y "En proceso"—, o la celda quedará marcada como inválida.
+   * Vacío = la fila nace en blanco y alguien elige a mano.
+   */
+  ESTADO_INICIAL: 'En proceso',
 
   /** Opciones del primer campo del formulario. */
   TIPOS_DE_SOLICITUD: ['Solicitud de creación', 'Solicitud de edición'],
