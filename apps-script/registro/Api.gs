@@ -256,9 +256,10 @@ function pruebaDeEscritura() {
    constancia— pero los dos correos salen SOLO a CONFIG.CORREO_SOPORTE.
    Nadie más recibe nada: ni la lista de avisos ni ningún proveedor.
 
-   La fila queda en la hoja para poder verla dentro de la tabla, con su
-   fórmula y su chip. Cuando termine de mirarla, `borrarFilaDePrueba`
-   la quita: no hay que borrar nada a mano.
+   La fila SE ESCRIBE y se queda en la hoja: de eso se trata, de verla
+   dentro de la tabla con su fórmula y su chip. Se borra a mano cuando ya
+   no sirva —se reconoce por el nombre—, o con `borrarFilaDePrueba` si se
+   prefiere que la quite el script.
    ==================================================================== */
 
 var MARCA_DE_PRUEBA = 'PRUEBA DEL SISTEMA — BORRAR';
@@ -341,9 +342,10 @@ function informeDePrueba_(id, destino, listaReal) {
   lineas.push('Ahora abra la hoja y mire la fila ' + fila + ': tiene que verse DENTRO');
   lineas.push('de la tabla, con sus chips de colores como las de arriba.');
   lineas.push('');
-  lineas.push('Cuando termine de mirar, ejecute   borrarFilaDePrueba');
-  lineas.push('(en la hoja CORREOS quedan dos renglones de la prueba; se');
-  lineas.push('reconocen por el nombre ' + MARCA_DE_PRUEBA + ').');
+  lineas.push('La fila queda escrita: bórrela usted cuando termine de mirarla.');
+  lineas.push('Se reconoce por el nombre ' + MARCA_DE_PRUEBA + '.');
+  lineas.push('(Si prefiere que la quite el script: borrarFilaDePrueba. En la hoja');
+  lineas.push('CORREOS quedan además los dos renglones del envío, con ese nombre.)');
   return lineas.join('\n');
 }
 
