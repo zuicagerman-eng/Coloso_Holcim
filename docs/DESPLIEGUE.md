@@ -36,6 +36,22 @@ razón muchos rechazarían. Separados, solo le pide **ver su dirección de corre
 
 ---
 
+## Los enlaces
+
+| Qué | Dónde |
+|---|---|
+| **El formulario** — esto es lo que se le manda al proveedor | `https://script.google.com/macros/s/AKfycbx04t8ojszx_rbJumWMXYIYQ_d3hDqu1bgTPYisolhrKD3KNmMBXuzd97DAsdG1P3kH/exec` |
+| El servicio de registro — **no** es para abrir, lo usa el formulario por dentro | `https://script.google.com/macros/s/AKfycbzoWJnJDeczWNv_JvoCbNv9tJjErBh42XDcQbo8U6AR4yQdIc_PAl0VY4IZ7mUnrfl7/exec` |
+| La hoja | https://docs.google.com/spreadsheets/d/1FGByxCw4R-D7_15Y1NjmrttilkQO-tF1AHYF0YgR-I4/edit?gid=388689330#gid=388689330 |
+
+Si al abrir uno sale `{"ok":true,"servicio":"Registro de empresas — Holcim"…}`, ese es
+el de atrás: el formulario es el otro.
+
+**La hoja y los dos proyectos no viven en la cuenta de Holcim ni en la cuenta
+personal de siempre, sino en una tercera cuenta de Google creada para esto.**
+Entrando con otra cuenta, los proyectos no aparecen en *Mis proyectos* y parece
+que se hubieran perdido. No se perdieron: es la cuenta.
+
 ## Cuál es cuál
 
 Abiertos los dos en el editor se parecen. Se distinguen sin equivocarse por la
